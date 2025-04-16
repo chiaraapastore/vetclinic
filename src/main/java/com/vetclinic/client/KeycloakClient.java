@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+
 @FeignClient(name = "keycloakClient", url = "${keycloak.admin.auth-server-url}")
 public interface KeycloakClient {
 
@@ -35,7 +36,7 @@ public interface KeycloakClient {
             @RequestParam(value = "max", defaultValue = "100") String max,
             @RequestParam(value = "search", defaultValue = "") String search);
 
-    @RequestMapping( method = RequestMethod.POST,
+    @RequestMapping(method = RequestMethod.POST,
             value = "/admin/realms/${keycloak.admin.realm}/users/{id}/role-mappings/realm",
             produces = "application/json")
     ResponseEntity<Object> addRoleToUser(

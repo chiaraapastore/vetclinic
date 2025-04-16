@@ -35,6 +35,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/**").authenticated()
                         .requestMatchers("/api/utente/login", "/api/utente/register").permitAll()
                         .requestMatchers("/api/utente/user-info").authenticated()
+                        .requestMatchers("/api/veterinarian/**").authenticated()
                         .anyRequest().permitAll()
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
