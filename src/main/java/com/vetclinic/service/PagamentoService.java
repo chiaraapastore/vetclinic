@@ -3,13 +3,9 @@ package com.vetclinic.service;
 import com.vetclinic.config.AuthenticationService;
 import com.vetclinic.models.*;
 import com.vetclinic.repository.*;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.client.RestTemplate;
 
-import java.util.HashMap;
-import java.util.Map;
 
 @Service
 public class PagamentoService {
@@ -23,11 +19,6 @@ public class PagamentoService {
     private final ClienteRepository clienteRepository;
 
 
-    @Value("${nexi.api.url}")
-    private String nexiApiUrl;
-
-    @Value("${nexi.api.key}")
-    private String nexiApiKey;
 
     public PagamentoService(PagamentoRepository pagamentoRepository, AppuntamentoRepository appuntamentoRepository,
                             UtenteRepository utenteRepository, AuthenticationService authenticationService,
@@ -59,7 +50,6 @@ public class PagamentoService {
         }
 
 
-        String paymentToken = requestNexiPayment(amount);
 
 
         Fattura invoice = new Fattura();
@@ -76,7 +66,7 @@ public class PagamentoService {
         payment.setAmount(amount);
         payment.setPaymentDate(new java.util.Date());
         payment.setStatus("COMPLETED");
-        payment.setTransactionId(paymentToken);
+
 
         pagamentoRepository.save(payment);
 
@@ -89,39 +79,6 @@ public class PagamentoService {
         notificheService.sendPaymentNotificationToVeterinarian(appointment.getVeterinarian(), payment);
 
         return payment;
-    }
-
-    private String requestNexiPayment(double amount) {
-
-        Utente client = utenteRepository.findByUsername(authenticationService.getUsername());
-        if (client == null) {
-            throw new IllegalArgumentException("Cliente non trovato");
-        }
-
-        RestTemplate restTemplate = new RestTemplate();
-
-        Map<String, Object> paymentRequest = new HashMap<>();
-        paymentRequest.put("amount", amount);
-        paymentRequest.put("currency", "EUR");
-        paymentRequest.put("description", "Servizio Veterinario");
-
-        paymentRequest.put("api_key", nexiApiKey);
-
-
-        String response = restTemplate.postForObject(nexiApiUrl + "/process", paymentRequest, String.class);
-
-        return parseNexiResponse(response);
-    }
-
-    private String parseNexiResponse(String response) {
-        Utente client = utenteRepository.findByUsername(authenticationService.getUsername());
-        if (client == null) {
-            throw new IllegalArgumentException("Cliente non trovato");
-        }
-
-        Map<String, String> responseMap = new HashMap<>();
-        responseMap.put("token", "paymentToken123");
-        return responseMap.get("token");
     }
 
 
