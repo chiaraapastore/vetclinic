@@ -2,14 +2,12 @@ package com.vetclinic.service;
 
 import com.vetclinic.config.AuthenticationService;
 import com.vetclinic.models.*;
-import com.vetclinic.repository.AppuntamentoRepository;
-import com.vetclinic.repository.AssistenteRepository;
-import com.vetclinic.repository.MedicineRepository;
-import com.vetclinic.repository.AnimaleRepository;
-import com.vetclinic.repository.UtenteRepository;
+import com.vetclinic.repository.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -24,11 +22,15 @@ public class AssistenteService {
     private final UtenteRepository utenteRepository;
     private final AuthenticationService authenticationService;
     private final AssistenteRepository assistenteRepository;
+    private final AnimaleRepository animaleRepository;
+    private final FatturaRepository fatturaRepository;
+    private final PagamentoRepository pagamentoRepository;
+    private final SomministrazioneRepository somministrazioneRepository;
 
 
     public AssistenteService(AppuntamentoRepository appuntamentoRepository, MedicineRepository medicineRepository,
                              AnimaleRepository pazienteRepository, NotificheService notificheService, AssistenteRepository assistenteRepository,
-                             UtenteRepository utenteRepository, AuthenticationService authenticationService) {
+                             UtenteRepository utenteRepository, AuthenticationService authenticationService, AnimaleRepository animaleRepository, FatturaRepository fatturaRepository, PagamentoRepository pagamentoRepository, SomministrazioneRepository somministrazioneRepository) {
         this.appuntamentoRepository = appuntamentoRepository;
         this.medicineRepository = medicineRepository;
         this.pazienteRepository = pazienteRepository;
@@ -36,6 +38,10 @@ public class AssistenteService {
         this.utenteRepository = utenteRepository;
         this.authenticationService = authenticationService;
         this.assistenteRepository = assistenteRepository;
+        this.animaleRepository = animaleRepository;
+        this.fatturaRepository = fatturaRepository;
+        this.pagamentoRepository = pagamentoRepository;
+        this.somministrazioneRepository = somministrazioneRepository;
     }
 
     @Transactional
@@ -163,5 +169,70 @@ public class AssistenteService {
     public Reparto getRepartoByVeterinarian(String emailDottore) {
         return utenteRepository.findRepartoByEmailVeterinarian(emailDottore)
                 .orElseThrow(() -> new RuntimeException("Nessun dottore trovato con email: " + emailDottore));
+    }
+
+
+
+    @Transactional
+    public String administerMedicine(Long animaleId, Long medicineId, int quantita, Long veterinarianId) {
+        Animale animale = animaleRepository.findById(animaleId)
+                .orElseThrow(() -> new IllegalArgumentException("Animale non trovato"));
+        Medicine medicine = medicineRepository.findById(medicineId)
+                .orElseThrow(() -> new IllegalArgumentException("Medicinale non trovato"));
+
+        if (medicine.getAvailableQuantity() < quantita) {
+            throw new IllegalArgumentException("Quantità insufficiente del medicinale");
+        }
+
+
+        medicine.setAvailableQuantity(medicine.getAvailableQuantity() - quantita);
+        medicineRepository.save(medicine);
+
+
+        Utente veterinarian = utenteRepository.findById(veterinarianId)
+                .orElseThrow(() -> new IllegalArgumentException("Veterinario non trovato"));
+        notificheService.sendNotificationSomministration(veterinarian, veterinarian, medicine.getName());
+
+        Somministrazione somministrazione = new Somministrazione();
+        somministrazione.setAnimal(animale);
+        somministrazione.setMedicine(medicine);
+        somministrazione.setDosage(quantita);
+        somministrazione.setDate(LocalDateTime.now());
+        somministrazioneRepository.save(somministrazione);
+
+        return "Farmaco somministrato con successo!";
+    }
+
+    @Transactional
+    public String managePayment(Long clienteId, double amount, String paymentMethod, String cardType) {
+        Cliente cliente = (Cliente) utenteRepository.findById(clienteId)
+                .orElseThrow(() -> new IllegalArgumentException("Cliente non trovato"));
+
+
+        Fattura fattura = new Fattura();
+        fattura.setClient(cliente);
+        fattura.setIssueDate(new Date());
+        fattura.setAmount(amount);
+        fattura.setStatus("PENDING");
+        fatturaRepository.save(fattura);
+
+
+        Pagamento pagamento = new Pagamento();
+        pagamento.setInvoice(fattura);
+        pagamento.setAmount(amount);
+        pagamento.setPaymentMethod(paymentMethod);
+        pagamento.setPaymentDate(new Date());
+        pagamento.setCardType(cardType);
+        pagamento.setStatus("SUCCESS");
+        pagamentoRepository.save(pagamento);
+
+
+        fattura.setStatus("PAID");
+        fatturaRepository.save(fattura);
+
+
+        notificheService.sendAppointmentReminder(cliente, fattura.getIssueDate());
+
+        return "Pagamento effettuato con successo!";
     }
 }

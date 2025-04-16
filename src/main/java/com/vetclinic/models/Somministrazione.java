@@ -31,5 +31,5 @@ public class Somministrazione {
 
     private LocalDateTime date;
 
-    private String dosage;
+    private int dosage;
 }

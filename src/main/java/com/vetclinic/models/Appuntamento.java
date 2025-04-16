@@ -30,5 +30,11 @@ public class Appuntamento {
     private Date appointmentDate;
 
     private String reason;
+
+    private String status;
+
+    @ManyToOne
+    @JoinColumn(name = "cliente_id")
+    private Cliente cliente;
 }
 

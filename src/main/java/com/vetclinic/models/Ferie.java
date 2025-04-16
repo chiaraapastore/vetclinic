@@ -18,6 +18,7 @@ public class Ferie {
     private LocalDate startDate;
     private LocalDate endDate;
     private String reason;
+    private boolean approved;
 
     @ManyToOne
     @JoinColumn(name = "utente_id")

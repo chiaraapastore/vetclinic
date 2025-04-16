@@ -30,11 +30,23 @@ public class Medicine {
 
     private int quantity;
 
+    private int currentStock;
+
+    private int pendingOrders;
+
+    private int unitsToReceive;
+
     private int availableQuantity;
 
     @ManyToOne
     @JoinColumn(name = "department_id")
     private Reparto department;
+
+
+    @ManyToOne
+    @JoinColumn(name = "animale_id")
+    private Animale animale;
+
 
     @Setter
     @ManyToOne

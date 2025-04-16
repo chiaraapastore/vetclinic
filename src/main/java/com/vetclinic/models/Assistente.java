@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Entity
 @Table(name = "assistente")
-public class Assistente {
+public class Assistente extends Utente {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -26,5 +26,7 @@ public class Assistente {
 
     @ManyToOne
     @JoinColumn(name = "reparto_id")
-    private Reparto reparto;
+    private Reparto department;
+
+
 }

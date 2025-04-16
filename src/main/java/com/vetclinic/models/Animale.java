@@ -6,6 +6,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.Set;
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -29,7 +31,16 @@ public class Animale {
 
         private int age;
 
+        private String state;
+
         private String microchip;
+
+        private String veterinaryNotes;
+
+        private String nextVisit;
+
+
+        private String symptoms;
 
         @NotBlank(message = "Il peso è obbligatorio")
         private double weight;
@@ -37,5 +48,27 @@ public class Animale {
         @ManyToOne
         @JoinColumn(name = "cliente_id")
         private Cliente cliente;
+
+
+        @OneToMany(mappedBy = "animale")
+        private Set<Vaccino> vaccini;
+
+
+        @OneToMany(mappedBy = "animale")
+        private Set<Medicine> medicine;
+
+        @OneToMany(mappedBy = "animale")
+        private Set<CronologiaAnimale> historicalDiseases;
+
+        @OneToMany(mappedBy = "animale")
+        private Set<Operazione> operazione;
+
+        @OneToMany(mappedBy = "animale")
+        private Set<Esame> esame;
+
+        @OneToMany(mappedBy = "animale")
+        private Set<Trattamento> trattamento;
+
+
 
 }

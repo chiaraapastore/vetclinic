@@ -41,8 +41,8 @@ public class AdminController {
     }
 
 
-    @PostMapping("/crea-reparto")
-    public ResponseEntity<Map<String, String>> creaReparto(@RequestBody Map<String, String> payload) {
+    @PostMapping("/create-department")
+    public ResponseEntity<Map<String, String>> createDepartment(@RequestBody Map<String, String> payload) {
         String repartoNome = payload.get("repartoNome");
 
         if (repartoNome == null || repartoNome.isEmpty()) {
@@ -61,8 +61,8 @@ public class AdminController {
     }
 
 
-    @PutMapping("/assegna-capo-reparto")
-    public ResponseEntity<Map<String, String>> assegnaCapoReparto(@RequestBody Map<String, Long> payload) {
+    @PutMapping("/assign-head-of-department")
+    public ResponseEntity<Map<String, String>> assignHeadOfDepartment(@RequestBody Map<String, Long> payload) {
         Long utenteId = payload.get("utenteId");
         Long repartoId = payload.get("repartoId");
 
@@ -103,8 +103,8 @@ public class AdminController {
     }
 
 
-    @PutMapping("/assegna-dottore-reparto/{utenteId}/{repartoId}")
-    public ResponseEntity<Map<String, String>> assegnaDottoreAReparto(@PathVariable Long utenteId, @PathVariable Long repartoId) {
+    @PutMapping("/assign-doctor-to-department/{utenteId}/{repartoId}")
+    public ResponseEntity<Map<String, String>> assignDoctorToDepartment(@PathVariable Long utenteId, @PathVariable Long repartoId) {
         System.out.println("Ricevuta richiesta: Cambio reparto per dottore ID " + utenteId + " → Reparto ID " + repartoId);
 
         Optional<Utente> dottoreOpt = utenteRepository.findById(utenteId);
@@ -130,23 +130,23 @@ public class AdminController {
     }
 
 
-    @GetMapping("/dottori")
+    @GetMapping("/veterinaries")
     public ResponseEntity<List<VeterinarioDTO>> getAllVeterinaries() {
         return ResponseEntity.ok(adminService.getAllVeterinaries());
     }
 
-    @GetMapping("/reparti")
-    public ResponseEntity<List<Reparto>> getAllDepartmets() {
+    @GetMapping("/departments")
+    public ResponseEntity<List<Reparto>> getAllDepartments() {
         return ResponseEntity.ok(adminService.getAllDepartments());
     }
 
-    @GetMapping("/capo-reparti")
+    @GetMapping("/head-of-department")
     public ResponseEntity<List<VeterinarioDTO>> getHeadOfDepartments() {
         return ResponseEntity.ok(adminService.getHeadOfDepartments());
     }
 
 
-    @PostMapping("/crea-dottore")
+    @PostMapping("/create-veterinarian")
     public ResponseEntity<Map<String, String>> createVeterinarian(@RequestBody Map<String, String> payload) {
         String firstName = payload.get("firstName");
         String lastName = payload.get("lastName");
@@ -181,7 +181,7 @@ public class AdminController {
     }
 
 
-    @PostMapping("/crea-capo-reparto")
+    @PostMapping("/create-head-of-department")
     public ResponseEntity<Map<String, String>> createHeadOfDepartment(@RequestBody Map<String, String> payload) {
         System.out.println("Richiesta ricevuta: " + payload);
 
@@ -208,19 +208,19 @@ public class AdminController {
     }
 
 
-    @PostMapping("/aggiungi-farmaco")
-    public ResponseEntity<Map<String, String>> addMedicine(@RequestBody Map<String, Object> payload) {
+    @PostMapping("/add-medicinal")
+    public ResponseEntity<Map<String, String>> addMedicinal(@RequestBody Map<String, Object> payload) {
         String result = adminService.addMedicine(payload);
         return ResponseEntity.ok(Map.of("message", result));
     }
 
-    @GetMapping("/magazzini")
+    @GetMapping("/warehouse")
     public ResponseEntity<List<Magazzino>> getAllWarehouses() {
         List<Magazzino> magazzini = magazzinoRepository.findAll();
         return ResponseEntity.ok(magazzini);
     }
 
-    @GetMapping("/emergenze")
+    @GetMapping("/emergency")
     public ResponseEntity<List<Emergenza>> getEmergency(
             @RequestParam Long medicineId,
             @RequestParam Long animalId,
@@ -233,7 +233,7 @@ public class AdminController {
     }
 
 
-    @PostMapping("/crea-assistente")
+    @PostMapping("/create-assistant")
     public ResponseEntity<Map<String, String>> createAssistant(@RequestBody Map<String, Object> payload) {
 
         String firstName = (String) payload.get("firstName");
@@ -255,7 +255,7 @@ public class AdminController {
     }
 
 
-    @GetMapping("/ordini")
+    @GetMapping("/orders")
     public ResponseEntity<List<Ordine>> getOrdini() {
         return ResponseEntity.ok(adminService.getOrdini());
     }
@@ -273,27 +273,49 @@ public class AdminController {
     }
 
 
-    @PostMapping("/ordini")
+    @PostMapping("/create-order")
     public ResponseEntity<Ordine> createOrder(@RequestBody Ordine ordine) {
         Ordine nuovoOrdine = ordineService.createOrder(ordine.getSupplier(), ordine.getQuantity());
         return ResponseEntity.ok(nuovoOrdine);
     }
 
-    @GetMapping("/storico-ordini")
+    @GetMapping("/order-history")
     public List<Ordine> getOrderHistory() {
         return ordineService.getOrderHistory();
     }
 
-    @GetMapping("/ordini-in-attesa")
+    @GetMapping("/pending-order")
     public List<Ordine> getPendingOrders() {
         return ordineService.getPendingOrders();
     }
 
-    @PutMapping("/ordini/{ordineId}/stato")
-    public ResponseEntity<Ordine> aggiornaStatoOrdine(@PathVariable Long ordineId, @RequestBody Map<String, String> payload) {
+    @PutMapping("/order/{ordineId}/state")
+    public ResponseEntity<Ordine> updateOrderState(@PathVariable Long ordineId, @RequestBody Map<String, String> payload) {
         Ordine.OrderStatus nuovoStato = Ordine.OrderStatus.valueOf(payload.get("stato"));
         Ordine ordineAggiornato = ordineService.updateOrderStatus(ordineId, nuovoStato);
         return ResponseEntity.ok(ordineAggiornato);
+    }
+
+    @PutMapping("/approve-holidays/{ferieId}")
+    public ResponseEntity<Map<String, String>> approveHolidays(@PathVariable Long ferieId) {
+        String result = adminService.approveHolidays(ferieId);
+        return ResponseEntity.ok(Map.of("message", result));
+    }
+
+    @DeleteMapping("/refuse-holidays/{ferieId}")
+    public ResponseEntity<Map<String, String>> refuseHolidays(@PathVariable Long ferieId) {
+        String result = adminService.refuseHolidays(ferieId);
+        return ResponseEntity.ok(Map.of("message", result));
+    }
+
+    @GetMapping("/approved-holidays")
+    public ResponseEntity<Map<String, Object>> getApprovedHolidays() {
+        return ResponseEntity.ok(Map.of("ferie", adminService.getApprovedHolidays()));
+    }
+
+    @GetMapping("/unapproved-holidays")
+    public ResponseEntity<Map<String, Object>> getUnapprovedHolidays() {
+        return ResponseEntity.ok(Map.of("ferie", adminService.getUnapprovedHolidays()));
     }
 
 }

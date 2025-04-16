@@ -2,23 +2,30 @@ package com.vetclinic.controller;
 
 
 import com.vetclinic.models.*;
+import com.vetclinic.service.AdminService;
 import com.vetclinic.service.AssistenteService;
+import com.vetclinic.service.OrdineService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/assistente")
 public class AssistenteController {
 
     private final AssistenteService assistenteService;
+    private final AdminService adminService;
+    private final OrdineService ordineService;
 
     @Autowired
-    public AssistenteController(AssistenteService assistenteService) {
+    public AssistenteController(AssistenteService assistenteService, OrdineService ordineService, AdminService adminService) {
         this.assistenteService = assistenteService;
+        this.ordineService = ordineService;
+        this.adminService = adminService;
     }
 
 
@@ -30,6 +37,21 @@ public class AssistenteController {
             @RequestParam String reason) {
         Appuntamento appointment = assistenteService.createAppointment(animalId, veterinarianId, appointmentDate, reason);
         return ResponseEntity.ok(appointment);
+    }
+    @GetMapping("/list-order")
+    public ResponseEntity<List<Ordine>> getOrdini() {
+        return ResponseEntity.ok(adminService.getOrdini());
+    }
+
+    @PostMapping("/create-order")
+    public ResponseEntity<Ordine> createOrder(@RequestBody Ordine ordine) {
+        Ordine nuovoOrdine = ordineService.createOrder(ordine.getSupplier(), ordine.getQuantity());
+        return ResponseEntity.ok(nuovoOrdine);
+    }
+
+    @GetMapping("/order-history")
+    public List<Ordine> getOrderHistory() {
+        return ordineService.getOrderHistory();
     }
 
 
@@ -108,4 +130,22 @@ public class AssistenteController {
         return ResponseEntity.ok(assistente);
     }
 
+
+    @PostMapping("/somministra-farmaco")
+    public ResponseEntity<Map<String, String>> administerMedicine(@RequestParam Long animaleId,
+                                                                  @RequestParam Long medicineId,
+                                                                  @RequestParam int quantita,
+                                                                  @RequestParam Long veterinarianId) {
+        String result = assistenteService.administerMedicine(animaleId, medicineId, quantita, veterinarianId);
+        return ResponseEntity.ok(Map.of("message", result));
+    }
+
+    @PostMapping("/gestisci-pagamento")
+    public ResponseEntity<Map<String, String>> managePayment(@RequestParam Long clienteId,
+                                                                 @RequestParam double amount,
+                                                                 @RequestParam String paymentMethod,
+                                                                 @RequestParam String cardType) {
+        String result = assistenteService.managePayment(clienteId, amount, paymentMethod, cardType);
+        return ResponseEntity.ok(Map.of("message", result));
+    }
 }

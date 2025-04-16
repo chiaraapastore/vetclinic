@@ -1,6 +1,5 @@
 package com.vetclinic.models;
 
-
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -12,22 +11,26 @@ import java.util.Date;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name = "cronologia_animale")
-public class CronologiaPaziente {
+@Table(name = "vaccino")
+public class Vaccino {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    private String name;
+    private String type;
+    private Date administrationDate;
+
     @ManyToOne
-    @JoinColumn(name = "animal_id")
-    private Animale animal;
+    @JoinColumn(name = "animale_id")
+    private Animale animale;
 
     @ManyToOne
     @JoinColumn(name = "veterinario_id")
-    private VeterinarioDTO veterinarian;
-    private Date eventDate;
-    private String eventType;
-    private String description;
-}
+    private VeterinarioDTO veterinario;
 
+    @ManyToOne
+    @JoinColumn(name = "cronologia_animale_id")
+    private CronologiaAnimale cronologiaAnimale;
+}

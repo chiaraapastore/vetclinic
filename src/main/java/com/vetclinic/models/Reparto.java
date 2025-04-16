@@ -24,10 +24,17 @@ public class Reparto {
 
 
     @OneToOne
-    @JoinColumn(name = "capo_reparto_id", referencedColumnName = "id", unique = true)
-    @JsonManagedReference
-    @ToString.Exclude
+    @JoinColumn(name = "capo_reparto_id")
     private Utente headOfDepartment;
+
+    @ManyToOne
+    @JoinColumn(name = "assistente_id")
+    private Assistente assistente;
+
+    @OneToOne
+    @JoinColumn(name = "veterinario_id")
+    private VeterinarioDTO veterinario;
+
 
 
 }

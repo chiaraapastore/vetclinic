@@ -2,9 +2,7 @@ package com.vetclinic.service;
 
 
 import com.vetclinic.config.AuthenticationService;
-import com.vetclinic.models.Cliente;
-import com.vetclinic.models.Notifiche;
-import com.vetclinic.models.Utente;
+import com.vetclinic.models.*;
 import com.vetclinic.repository.NotificheRepository;
 import com.vetclinic.repository.UtenteRepository;
 import org.springframework.stereotype.Service;
@@ -110,6 +108,13 @@ public class NotificheService {
     }
 
     @Transactional
+    public void sendEmergencyNotificationToHeadOfDepartment(VeterinarioDTO veterinarian, Utente headOfDepartment, String description, Medicine medicine) {
+        String message = "Emergenza segnalata dal veterinario " + veterinarian.getFirstName() + " " + veterinarian.getLastName() +
+                ": " + description + ". Farmaco richiesto: " + medicine.getName() + ". Disponibilità: " + medicine.getAvailableQuantity();
+        createAndSendNotification(veterinarian, headOfDepartment, message, "emergenza");
+    }
+
+    @Transactional
     public void sendVeterinarianNotificationToDepartmentHead(Utente assistant, Utente departmentHead, String medicineName) {
         String message = "Notifica: Il farmaco " + medicineName + " sta per scadere. Notifica inviata da "
                 + assistant.getUsername() + " al Capo Reparto " + departmentHead.getUsername();
@@ -117,7 +122,7 @@ public class NotificheService {
     }
 
 
-    private void createAndSendNotification(Utente sender, Utente receiver, String message, String type) {
+    void createAndSendNotification(Utente sender, Utente receiver, String message, String type) {
         if (receiver == null) {
             return;
         }
@@ -138,11 +143,45 @@ public class NotificheService {
 
     private void sendNotificationFromAssistantToClient(Cliente client, String message, Notifiche.NotificationType type) {
 
-        Utente assistant = utenteRepository.findByUsername(authenticationService.getUsername());
-        if (assistant == null) {
-            throw new IllegalArgumentException("Assistente non trovato");
-        }
-        createAndSendNotification(assistant, client, message, type.toString());
     }
+
+    @Transactional
+    public void sendEmergencyNotificationToAssistant(VeterinarioDTO veterinarian, Utente assistant, String description, Medicine medicine) {
+
+        String message = "Emergenza: " + veterinarian.getFirstName() + " " + veterinarian.getLastName() + " ha segnalato un'emergenza per l'animale " +
+                veterinarian.getReparto().getName() + ". Descrizione: " + description + ". Farmaco coinvolto: " + medicine.getName();
+        createAndSendNotification(veterinarian, assistant, message, "emergenza");
+    }
+
+    @Transactional
+    public void sendPaymentNotificationToClient(Cliente client, Pagamento payment) {
+        String message = "Il pagamento di €" + payment.getAmount() + " per il servizio richiesto è stato completato con successo. Data del pagamento: " + payment.getPaymentDate();
+        createAndSendNotifications(client, message, "payment_confirmation");
+    }
+
+
+    @Transactional
+    public void sendPaymentNotificationToVeterinarian(VeterinarioDTO veterinarian, Pagamento payment) {
+        String message = "Il pagamento di €" + payment.getAmount() + " per l'appuntamento con il cliente " + veterinarian.getFirstName() + " " + veterinarian.getLastName() + " è stato completato con successo.";
+        createAndSendNotifications(veterinarian, message, "payment_confirmation");
+    }
+
+    private void createAndSendNotifications(Utente receiver, String message, String type) {
+        if (receiver == null) {
+            return;
+        }
+        Notifiche notification = new Notifiche();
+        notification.setMessage(message);
+        notification.setSentTo(receiver);
+        notification.setNotificationDate(new Date());
+        notification.setType(Notifiche.NotificationType.valueOf(type));
+        notification.setRead(false);
+
+        notificheRepository.save(notification);
+
+        receiver.setCountNotification(receiver.getCountNotification() + 1);
+        utenteRepository.save(receiver);
+    }
+
 
 }

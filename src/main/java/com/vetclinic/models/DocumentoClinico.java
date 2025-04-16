@@ -27,4 +27,8 @@ public class DocumentoClinico {
     @ManyToOne
     @JoinColumn(name = "veterinario_id")
     private VeterinarioDTO veterinario;
+
+    @ManyToOne
+    @JoinColumn(name = "assistente_id")
+    private Assistente assistant;
 }

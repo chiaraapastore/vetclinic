@@ -1,7 +1,9 @@
 package com.vetclinic.models;
 
 import jakarta.persistence.*;
+import lombok.Data;
 
+@Data
 @Entity
 @Table(name = "magazzino")
 public class Magazzino {
@@ -27,12 +29,6 @@ public class Magazzino {
 
     private boolean isAvailable;
 
-    public int calculateAvailableStock() {
-        return currentStock - pendingOrders + unitsToReceive;
-    }
 
-    public boolean isMedicineOutOfStock(Medicine medicine) {
-        return calculateAvailableStock() <= 0;
-    }
 
 }

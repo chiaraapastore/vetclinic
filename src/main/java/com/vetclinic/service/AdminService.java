@@ -7,10 +7,7 @@ import com.vetclinic.repository.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -20,17 +17,16 @@ public class AdminService {
     private final UtenteRepository utenteRepository;
     private final RepartoRepository repartoRepository;
     public final EmergenzaRepository emergenzaRepository;
-
+    private final FerieRepository ferieRepository;
     private final AnimaleRepository animaleRepository;
     private final MedicineRepository medicineRepository;
     private final MagazzinoRepository magazineRepository;
     private final OrdineRepository ordineRepository;
-
     private final AssistenteRepository assistenteRepository;
     private final AuthenticationService authenticationService;
     private final NotificheService notificationService;
 
-    public AdminService(UtenteRepository utenteRepository, RepartoRepository repartoRepository, AuthenticationService authenticationService, AnimaleRepository animaleRepository, AssistenteRepository assistenteRepository, MedicineRepository medicineRepository, OrdineRepository ordineRepository, MagazzinoRepository magazzinoRepository, NotificheService notificheService, EmergenzaRepository emergenzaRepository) {
+    public AdminService(UtenteRepository utenteRepository, RepartoRepository repartoRepository, FerieRepository ferieRepository, AuthenticationService authenticationService, AnimaleRepository animaleRepository, AssistenteRepository assistenteRepository, MedicineRepository medicineRepository, OrdineRepository ordineRepository, MagazzinoRepository magazzinoRepository, NotificheService notificheService, EmergenzaRepository emergenzaRepository) {
         this.repartoRepository = repartoRepository;
         this.authenticationService = authenticationService;
         this.utenteRepository = utenteRepository;
@@ -41,6 +37,7 @@ public class AdminService {
         this.ordineRepository = ordineRepository;
         this.notificationService = notificheService;
         this.emergenzaRepository = emergenzaRepository;
+        this.ferieRepository = ferieRepository;
     }
 
 
@@ -188,8 +185,7 @@ public class AdminService {
         nuovoAssistente.setFirstName(firstName);
         nuovoAssistente.setLastName(lastName);
         nuovoAssistente.setRegistrationNumber(registrationNumber);
-        nuovoAssistente.setReparto(reparto);
-
+        nuovoAssistente.setDepartment(reparto);
 
         assistenteRepository.save(nuovoAssistente);
 
@@ -226,5 +222,43 @@ public class AdminService {
         return medicineRepository.findConsumoPerReparto();
     }
 
+
+    @Transactional
+    public String approveHolidays(Long ferieId) {
+        Optional<Ferie> ferieOpt = ferieRepository.findById(ferieId);
+        if (ferieOpt.isEmpty()) {
+            return "Ferie non trovate.";
+        }
+
+        Ferie ferie = ferieOpt.get();
+        ferie.setApproved(true);
+        ferieRepository.save(ferie);
+
+        return "Ferie approvate con successo.";
+    }
+
+    @Transactional
+    public String refuseHolidays(Long ferieId) {
+        Optional<Ferie> ferieOpt = ferieRepository.findById(ferieId);
+        if (ferieOpt.isEmpty()) {
+            return "Ferie non trovate.";
+        }
+
+        ferieRepository.delete(ferieOpt.get());
+
+        return "Ferie rifiutate e cancellate.";
+    }
+
+
+    @Transactional
+    public List<Ferie> getApprovedHolidays() {
+        return ferieRepository.findByApprovedTrue();
+    }
+
+
+    @Transactional
+    public List<Ferie> getUnapprovedHolidays() {
+        return ferieRepository.findByApprovedFalse();
+    }
 
 }
