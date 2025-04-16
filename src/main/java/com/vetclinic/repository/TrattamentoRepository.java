@@ -3,11 +3,13 @@ package com.vetclinic.repository;
 import com.vetclinic.models.Animale;
 import com.vetclinic.models.Trattamento;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
+@Repository
 public interface TrattamentoRepository extends JpaRepository<Trattamento, Long> {
-    List<Trattamento> findByAnimalId(Long animalId);
+    List<Trattamento> findByAnimaleId(Long animalId);
 
-    int findByAnimal(Animale animale);
+    int findByAnimale(Animale animale);
 }

@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.Date;
+import java.util.Set;
 
 @Data
 @AllArgsConstructor
@@ -28,7 +29,7 @@ public class Esame {
 
     @ManyToOne
     @JoinColumn(name = "animale_id")
-    private Animale animal;
+    private Animale animale;
 
     @ManyToOne
     @JoinColumn(name = "cronologia_animale_id")

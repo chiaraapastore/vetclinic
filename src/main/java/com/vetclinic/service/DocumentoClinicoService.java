@@ -34,7 +34,7 @@ public class DocumentoClinicoService {
                 .orElseThrow(() -> new IllegalArgumentException("Assistente non trovato"));
 
         DocumentoClinico document = new DocumentoClinico();
-        document.setAnimal(animal);
+        document.setAnimale(animal);
         document.setVeterinario(veterinarian);
         document.setAssistant(assistant);
         document.setDocumentType(documentType);
@@ -46,12 +46,12 @@ public class DocumentoClinicoService {
 
     @Transactional
     public List<DocumentoClinico> getDocumentsByAnimal(Long animalId) {
-        return documentoClinicoRepository.findByAnimalId(animalId);
+        return documentoClinicoRepository.findByAnimaleId(animalId);
     }
 
     @Transactional
     public List<DocumentoClinico> getDocumentsByVeterinarian(Long veterinarianId) {
-        return documentoClinicoRepository.findByVeterinarianId(veterinarianId);
+        return documentoClinicoRepository.findByVeterinarioId(veterinarianId);
     }
 
     @Transactional

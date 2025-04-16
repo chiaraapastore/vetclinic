@@ -185,7 +185,7 @@ public class AdminService {
         nuovoAssistente.setFirstName(firstName);
         nuovoAssistente.setLastName(lastName);
         nuovoAssistente.setRegistrationNumber(registrationNumber);
-        nuovoAssistente.setDepartment(reparto);
+        nuovoAssistente.setReparto(reparto);
 
         assistenteRepository.save(nuovoAssistente);
 

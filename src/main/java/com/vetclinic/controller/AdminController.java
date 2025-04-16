@@ -43,18 +43,18 @@ public class AdminController {
 
     @PostMapping("/create-department")
     public ResponseEntity<Map<String, String>> createDepartment(@RequestBody Map<String, String> payload) {
-        String repartoNome = payload.get("repartoNome");
+        String repartoName = payload.get("repartoNome");
 
-        if (repartoNome == null || repartoNome.isEmpty()) {
+        if (repartoName == null || repartoName.isEmpty()) {
             return ResponseEntity.badRequest().body(Map.of("error", "Il nome del reparto è obbligatorio."));
         }
 
-        Optional<Reparto> existingReparto = repartoRepository.findFirstByNome(repartoNome);
+        Optional<Reparto> existingReparto = repartoRepository.findFirstByName(repartoName);
         if (existingReparto.isPresent()) {
             return ResponseEntity.badRequest().body(Map.of("error", "Il reparto esiste già!"));
         }
         Reparto nuovoReparto = new Reparto();
-        nuovoReparto.setName(repartoNome);
+        nuovoReparto.setName(repartoName);
         repartoRepository.save(nuovoReparto);
 
         return ResponseEntity.ok(Map.of("message", "Reparto aggiunto con successo!"));
@@ -86,7 +86,7 @@ public class AdminController {
         Utente utente = userOpt.get();
         Reparto nuovoReparto = departmentOpt.get();
 
-        Optional<Reparto> repartoAttualeOpt = repartoRepository.findByCapoReparto(utente);
+        Optional<Reparto> repartoAttualeOpt = repartoRepository.findByHeadOfDepartment(utente);
         repartoAttualeOpt.ifPresent(repartoAttuale -> {
             repartoAttuale.setHeadOfDepartment(null);
             repartoRepository.save(repartoAttuale);
@@ -151,15 +151,15 @@ public class AdminController {
         String firstName = payload.get("firstName");
         String lastName = payload.get("lastName");
         String email = payload.get("email");
-        String repartoNome = payload.get("repartoNome");
+        String repartoName = payload.get("repartoNome");
 
 
-        if (firstName == null || lastName == null || email == null || repartoNome == null ||
-                firstName.isEmpty() || lastName.isEmpty() || email.isEmpty() || repartoNome.isEmpty()) {
+        if (firstName == null || lastName == null || email == null || repartoName == null ||
+                firstName.isEmpty() || lastName.isEmpty() || email.isEmpty() || repartoName.isEmpty()) {
             return ResponseEntity.badRequest().body(Map.of("error", "Tutti i campi sono obbligatori, incluso il reparto."));
         }
 
-        Optional<Reparto> repartoOpt = repartoRepository.findFirstByNome(repartoNome);
+        Optional<Reparto> repartoOpt = repartoRepository.findFirstByName(repartoName);
         if (repartoOpt.isEmpty()) {
             return ResponseEntity.badRequest().body(Map.of("error", "Errore: Il reparto specificato non esiste."));
         }
@@ -188,17 +188,17 @@ public class AdminController {
         String firstName = payload.get("firstName");
         String lastName = payload.get("lastName");
         String email = payload.get("email");
-        String repartoNome = payload.get("repartoNome");
+        String repartoName = payload.get("repartoNome");
 
-        if (firstName == null || lastName == null || email == null || repartoNome == null ||
-                firstName.isEmpty() || lastName.isEmpty() || email.isEmpty() || repartoNome.isEmpty()) {
+        if (firstName == null || lastName == null || email == null || repartoName == null ||
+                firstName.isEmpty() || lastName.isEmpty() || email.isEmpty() || repartoName.isEmpty()) {
             System.out.println("Errore: Campi mancanti!");
             return ResponseEntity.badRequest().body(Map.of("error", "Tutti i campi sono obbligatori, incluso il reparto."));
         }
 
-        Optional<Reparto> repartoOpt = repartoRepository.findFirstByNome(repartoNome);
+        Optional<Reparto> repartoOpt = repartoRepository.findFirstByName(repartoName);
         if (repartoOpt.isEmpty()) {
-            System.out.println("Errore: Il reparto '" + repartoNome + "' non esiste!");
+            System.out.println("Errore: Il reparto '" + repartoName + "' non esiste!");
             return ResponseEntity.badRequest().body(Map.of("error", "Errore: Il reparto specificato non esiste."));
         }
 

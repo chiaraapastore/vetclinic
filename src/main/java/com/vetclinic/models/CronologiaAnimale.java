@@ -26,25 +26,24 @@ public class CronologiaAnimale {
     private String symptoms;
 
     @ManyToOne
-    @JoinColumn(name = "animal_id")
-    private Animale animal;
+    @JoinColumn(name = "animale_id")
+    private Animale animale;
 
     @ManyToOne
     @JoinColumn(name = "veterinario_id")
     private VeterinarioDTO veterinarian;
 
-    @OneToMany(mappedBy = "animale")
-    private List<Operazione> operazione;
+    @OneToMany(mappedBy = "cronologiaAnimale")
+    private Set<Operazione> operazione;
 
-    @OneToMany(mappedBy = "animale")
-    private List<Esame> esame;
+    @OneToMany(mappedBy = "cronologiaAnimale")
+    private Set<Esame> esame;
 
-    @OneToMany(mappedBy = "animale")
-    private List<Trattamento> trattamento;
+    @OneToMany(mappedBy = "cronologiaAnimale")
+    private Set<Trattamento> trattamento;
 
-    @OneToMany(mappedBy = "animale")
-    private List<Vaccino> vaccini;
-
+    @OneToMany(mappedBy = "cronologiaAnimale")
+    private Set<Vaccino> vaccini;
 
     @ManyToOne
     @JoinColumn(name = "assistente_id")

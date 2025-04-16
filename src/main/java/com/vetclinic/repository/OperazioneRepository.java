@@ -7,5 +7,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface OperazioneRepository extends JpaRepository<Operazione, Long> {
-    int findByAnimal(Animale animale);
+    int findByAnimale(Animale animale);
 }

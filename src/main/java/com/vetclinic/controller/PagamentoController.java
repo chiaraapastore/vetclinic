@@ -2,14 +2,17 @@ package com.vetclinic.controller;
 
 import com.vetclinic.models.Pagamento;
 import com.vetclinic.service.PagamentoService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
+@CrossOrigin(origins = "http://localhost:4200")
 @RequestMapping("/api/pagamenti")
 public class PagamentoController {
 
     private final PagamentoService pagamentoService;
+
 
     public PagamentoController(PagamentoService pagamentoService) {
         this.pagamentoService = pagamentoService;

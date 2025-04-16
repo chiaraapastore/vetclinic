@@ -54,7 +54,7 @@ public class NotificheService {
         if (user == null) {
             throw new IllegalArgumentException("Assistente non trovato");
         }
-        List<Notifiche> unreadNotifications = notificheRepository.findByReceiverIdAndLettaFalse(user.getId());
+        List<Notifiche> unreadNotifications = notificheRepository.findBySentToIdAndIsReadFalse(user.getId());
 
         if (!unreadNotifications.isEmpty()) {
 
@@ -65,7 +65,7 @@ public class NotificheService {
             utenteRepository.save(user);
         }
 
-        return notificheRepository.findByReceiverId(user.getId());
+        return notificheRepository.findBySentToId(user.getId());
     }
 
     @Transactional
@@ -181,6 +181,35 @@ public class NotificheService {
 
         receiver.setCountNotification(receiver.getCountNotification() + 1);
         utenteRepository.save(receiver);
+    }
+
+
+    @Transactional
+
+    public void sendNotificationAnomalia(String referenzaId, String tipoAnomalia) {
+        String message = "Anomalia rilevata per la referenza ID: " + referenzaId + " - Tipo: " + tipoAnomalia;
+
+        Utente sender = utenteRepository.findByUsername(authenticationService.getUsername());
+        if (sender == null) {
+            throw new IllegalArgumentException("Assistente non trovato");
+        }
+
+
+        Utente veterinarian = utenteRepository.findByDepartmentId(sender.getReparto().getId()).stream()
+                .filter(utente -> utente instanceof VeterinarioDTO)
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("Veterinario non trovato"));
+
+        createAndSendNotification(sender, veterinarian, message, "anomalia");
+
+        Utente headOfDepartment = utenteRepository.findByDepartmentId(veterinarian.getReparto().getId()).stream()
+                .filter(utente -> utente.getRole().equals("capo-reparto"))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("Capo reparto non trovato"));
+
+        createAndSendNotification(veterinarian, headOfDepartment, message, "anomalia");
+
+
     }
 
 

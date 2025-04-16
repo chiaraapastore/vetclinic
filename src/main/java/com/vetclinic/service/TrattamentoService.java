@@ -2,6 +2,7 @@ package com.vetclinic.service;
 
 import com.vetclinic.models.Trattamento;
 import com.vetclinic.repository.TrattamentoRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -15,10 +16,12 @@ public class TrattamentoService {
         this.treatmentRepository = treatmentRepository;
     }
 
+    @Transactional
     public List<Trattamento> getTreatmentsByAnimal(Long animalId) {
-        return treatmentRepository.findByAnimalId(animalId);
+        return treatmentRepository.findByAnimaleId(animalId);
     }
 
+    @Transactional
     public Trattamento addTreatment(Trattamento treatment) {
         return treatmentRepository.save(treatment);
     }

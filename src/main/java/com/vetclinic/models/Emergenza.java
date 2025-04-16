@@ -35,12 +35,6 @@ public class Emergenza {
     private Medicine medicine;
 
     private String dosage;
-
-    public boolean isMedicineStockCritical() {
-        if (medicine != null && medicine.getAvailableQuantity() <= 0) {
-            return true;
-        }
-        return false;
-    }
+    
 }
 

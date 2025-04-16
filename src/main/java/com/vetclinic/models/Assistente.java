@@ -9,7 +9,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name = "assistente")
 public class Assistente extends Utente {
 
     @Id
@@ -24,9 +23,6 @@ public class Assistente extends Utente {
 
     private String registrationNumber;
 
-    @ManyToOne
-    @JoinColumn(name = "reparto_id")
-    private Reparto department;
 
 
 }

@@ -60,6 +60,7 @@ public class MedicineService {
         medicineRepository.deleteById(id);
     }
 
+    @Transactional
     public List<Medicine> getAvailableMedicines() {
         return medicineRepository.findByQuantityGreaterThan(0);
     }

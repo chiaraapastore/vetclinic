@@ -36,6 +36,7 @@ public class Medicine {
 
     private int unitsToReceive;
 
+    @Column(name = "available_quantity")
     private int availableQuantity;
 
     @ManyToOne
@@ -53,8 +54,5 @@ public class Medicine {
     @JoinColumn(name = "magazzino_id")
     private Magazzino magazzino;
 
-    public void updateAvailableQuantity(int quantity) {
-        this.availableQuantity += quantity;
-    }
 
 }

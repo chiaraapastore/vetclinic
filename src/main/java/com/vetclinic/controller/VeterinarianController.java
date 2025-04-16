@@ -94,7 +94,7 @@ public class VeterinarianController {
     public ResponseEntity<List<VeterinarioDTO>> getVeterinariesByDepartment(@PathVariable Long departmentId) {
         List<VeterinarioDTO> dottori = veterinarianService.getVeterinariesByDepartment(departmentId).stream()
                 .map(dottore -> new VeterinarioDTO(dottore.getId(), dottore.getFirstName(),
-                        dottore.getLastName(), dottore.getEmail(), dottore.getRegistrationNumber(), dottore.getRepartoNome()))
+                        dottore.getLastName(), dottore.getEmail(), dottore.getRegistrationNumber(), dottore.getReparto().getName()))
                 .collect(Collectors.toList());
         if (dottori.isEmpty()) {
             return ResponseEntity.notFound().build();

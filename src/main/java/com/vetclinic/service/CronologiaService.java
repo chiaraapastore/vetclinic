@@ -6,9 +6,7 @@ import com.vetclinic.repository.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Date;
+import java.util.*;
 
 @Service
 public class CronologiaService {
@@ -53,7 +51,7 @@ public class CronologiaService {
         }
 
         CronologiaAnimale cronologiaPaziente = new CronologiaAnimale();
-        cronologiaPaziente.setAnimal(animale);
+        cronologiaPaziente.setAnimale(animale);
         cronologiaPaziente.setAssistant((Assistente) assistente);
         cronologiaPaziente.setVeterinarian((VeterinarioDTO) veterinario);
         cronologiaPaziente.setEventDate(new Date());
@@ -75,14 +73,17 @@ public class CronologiaService {
             throw new RuntimeException("Questo animale non appartiene al cliente.");
         }
 
-        List<Operazione> operations = new ArrayList<>(operazioneRepository.findByAnimal(animale));
-        List<Esame> exams = new ArrayList<>(esameRepository.findByAnimal(animale));
-        List<Trattamento> treatments = new ArrayList<>(trattamentoRepository.findByAnimal(animale));
-        List<Vaccino> vaccinations = new ArrayList<>(vaccinoRepository.findByAnimale(animale));
-
+        List<Operazione> listOperations = new ArrayList<>(operazioneRepository.findByAnimale(animale));
+        List<Trattamento> listTreatments = new ArrayList<>(trattamentoRepository.findByAnimale(animale));
+        List<Vaccino> listVaccinations = new ArrayList<>(vaccinoRepository.findByAnimale(animale));
+        List<Esame> examsList = esameRepository.findByAnimale(animale);
+        Set<Esame> exams = new HashSet<>(examsList);
+        Set<Operazione> operations = new HashSet<>(listOperations);
+        Set<Trattamento> treatments = new HashSet<>(listTreatments );
+        Set<Vaccino>vaccinations = new HashSet<>(listVaccinations);
 
         CronologiaAnimale cronologia = new CronologiaAnimale();
-        cronologia.setAnimal(animale);
+        cronologia.setAnimale(animale);
         cronologia.setCliente(cliente);
 
 

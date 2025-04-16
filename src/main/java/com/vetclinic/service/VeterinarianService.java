@@ -171,7 +171,7 @@ public class VeterinarianService {
             throw new IllegalArgumentException("Dottore non trovato");
         }
 
-        List<Animale> animali = animaleRepository.findByVeterinarian(veterinarian);
+        List<Animale> animali = animaleRepository.findByVeterinario(veterinarian);
         System.out.println("Pazienti del dottore " + username + ": " + animali);
         return animali;
     }
@@ -196,7 +196,7 @@ public class VeterinarianService {
                         dottore.getLastName(),
                         dottore.getEmail(),
                         dottore.getRegistrationNumber(),
-                        dottore.getRepartoNome()
+                        dottore.getReparto().getName()
                 ))
                 .collect(Collectors.toList());
     }

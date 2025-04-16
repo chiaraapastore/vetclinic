@@ -3,13 +3,11 @@ package com.vetclinic.models;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 
-@Data
+@Setter
+@Getter
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
@@ -44,10 +42,6 @@ public class Utente {
     @JoinColumn(name = "reparto_id", referencedColumnName = "id")
     private Reparto reparto;
 
-    @Transient
-    public String getRepartoNome() {
-        return reparto != null ? reparto.getName() : "Nessun reparto assegnato";
-    }
 
     @ManyToOne
     @JoinColumn(name = "cliente_id")

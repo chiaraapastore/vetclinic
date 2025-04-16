@@ -63,7 +63,7 @@ public class PagamentoService {
 
 
         Fattura invoice = new Fattura();
-        invoice.setClient((Cliente) client);
+        invoice.setCliente((Cliente) client);
         invoice.setIssueDate(new java.util.Date());
         invoice.setAmount(amount);
         invoice.setStatus("PENDING");

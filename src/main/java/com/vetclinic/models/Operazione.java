@@ -18,7 +18,7 @@ public class Operazione {
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "animale_id")
+    @JoinColumn(name = "animal_id")
     private Animale animale;
 
     @ManyToOne
@@ -26,7 +26,7 @@ public class Operazione {
     private Utente veterinario;
 
     @ManyToOne
-    @JoinColumn(name = "cronologia_animale_id")
+    @JoinColumn(name = "animale_id")
     private CronologiaAnimale cronologiaAnimale;
 
     private String tipoOperazione;

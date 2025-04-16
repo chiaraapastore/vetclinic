@@ -22,17 +22,19 @@ public class SomministrazioneService {
     private final AnimaleRepository animaleRepository;
     private final UtenteRepository utenteRepository;
     private final AuthenticationService authenticationService;
+    private final NotificheService notificheService;
 
     public SomministrazioneService(SomministrazioneRepository somministrazioneRepository,
                                    MagazzinoService magazzinoService,
                                    AnimaleRepository animaleRepository,
                                    UtenteRepository utenteRepository,
-                                   AuthenticationService authenticationService) {
+                                   AuthenticationService authenticationService, NotificheService notificheService) {
         this.magazzinoService = magazzinoService;
         this.somministrazioneRepository = somministrazioneRepository;
         this.animaleRepository = animaleRepository;
         this.utenteRepository = utenteRepository;
         this.authenticationService = authenticationService;
+        this.notificheService = notificheService;
     }
 
     @Transactional
@@ -58,8 +60,10 @@ public class SomministrazioneService {
         return somministrazioneRepository.save(somministrazione);
     }
 
+    @Transactional
     public void notificaAnomalie(String referenzaId, String tipoAnomalia) {
         System.out.println("Notifica Anomalia - Referenza: " + referenzaId + ", Tipo: " + tipoAnomalia);
+        notificheService.sendNotificationAnomalia(referenzaId, tipoAnomalia);
     }
 
     @Transactional

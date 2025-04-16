@@ -21,12 +21,12 @@ public class DocumentoClinico {
     private String documentName;
     private String documentPath;
     @ManyToOne
-    @JoinColumn(name = "animal_id")
-    private Animale animal;
+    @JoinColumn(name = "animale_id")
+    private Animale animale;
 
     @ManyToOne
     @JoinColumn(name = "veterinario_id")
-    private VeterinarioDTO veterinario;
+    private Utente veterinario;
 
     @ManyToOne
     @JoinColumn(name = "assistente_id")

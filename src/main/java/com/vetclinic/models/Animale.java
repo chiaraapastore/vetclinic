@@ -69,6 +69,11 @@ public class Animale {
         @OneToMany(mappedBy = "animale")
         private Set<Trattamento> trattamento;
 
+        @ManyToOne
+        @JoinColumn(name = "veterinario_id")
+        private VeterinarioDTO veterinario;
+
+
 
 
 }

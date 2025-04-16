@@ -82,6 +82,7 @@ public class UtenteService {
     }
 
 
+    @Transactional
     public String uploadProfileImage(Long id, MultipartFile file) throws IOException {
         Utente utente = utenteRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Utente non trovato con ID: " + id));

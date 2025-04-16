@@ -26,9 +26,7 @@ public class VeterinarioDTO extends Utente {
         private boolean available;
         private boolean isDepartmentHead;
 
-        @ManyToOne
-        @JoinColumn(name = "reparto_id")
-        private Reparto department;
+
 
         public VeterinarioDTO(Long id, String firstName, String lastName, String email, String registrationNumber, String departmentName) {
                 this.id = id;

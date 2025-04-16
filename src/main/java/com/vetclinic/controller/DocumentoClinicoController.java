@@ -58,7 +58,7 @@ public class DocumentoClinicoController {
     public ResponseEntity<byte[]> downloadDocumentAndInvoicePdf(
             @PathVariable Long clienteId, @PathVariable Long animaleId) throws DocumentException {
 
-        byte[] pdfBytes = animaleService.generateDocumentoClinicoAndFatturaPdf(clienteId, animaleId);
+        byte[] pdfBytes = animaleService.generateDocumentoClinicoAndFatturaPdf(animaleId);
 
         return ResponseEntity.ok()
                 .header("Content-Disposition", "attachment; filename=documento_clinico_e_fattura.pdf")

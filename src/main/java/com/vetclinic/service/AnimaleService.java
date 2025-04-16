@@ -76,13 +76,13 @@ public class AnimaleService {
     }
 
     @Transactional
-    public byte[] generateDocumentoClinicoAndFatturaPdf(Long clienteId, Long animaleId) throws DocumentException {
+    public byte[] generateDocumentoClinicoAndFatturaPdf(Long animaleId) throws DocumentException {
         Animale animale = animaleRepository.findById(animaleId)
                 .orElseThrow(() -> new RuntimeException("Animale non trovato"));
 
         Cliente cliente = animale.getCliente();
 
-        Fattura fattura = fatturaRepository.findByClienteId(clienteId)
+        Fattura fattura = fatturaRepository.findByCliente(cliente)
                 .orElseThrow(() -> new RuntimeException("Fattura non trovata per il cliente"));
 
 

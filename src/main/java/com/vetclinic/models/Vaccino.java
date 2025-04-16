@@ -23,7 +23,7 @@ public class Vaccino {
     private Date administrationDate;
 
     @ManyToOne
-    @JoinColumn(name = "animale_id")
+    @JoinColumn(name = "animal_id")
     private Animale animale;
 
     @ManyToOne
@@ -31,6 +31,6 @@ public class Vaccino {
     private VeterinarioDTO veterinario;
 
     @ManyToOne
-    @JoinColumn(name = "cronologia_animale_id")
+    @JoinColumn(name = "animale_id")
     private CronologiaAnimale cronologiaAnimale;
 }

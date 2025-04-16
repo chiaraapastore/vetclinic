@@ -29,10 +29,10 @@ public class Trattamento {
     private Date endDate;
 
     @ManyToOne
-    @JoinColumn(name = "animale_id")
+    @JoinColumn(name = "animal_id")
     private Animale animale;
 
     @ManyToOne
-    @JoinColumn(name = "cronologia_animale_id")
+    @JoinColumn(name = "animale_id")
     private CronologiaAnimale cronologiaAnimale;
 }

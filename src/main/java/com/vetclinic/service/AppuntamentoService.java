@@ -5,6 +5,7 @@ import com.vetclinic.models.Appuntamento;
 import com.vetclinic.models.Utente;
 import com.vetclinic.repository.AppuntamentoRepository;
 import com.vetclinic.repository.UtenteRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -18,13 +19,13 @@ public class AppuntamentoService {
     private final UtenteRepository utenteRepository;
     private final AuthenticationService authenticationService;
 
-    @Autowired
     public AppuntamentoService(AppuntamentoRepository appuntamentoRepository, UtenteRepository utenteRepository, AuthenticationService authenticationService) {
         this.authenticationService = authenticationService;
         this.appuntamentoRepository = appuntamentoRepository;
         this.utenteRepository = utenteRepository;
     }
 
+    @Transactional
     public Appuntamento createAppointment(Appuntamento appuntamento) {
         Utente authenticatedUtente = utenteRepository.findByUsername(authenticationService.getUsername());
         if (authenticatedUtente == null) {
@@ -33,6 +34,7 @@ public class AppuntamentoService {
         return appuntamentoRepository.save(appuntamento);
     }
 
+    @Transactional
     public Optional<Appuntamento> getAppointmentById(Long id) {
         Utente authenticatedUtente = utenteRepository.findByUsername(authenticationService.getUsername());
         if (authenticatedUtente == null) {
@@ -41,6 +43,7 @@ public class AppuntamentoService {
         return appuntamentoRepository.findById(id);
     }
 
+    @Transactional
     public List<Appuntamento> getAppointmentsByAnimal(Long animalId) {
         Utente authenticatedUtente = utenteRepository.findByUsername(authenticationService.getUsername());
         if (authenticatedUtente == null) {
@@ -49,6 +52,7 @@ public class AppuntamentoService {
         return appuntamentoRepository.findByAnimalId(animalId);
     }
 
+    @Transactional
     public List<Appuntamento> getAppointmentsByVeterinarian(Long veterinarianId) {
         Utente authenticatedUtente = utenteRepository.findByUsername(authenticationService.getUsername());
         if (authenticatedUtente == null) {
@@ -57,6 +61,7 @@ public class AppuntamentoService {
         return appuntamentoRepository.findByVeterinarianId(veterinarianId);
     }
 
+    @Transactional
     public Appuntamento updateAppointment(Long id, Appuntamento appuntamentoDetails) {
         Utente authenticatedUtente = utenteRepository.findByUsername(authenticationService.getUsername());
         if (authenticatedUtente == null) {
@@ -71,6 +76,7 @@ public class AppuntamentoService {
         return appuntamentoRepository.save(appuntamento);
     }
 
+    @Transactional
     public void deleteAppointment(Long id) {
         Utente authenticatedUtente = utenteRepository.findByUsername(authenticationService.getUsername());
         if (authenticatedUtente == null) {

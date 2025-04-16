@@ -82,6 +82,7 @@ public class CapoRepartoService {
         return "Medicinale " + medicine.getName() + " aggiunto con successo al reparto " + reparto.getName();
     }
 
+    @Transactional
     public String addHolidaysForReparto(Long utenteId, LocalDate startDate, LocalDate endDate) {
         Optional<Utente> utenteOpt = utenteRepository.findById(utenteId);
         if (utenteOpt.isEmpty()) {

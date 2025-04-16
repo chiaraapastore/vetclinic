@@ -9,9 +9,9 @@ import java.util.List;
 @Repository
 public interface DocumentoClinicoRepository extends JpaRepository<DocumentoClinico, Long> {
 
-    List<DocumentoClinico> findByAnimalId(Long animalId);
+    List<DocumentoClinico> findByAnimaleId(Long animalId);
 
-    List<DocumentoClinico> findByVeterinarianId(Long veterinarioId);
+    List<DocumentoClinico> findByVeterinarioId(Long veterinarioId);
 
     List<DocumentoClinico> findByAssistantId(Long assistenteId);
 }

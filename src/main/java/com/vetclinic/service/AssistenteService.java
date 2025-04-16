@@ -6,7 +6,7 @@ import com.vetclinic.repository.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
+
 import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
@@ -53,12 +53,12 @@ public class AssistenteService {
         Animale animal = pazienteRepository.findById(animalId)
                 .orElseThrow(() -> new IllegalArgumentException("Animale non trovato"));
 
-        VeterinarioDTO veterinarian = utenteRepository.findByVeterinarianId(veterinarianId)
+        Utente veterinarian = utenteRepository.findByVeterinarianId(veterinarianId)
                 .orElseThrow(() -> new IllegalArgumentException("Veterinario non trovato"));
 
         Appuntamento appointment = new Appuntamento();
         appointment.setAnimal(animal);
-        appointment.setVeterinarian(veterinarian);
+        appointment.setVeterinarian((VeterinarioDTO) veterinarian);
         appointment.setAppointmentDate(appointmentDate);
         appointment.setReason(reason);
 
@@ -121,7 +121,7 @@ public class AssistenteService {
         if (veterinarian == null) {
             throw new IllegalArgumentException("Veterinario non trovato");
         }
-        return pazienteRepository.findByVeterinarian(veterinarian);
+        return pazienteRepository.findByVeterinario(veterinarian);
     }
 
 
@@ -159,7 +159,7 @@ public class AssistenteService {
                     veterinarianDTO.setRegistrationNumber(veterinarian.getRegistrationNumber());
                     veterinarianDTO.setSpecialization(((VeterinarioDTO) veterinarian).getSpecialization());
                     veterinarianDTO.setAvailable(((VeterinarioDTO) veterinarian).isAvailable());
-                    veterinarianDTO.setDepartment(veterinarian.getReparto());
+                    veterinarianDTO.setReparto(veterinarian.getReparto());
                     return veterinarianDTO;
                 })
                 .collect(Collectors.toList());
@@ -210,7 +210,7 @@ public class AssistenteService {
 
 
         Fattura fattura = new Fattura();
-        fattura.setClient(cliente);
+        fattura.setCliente(cliente);
         fattura.setIssueDate(new Date());
         fattura.setAmount(amount);
         fattura.setStatus("PENDING");

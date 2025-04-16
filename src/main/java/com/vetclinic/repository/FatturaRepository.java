@@ -10,5 +10,5 @@ import java.util.Optional;
 @Repository
 public interface FatturaRepository extends JpaRepository<Fattura, Long> {
 
-    Optional<Fattura> findByClienteId(Long clienteId);
+    Optional<Fattura> findByCliente(Cliente cliente);
 }

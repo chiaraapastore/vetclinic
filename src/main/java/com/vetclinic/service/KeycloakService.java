@@ -13,6 +13,7 @@ import org.keycloak.representations.idm.RoleRepresentation;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
@@ -39,6 +40,7 @@ public class KeycloakService {
     @Value("${keycloak.admin.realm}")
     private String realm;
 
+    @Transactional
     public String authenticate(String username, String password) {
         TokenRequest tokenRequest = new TokenRequest(username, password, clientId, clientSecret, "password");
         ResponseEntity<Object> responseEntity = keycloakClient.getAccessToken(tokenRequest);
@@ -52,6 +54,7 @@ public class KeycloakService {
         }
     }
 
+    @Transactional
     public ResponseEntity<Utente> createUser(Utente utente) {
         if (utenteRepository.findByUsername(utente.getUsername()) != null) {
             throw new RuntimeException("Utente con username '" + utente.getUsername() + "' già esistente.");
