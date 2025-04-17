@@ -1,59 +1,99 @@
-version: '3.8'
+#version: '3.8'
+#
+#services:
+#  keycloak_vetclinic:
+#    container_name: vetclinic-container
+#    image: quay.io/keycloak/keycloak:22.0.3
+#    command: start-dev
+#    environment:
+#      KC_HOSTNAME: localhost
+#      KC_HOSTNAME_PORT: 8080
+#      KC_HOSTNAME_STRICT_BACKCHANNEL: 'false'
+#      KC_HTTP_ENABLED: 'true'
+#      KC_HOSTNAME_STRICT_HTTPS: 'false'
+#      KC_HEALTH_ENABLED: 'true'
+#
+#
+#      KEYCLOAK_ADMIN: admin
+#      KEYCLOAK_ADMIN_PASSWORD: admin
+#      KC_HOSTNAME_ADMIN_URL: "http://localhost:8080"
+#
+#
+#      KC_DB: postgres
+#      KC_DB_URL_HOST: postgres_keycloak_vetclinic
+#      KC_DB_URL_DATABASE: vetclinic
+#      KC_DB_URL_USERNAME: keycloak
+#      KC_DB_PASSWORD: password
+#      KC_DB_SCHEMA: public
+#
+#    ports:
+#      - "8080:8080"
+#    restart: always
+#    depends_on:
+#      postgres_keycloak_vetclinic:
+#        condition: service_healthy
+#    networks:
+#      - keycloak_vetclinic_dev_network
+#
+#  postgres_keycloak_vetclinic:
+#    image: postgres:16
+#    command: postgres -c 'max_connections=200'
+#    volumes:
+#      - /var/lib/postgresql/data
+#    environment:
+#      POSTGRES_DB: vetclinic
+#      POSTGRES_USER: keycloak
+#      POSTGRES_PASSWORD: password
+#    healthcheck:
+#      test: "exit 0"
+#    ports:
+#      - "5432:5432"
+#    networks:
+#      - keycloak_vetclinic_dev_network
+#
+#volumes:
+#  pgdata_keycloak_vetclinic:
+#
+#networks:
+#  keycloak_vetclinic_dev_network:
+#    driver: bridge
+
+version: '3'
+
+volumes:
+  keycloak-data:
+    driver: local
 
 services:
-  keycloak_vetclinic:
-    container_name: vetclinic-container
-    image: quay.io/keycloak/keycloak:22.0.3
-    command: start-dev
-    environment:
-      KC_HOSTNAME: localhost
-      KC_HOSTNAME_PORT: 8080
-      KC_HOSTNAME_STRICT_BACKCHANNEL: 'false'
-      KC_HTTP_ENABLED: 'true'
-      KC_HOSTNAME_STRICT_HTTPS: 'false'
-      KC_HEALTH_ENABLED: 'true'
-
-
-      KEYCLOAK_ADMIN: admin
-      KEYCLOAK_ADMIN_PASSWORD: admin
-      KC_HOSTNAME_ADMIN_URL: "http://localhost:8080"
-
-
-      KC_DB: postgres
-      KC_DB_URL_HOST: postgres_keycloak_vetclinic
-      KC_DB_URL_DATABASE: vetclinic
-      KC_DB_URL_USERNAME: keycloak
-      KC_DB_PASSWORD: password
-      KC_DB_SCHEMA: public
-
-    ports:
-      - "8080:8080"
-    restart: always
-    depends_on:
-      postgres_keycloak_vetclinic:
-        condition: service_healthy
-    networks:
-      - keycloak_vetclinic_dev_network
-
-  postgres_keycloak_vetclinic:
-    image: postgres:16
-    command: postgres -c 'max_connections=200'
+  postgres:
+    image: postgres:latest
     volumes:
       - /var/lib/postgresql/data
     environment:
       POSTGRES_DB: vetclinic
       POSTGRES_USER: keycloak
       POSTGRES_PASSWORD: password
-    healthcheck:
-      test: "exit 0"
+
+  keycloak:
+    build: .
+    container_name: vetclinic-container
+    environment:
+      KC_HOSTNAME_STRICT: 'false'
+      KC_HOSTNAME_STRICT_HTTPS: 'false'
+      KC_HTTP_ENABLED: 'true'
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_HEALTH_ENABLED: 'true'
+      KC_METRICS_ENABLED: 'true'
+      KC_HOSTNAME: localhost
+      PROXY_ADDRESS_FORWARDING: "true"
+    command:
+      - "-v"
+      - "start"
+      - "--optimized"
     ports:
-      - "5432:5432"
-    networks:
-      - keycloak_vetclinic_dev_network
+      - "8080:8080"
+      - "8443:8443"
+    depends_on:
+      - postgres
 
-volumes:
-  pgdata_keycloak_vetclinic:
-
-networks:
-  keycloak_vetclinic_dev_network:
-    driver: bridge

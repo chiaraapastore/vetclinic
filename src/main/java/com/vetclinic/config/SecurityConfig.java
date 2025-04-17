@@ -32,11 +32,11 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers("/api/**").authenticated()
-                        .requestMatchers("/api/utente/login", "/api/utente/register").permitAll()
-                        .requestMatchers("/api/utente/user-info").authenticated()
-                        .requestMatchers("/api/veterinarian/**").authenticated()
-                        .anyRequest().permitAll()
+                .requestMatchers("/api/utente/login", "/api/utente/register").permitAll()
+                .requestMatchers("/api/utente/user-info").authenticated()
+                .requestMatchers("/api/veterinarian/**").authenticated()
+                .requestMatchers("/api/**").authenticated()
+                .anyRequest().permitAll()
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .oauth2ResourceServer(oauth2 -> oauth2

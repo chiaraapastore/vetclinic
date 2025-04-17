@@ -52,4 +52,6 @@ public interface KeycloakClient {
             @RequestHeader("Authorization") String accessToken,
             @PathVariable("id") String userId,
             @RequestBody List<RoleRepresentation> roles);
+
+
 }

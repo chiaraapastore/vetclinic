@@ -12,7 +12,7 @@ import java.util.Set;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name = "paziente")
+@Table(name = "animale")
 
 public class Animale {
 

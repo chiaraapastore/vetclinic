@@ -171,10 +171,13 @@ public class AdminController {
         dottore.setFirstName(firstName);
         dottore.setLastName(lastName);
         dottore.setEmail(email);
-        dottore.setRole("dottore");
+        dottore.setRole("veterinario");
         dottore.setReparto(reparto);
 
         utenteRepository.save(dottore);
+
+
+
 
         return ResponseEntity.ok(Map.of("message", "Dottore creato con successo e assegnato al reparto " + reparto.getName()));
 
