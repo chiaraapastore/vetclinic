@@ -2,13 +2,9 @@ package com.vetclinic.controller;
 
 
 import com.vetclinic.models.*;
-import com.vetclinic.repository.EmergenzaRepository;
-import com.vetclinic.repository.MagazzinoRepository;
-import com.vetclinic.repository.RepartoRepository;
-import com.vetclinic.repository.UtenteRepository;
-import com.vetclinic.service.AdminService;
-import com.vetclinic.service.KeycloakService;
-import com.vetclinic.service.OrdineService;
+import com.vetclinic.repository.*;
+import com.vetclinic.service.*;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -29,8 +25,10 @@ public class AdminController {
     private final MagazzinoRepository magazzinoRepository;
     private final EmergenzaRepository emergenzaRepository;
     private final OrdineService ordineService;
+    private final AnimaleService animaleService;
+    private final ClienteRepository clienteRepository;
 
-    public AdminController(AdminService adminService, RepartoRepository repartoRepository, UtenteRepository utenteRepository, EmergenzaRepository emergenzaRepository, KeycloakService keycloakService , OrdineService ordineService, MagazzinoRepository magazzinoRepository) {
+    public AdminController(AdminService adminService, ClienteRepository   clienteRepository,RepartoRepository repartoRepository, UtenteRepository utenteRepository, EmergenzaRepository emergenzaRepository, KeycloakService keycloakService , OrdineService ordineService, MagazzinoRepository magazzinoRepository, AnimaleService animaleService) {
         this.adminService = adminService;
         this.repartoRepository = repartoRepository;
         this.utenteRepository = utenteRepository;
@@ -38,6 +36,8 @@ public class AdminController {
         this.emergenzaRepository = emergenzaRepository;
         this.magazzinoRepository = magazzinoRepository;
         this.ordineService = ordineService;
+        this.animaleService = animaleService;
+        this.clienteRepository = clienteRepository;
     }
 
 
@@ -61,7 +61,7 @@ public class AdminController {
     }
 
 
-    @PutMapping("/assign-head-of-department")
+    @PostMapping("/assign-head-of-department")
     public ResponseEntity<Map<String, String>> assignHeadOfDepartment(@RequestBody Map<String, Long> payload) {
         Long utenteId = payload.get("utenteId");
         Long repartoId = payload.get("repartoId");
@@ -103,7 +103,7 @@ public class AdminController {
     }
 
 
-    @PutMapping("/assign-doctor-to-department/{utenteId}/{repartoId}")
+    @PostMapping("/assign-doctor-to-department/{utenteId}/{repartoId}")
     public ResponseEntity<Map<String, String>> assignDoctorToDepartment(@PathVariable Long utenteId, @PathVariable Long repartoId) {
         System.out.println("Ricevuta richiesta: Cambio reparto per dottore ID " + utenteId + " → Reparto ID " + repartoId);
 
@@ -121,6 +121,20 @@ public class AdminController {
         Utente dottore = dottoreOpt.get();
         Reparto reparto = repartoOpt.get();
 
+
+        if (dottore instanceof Veterinario) {
+            Veterinario veterinario = (Veterinario) dottore;
+
+
+            if (reparto.getVeterinario() == null) {
+                reparto.setVeterinario(veterinario);
+                repartoRepository.save(reparto);
+            }
+        } else {
+            return ResponseEntity.badRequest().body(Map.of("error", "L'utente non è un veterinario."));
+        }
+
+
         dottore.setReparto(reparto);
         utenteRepository.saveAndFlush(dottore);
 
@@ -130,8 +144,66 @@ public class AdminController {
     }
 
 
+
+
+    @PostMapping("/assign-assistant-to-department/{utenteId}/{repartoId}")
+    public ResponseEntity<Map<String, String>> assignAssistantToDepartment(@PathVariable Long utenteId, @PathVariable Long repartoId) {
+        System.out.println("Ricevuta richiesta: Cambio reparto per assistente ID " + utenteId + " → Reparto ID " + repartoId);
+
+        try {
+            String message = adminService.assignAssistantToDepartment(utenteId, repartoId);
+            return ResponseEntity.ok(Map.of("message", message));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+
+
+    @PostMapping("/create-animale")
+    public ResponseEntity<Map<String, String>> createAnimalForClient(@RequestBody Map<String, Object> payload) {
+        String result = animaleService.createAnimalForClient(payload);
+        return ResponseEntity.ok(Map.of("message", result));
+    }
+
+    @PostMapping("/create-cliente")
+    public ResponseEntity<Object> createCliente(@RequestBody Map<String, String> payload) {
+        String username= payload.get("username");
+        String firstName = payload.get("firstName");
+        String lastName = payload.get("lastName");
+        String email = payload.get("email");
+        String phoneNumber = payload.get("phoneNumber");
+        String address = payload.get("address");
+
+        if (firstName == null || lastName == null || email == null ||
+                phoneNumber == null || address == null ||
+                firstName.isEmpty() || lastName.isEmpty() || email.isEmpty() || phoneNumber.isEmpty() || address.isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Tutti i campi sono obbligatori."));
+        }
+
+        Cliente cliente = new Cliente();
+        cliente.setFirstName(firstName);
+        cliente.setLastName(lastName);
+        cliente.setEmail(email);
+        cliente.setPhoneNumber(phoneNumber);
+        cliente.setAddress(address);
+        cliente.setUsername(username);
+        cliente.setRole("cliente");
+
+        try {
+            keycloakService.createUser(cliente);
+            clienteRepository.save(cliente);
+            return ResponseEntity.ok(Map.of("message", "Cliente creato con successo!"));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", e.getMessage()));
+        }
+
+    }
+
+
+
     @GetMapping("/veterinaries")
-    public ResponseEntity<List<VeterinarioDTO>> getAllVeterinaries() {
+    public ResponseEntity<List<Veterinario>> getAllVeterinaries() {
         return ResponseEntity.ok(adminService.getAllVeterinaries());
     }
 
@@ -141,14 +213,16 @@ public class AdminController {
     }
 
     @GetMapping("/head-of-department")
-    public ResponseEntity<List<VeterinarioDTO>> getHeadOfDepartments() {
+    public ResponseEntity<List<Veterinario>> getHeadOfDepartments() {
         return ResponseEntity.ok(adminService.getHeadOfDepartments());
     }
 
 
     @PostMapping("/create-veterinarian")
     public ResponseEntity<Map<String, String>> createVeterinarian(@RequestBody Map<String, String> payload) {
+        String username= payload.get("username");
         String firstName = payload.get("firstName");
+        String registration_number = payload.get("registration_number");
         String lastName = payload.get("lastName");
         String email = payload.get("email");
         String repartoName = payload.get("repartoNome");
@@ -169,14 +243,15 @@ public class AdminController {
 
         Utente dottore = new Utente();
         dottore.setFirstName(firstName);
+        dottore.setRegistrationNumber(registration_number);
         dottore.setLastName(lastName);
         dottore.setEmail(email);
         dottore.setRole("veterinario");
+        dottore.setUsername(username);
         dottore.setReparto(reparto);
 
+        keycloakService.createUser(dottore);
         utenteRepository.save(dottore);
-
-
 
 
         return ResponseEntity.ok(Map.of("message", "Dottore creato con successo e assegnato al reparto " + reparto.getName()));
@@ -237,23 +312,26 @@ public class AdminController {
 
 
     @PostMapping("/create-assistant")
-    public ResponseEntity<Map<String, String>> createAssistant(@RequestBody Map<String, Object> payload) {
+    public ResponseEntity<Map<String, String>> createAssistant(@RequestBody Map<String, String> payload) {
+        String username = payload.get("username");
+        String firstName = payload.get("firstName");
+        String lastName = payload.get("lastName");
+        String email = payload.get("email");
+        String registrationNumber = payload.get("registrationNumber");
+        String repartoName = payload.get("repartoName");
 
-        String firstName = (String) payload.get("firstName");
-        String lastName = (String) payload.get("lastName");
-        String registrationNumber = (String) payload.get("registrationNumber");
-        Long repartoId = (Long) payload.get("repartoId");
-
-        if (firstName == null || lastName == null || registrationNumber == null || repartoId == null ||
-                firstName.isEmpty() || lastName.isEmpty() || registrationNumber.isEmpty()) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Tutti i campi sono obbligatori."));
+        if (username == null || firstName == null || lastName == null || email == null || repartoName == null ||
+                username.isEmpty() || firstName.isEmpty() || lastName.isEmpty() || email.isEmpty() || repartoName.isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Tutti i campi sono obbligatori, incluso il reparto."));
         }
 
         try {
-            String result = adminService.createAssistant(firstName, lastName, registrationNumber, repartoId);
-            return ResponseEntity.ok(Map.of("message", result));
+            String message = adminService.createAssistant(username, firstName, lastName, email, registrationNumber, repartoName);
+            return ResponseEntity.ok(Map.of("message", message));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(Map.of("error", "Errore interno: " + e.getMessage()));
         }
     }
 

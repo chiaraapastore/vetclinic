@@ -27,7 +27,7 @@ public class VaccinoService {
         Animale animale = animaleRepository.findById(animaleId)
                 .orElseThrow(() -> new RuntimeException("Animale non trovato"));
 
-        VeterinarioDTO veterinario = (VeterinarioDTO) utenteRepository.findById(veterinarioId)
+        Veterinario veterinario = (Veterinario) utenteRepository.findById(veterinarioId)
                 .orElseThrow(() -> new RuntimeException("Veterinario non trovato"));
 
         Vaccino vaccino = new Vaccino();
@@ -49,7 +49,7 @@ public class VaccinoService {
 
     @Transactional
     public List<Vaccino> getVaccineByVeterinarian(Long veterinarioId) {
-        VeterinarioDTO veterinario = (VeterinarioDTO) utenteRepository.findById(veterinarioId)
+        Veterinario veterinario = (Veterinario) utenteRepository.findById(veterinarioId)
                 .orElseThrow(() -> new RuntimeException("Veterinario non trovato"));
         return vaccinoRepository.findByVeterinario(veterinario);
     }

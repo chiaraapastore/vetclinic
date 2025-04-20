@@ -28,7 +28,7 @@ public class Vaccino {
 
     @ManyToOne
     @JoinColumn(name = "veterinario_id")
-    private VeterinarioDTO veterinario;
+    private Veterinario veterinario;
 
     @ManyToOne
     @JoinColumn(name = "animale_id")

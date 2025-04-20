@@ -1,10 +1,12 @@
 package com.vetclinic.controller;
 
+import com.vetclinic.models.Appuntamento;
 import com.vetclinic.models.Fattura;
 import com.vetclinic.service.FatturaService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -19,7 +21,7 @@ public class FatturaController {
     }
 
     @PostMapping("/create")
-    public ResponseEntity<Map<String, String>> createInvoice(@RequestParam Long appointmentId, @RequestParam double amount) {
+    public ResponseEntity<Map<String, String>> createInvoice(@RequestParam Appuntamento appointmentId, @RequestParam double amount) {
         Fattura fattura = fatturaService.createInvoice(appointmentId, amount);
         return ResponseEntity.ok(Map.of("message", "Fattura creata con successo", "fatturaId", String.valueOf(fattura.getId())));
     }
@@ -40,6 +42,12 @@ public class FatturaController {
     public ResponseEntity<Map<String, String>> deleteInvoice(@PathVariable Long id) {
         fatturaService.deleteInvoice(id);
         return ResponseEntity.ok(Map.of("message", "Fattura eliminata con successo"));
+    }
+
+    @GetMapping("/utente/{username}")
+    public ResponseEntity<List<Fattura>> getInvoicesByClienteUsername(@PathVariable String username) {
+        List<Fattura> fatture = fatturaService.getInvoicesByClienteUsername(username);
+        return ResponseEntity.ok(fatture);
     }
 
 }

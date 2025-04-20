@@ -27,7 +27,7 @@ public class DocumentoClinicoService {
         Animale animal = animaleRepository.findById(animalId)
                 .orElseThrow(() -> new IllegalArgumentException("Animale non trovato"));
 
-        VeterinarioDTO veterinarian = (VeterinarioDTO) utenteRepository.findById(veterinarianId)
+        Veterinario veterinarian = (Veterinario) utenteRepository.findById(veterinarianId)
                 .orElseThrow(() -> new IllegalArgumentException("Veterinario non trovato"));
 
         Assistente assistant = (Assistente) utenteRepository.findById(assistantId)

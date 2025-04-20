@@ -31,7 +31,7 @@ public class CronologiaAnimale {
 
     @ManyToOne
     @JoinColumn(name = "veterinario_id")
-    private VeterinarioDTO veterinarian;
+    private Veterinario veterinarian;
 
     @OneToMany(mappedBy = "cronologiaAnimale")
     private Set<Operazione> operazione;

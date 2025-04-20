@@ -58,7 +58,7 @@ public class AssistenteService {
 
         Appuntamento appointment = new Appuntamento();
         appointment.setAnimal(animal);
-        appointment.setVeterinarian((VeterinarioDTO) veterinarian);
+        appointment.setVeterinarian((Veterinario) veterinarian);
         appointment.setAppointmentDate(appointmentDate);
         appointment.setReason(reason);
 
@@ -147,18 +147,18 @@ public class AssistenteService {
     }
 
     @Transactional
-    public List<VeterinarioDTO> getVeterinariesByDepartment(Long departmentId) {
+    public List<Veterinario> getVeterinariesByDepartment(Long departmentId) {
         return utenteRepository.findByDepartmentId(departmentId).stream()
                 .filter(utente -> "veterinario".equalsIgnoreCase(utente.getRole()))
                 .map(veterinarian -> {
-                    VeterinarioDTO veterinarianDTO = new VeterinarioDTO();
+                    Veterinario veterinarianDTO = new Veterinario();
                     veterinarianDTO.setId(veterinarian.getId());
                     veterinarianDTO.setFirstName(veterinarian.getFirstName());
                     veterinarianDTO.setLastName(veterinarian.getLastName());
                     veterinarianDTO.setEmail(veterinarian.getEmail());
                     veterinarianDTO.setRegistrationNumber(veterinarian.getRegistrationNumber());
-                    veterinarianDTO.setSpecialization(((VeterinarioDTO) veterinarian).getSpecialization());
-                    veterinarianDTO.setAvailable(((VeterinarioDTO) veterinarian).isAvailable());
+                    veterinarianDTO.setSpecialization(((Veterinario) veterinarian).getSpecialization());
+                    veterinarianDTO.setAvailable(((Veterinario) veterinarian).getAvailable());
                     veterinarianDTO.setReparto(veterinarian.getReparto());
                     return veterinarianDTO;
                 })

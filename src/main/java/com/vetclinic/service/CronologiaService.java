@@ -53,7 +53,7 @@ public class CronologiaService {
         CronologiaAnimale cronologiaPaziente = new CronologiaAnimale();
         cronologiaPaziente.setAnimale(animale);
         cronologiaPaziente.setAssistant((Assistente) assistente);
-        cronologiaPaziente.setVeterinarian((VeterinarioDTO) veterinario);
+        cronologiaPaziente.setVeterinarian((Veterinario) veterinario);
         cronologiaPaziente.setEventDate(new Date());
         cronologiaPaziente.setEventType(eventType);
         cronologiaPaziente.setDescription(description);

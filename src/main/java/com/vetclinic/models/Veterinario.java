@@ -15,7 +15,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Entity
 @DiscriminatorValue("veterinario")
-public class VeterinarioDTO extends Utente {
+public class Veterinario extends Utente {
         private Long id;
         private String firstName;
         private String lastName;
@@ -23,12 +23,12 @@ public class VeterinarioDTO extends Utente {
         private String registrationNumber;
         @NotBlank(message = "La specializzazione è obbligatoria")
         private String specialization;
-        private boolean available;
-        private boolean isDepartmentHead;
+        private Boolean available;
+        private Boolean isDepartmentHead;
 
 
 
-        public VeterinarioDTO(Long id, String firstName, String lastName, String email, String registrationNumber, String departmentName) {
+        public Veterinario(Long id, String firstName, String lastName, String email, String registrationNumber, String departmentName) {
                 this.id = id;
                 this.firstName = firstName;
                 this.lastName = lastName;

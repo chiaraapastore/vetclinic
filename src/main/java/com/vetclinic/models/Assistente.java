@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
+@DiscriminatorValue("assistente")
 public class Assistente extends Utente {
 
     @Id

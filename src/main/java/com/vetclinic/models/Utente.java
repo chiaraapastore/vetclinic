@@ -12,7 +12,8 @@ import lombok.*;
 @NoArgsConstructor
 @Entity
 @Table(name = "utente")
-
+@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
+@DiscriminatorColumn(name = "dtype", discriminatorType = DiscriminatorType.STRING)
 
 public class Utente {
     @Id
@@ -41,12 +42,6 @@ public class Utente {
     @ManyToOne
     @JoinColumn(name = "reparto_id", referencedColumnName = "id")
     private Reparto reparto;
-
-
-    @ManyToOne
-    @JoinColumn(name = "cliente_id")
-    private Cliente cliente;
-
 
 
 

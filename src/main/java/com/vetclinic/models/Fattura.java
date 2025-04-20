@@ -32,5 +32,10 @@ public class Fattura {
     @ManyToOne
     @JoinColumn(name = "payment_method_id")
     private Pagamento paymentMethod;
+
+    @ManyToOne
+    @JoinColumn(name = "appuntamento_id")
+    private Appuntamento appuntamento;
+
 }
 

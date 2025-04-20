@@ -108,7 +108,7 @@ public class NotificheService {
     }
 
     @Transactional
-    public void sendEmergencyNotificationToHeadOfDepartment(VeterinarioDTO veterinarian, Utente headOfDepartment, String description, Medicine medicine) {
+    public void sendEmergencyNotificationToHeadOfDepartment(Veterinario veterinarian, Utente headOfDepartment, String description, Medicine medicine) {
         String message = "Emergenza segnalata dal veterinario " + veterinarian.getFirstName() + " " + veterinarian.getLastName() +
                 ": " + description + ". Farmaco richiesto: " + medicine.getName() + ". Disponibilità: " + medicine.getAvailableQuantity();
         createAndSendNotification(veterinarian, headOfDepartment, message, "emergenza");
@@ -146,7 +146,7 @@ public class NotificheService {
     }
 
     @Transactional
-    public void sendEmergencyNotificationToAssistant(VeterinarioDTO veterinarian, Utente assistant, String description, Medicine medicine) {
+    public void sendEmergencyNotificationToAssistant(Veterinario veterinarian, Utente assistant, String description, Medicine medicine) {
 
         String message = "Emergenza: " + veterinarian.getFirstName() + " " + veterinarian.getLastName() + " ha segnalato un'emergenza per l'animale " +
                 veterinarian.getReparto().getName() + ". Descrizione: " + description + ". Farmaco coinvolto: " + medicine.getName();
@@ -161,7 +161,7 @@ public class NotificheService {
 
 
     @Transactional
-    public void sendPaymentNotificationToVeterinarian(VeterinarioDTO veterinarian, Pagamento payment) {
+    public void sendPaymentNotificationToVeterinarian(Veterinario veterinarian, Pagamento payment) {
         String message = "Il pagamento di €" + payment.getAmount() + " per l'appuntamento con il cliente " + veterinarian.getFirstName() + " " + veterinarian.getLastName() + " è stato completato con successo.";
         createAndSendNotifications(veterinarian, message, "payment_confirmation");
     }
@@ -196,7 +196,7 @@ public class NotificheService {
 
 
         Utente veterinarian = utenteRepository.findByDepartmentId(sender.getReparto().getId()).stream()
-                .filter(utente -> utente instanceof VeterinarioDTO)
+                .filter(utente -> utente instanceof Veterinario)
                 .findFirst()
                 .orElseThrow(() -> new IllegalArgumentException("Veterinario non trovato"));
 

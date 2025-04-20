@@ -25,8 +25,10 @@ public class AdminService {
     private final AssistenteRepository assistenteRepository;
     private final AuthenticationService authenticationService;
     private final NotificheService notificationService;
+    private final ClienteRepository clienteRepository;
+    private final KeycloakService keycloakService;
 
-    public AdminService(UtenteRepository utenteRepository, RepartoRepository repartoRepository, FerieRepository ferieRepository, AuthenticationService authenticationService, AnimaleRepository animaleRepository, AssistenteRepository assistenteRepository, MedicineRepository medicineRepository, OrdineRepository ordineRepository, MagazzinoRepository magazzinoRepository, NotificheService notificheService, EmergenzaRepository emergenzaRepository) {
+    public AdminService(UtenteRepository utenteRepository, KeycloakService keycloakService,RepartoRepository repartoRepository, FerieRepository ferieRepository, AuthenticationService authenticationService, AnimaleRepository animaleRepository, AssistenteRepository assistenteRepository, MedicineRepository medicineRepository, OrdineRepository ordineRepository, MagazzinoRepository magazzinoRepository, NotificheService notificheService, ClienteRepository clienteRepository,EmergenzaRepository emergenzaRepository) {
         this.repartoRepository = repartoRepository;
         this.authenticationService = authenticationService;
         this.utenteRepository = utenteRepository;
@@ -38,15 +40,17 @@ public class AdminService {
         this.notificationService = notificheService;
         this.emergenzaRepository = emergenzaRepository;
         this.ferieRepository = ferieRepository;
+        this.clienteRepository = clienteRepository;
+        this.keycloakService = keycloakService;
     }
 
 
 
     @Transactional
-    public List<VeterinarioDTO> getAllVeterinaries() {
+    public List<Veterinario> getAllVeterinaries() {
         return utenteRepository.findAll().stream()
                 .filter(utente -> "veterinario".equalsIgnoreCase(utente.getRole()))
-                .map(utente -> new VeterinarioDTO(
+                .map(utente -> new Veterinario(
                         utente.getId(),
                         utente.getFirstName(),
                         utente.getLastName(),
@@ -66,10 +70,10 @@ public class AdminService {
 
 
     @Transactional
-    public List<VeterinarioDTO> getHeadOfDepartments() {
+    public List<Veterinario> getHeadOfDepartments() {
         return utenteRepository.findAll().stream()
                 .filter(utente -> "capo-reparto".equalsIgnoreCase(utente.getRole()))
-                .map(utente -> new VeterinarioDTO(
+                .map(utente -> new Veterinario(
                         utente.getId(),
                         utente.getFirstName(),
                         utente.getLastName(),
@@ -152,8 +156,8 @@ public class AdminService {
                 .orElseThrow(() -> new IllegalArgumentException("Animale non trovato"));
 
 
-        VeterinarioDTO veterinarian = utenteRepository.findById(veterinarianId)
-                .map(utente -> (VeterinarioDTO) utente)
+        Veterinario veterinarian = utenteRepository.findById(veterinarianId)
+                .map(utente -> (Veterinario) utente)
                 .orElseThrow(() -> new IllegalArgumentException("Veterinario non trovato"));
 
 
@@ -172,25 +176,33 @@ public class AdminService {
 
 
     @Transactional
-    public String createAssistant(String firstName, String lastName, String registrationNumber, Long repartoId) {
-        Utente utenteAdmin = utenteRepository.findByUsername(authenticationService.getUsername());
-        if (utenteAdmin == null) {
-            throw new IllegalArgumentException("Utente non autenticato");
-        }
+    public String createAssistant(String username, String firstName, String lastName, String email, String registrationNumber, String repartoName) {
 
-        Reparto reparto = repartoRepository.findById(repartoId)
+        Reparto reparto = repartoRepository.findFirstByName(repartoName)
                 .orElseThrow(() -> new IllegalArgumentException("Reparto non trovato"));
 
-        Assistente nuovoAssistente = new Assistente();
-        nuovoAssistente.setFirstName(firstName);
-        nuovoAssistente.setLastName(lastName);
-        nuovoAssistente.setRegistrationNumber(registrationNumber);
-        nuovoAssistente.setReparto(reparto);
+        Assistente assistente = new Assistente();
+        assistente.setUsername(username);
+        assistente.setFirstName(firstName);
+        assistente.setLastName(lastName);
+        assistente.setEmail(email);
+        assistente.setRegistrationNumber(registrationNumber);
+        assistente.setRole("assistente");
+        assistente.setReparto(reparto);
 
-        assistenteRepository.save(nuovoAssistente);
+        keycloakService.createUser(assistente);
+        utenteRepository.save(assistente);
+
+
+        reparto.setAssistente(assistente);
+        repartoRepository.save(reparto);
 
         return "Assistente " + firstName + " " + lastName + " creato con successo e assegnato al reparto " + reparto.getName();
     }
+
+
+
+
 
     @Transactional
     public List<Ordine> getOrdini() {
@@ -260,5 +272,85 @@ public class AdminService {
     public List<Ferie> getUnapprovedHolidays() {
         return ferieRepository.findByApprovedFalse();
     }
+
+    @Transactional
+    public String assignAssistantToDepartment(Long utenteId, Long repartoId) {
+        Optional<Utente> assistenteOpt = utenteRepository.findById(utenteId);
+        Optional<Reparto> repartoOpt = repartoRepository.findById(repartoId);
+
+        if (assistenteOpt.isEmpty()) {
+            throw new IllegalArgumentException("Assistente non trovato.");
+        }
+
+        if (repartoOpt.isEmpty()) {
+            throw new IllegalArgumentException("Reparto non trovato.");
+        }
+
+        Utente assistente = assistenteOpt.get();
+        Reparto reparto = repartoOpt.get();
+
+
+        assistente.setReparto(reparto);
+        utenteRepository.saveAndFlush(assistente);
+
+        System.out.println("Assistente aggiornato al reparto: " + reparto.getName());
+
+        return "Assistente assegnato al reparto " + reparto.getName();
+    }
+
+    @Transactional
+    public String createAnimalForClient(Map<String, Object> payload) {
+        String name = (String) payload.get("name");
+        String species = (String) payload.get("species");
+        String breed = (String) payload.get("breed");
+        Integer age = (Integer) payload.get("age");
+        String state = (String) payload.get("state");
+        String microchip = (String) payload.get("microchip");
+        String veterinaryNotes = (String) payload.get("veterinaryNotes");
+        String nextVisit = (String) payload.get("nextVisit");
+        String symptoms = (String) payload.get("symptoms");
+        Double weight = payload.get("weight") != null ? Double.valueOf(payload.get("weight").toString()) : null;
+        Long clienteId = Long.valueOf(payload.get("clienteId").toString());
+        Long veterinarioId = Long.valueOf(payload.get("veterinarioId").toString());
+
+        Utente utenteCliente = utenteRepository.findById(clienteId)
+                .orElseThrow(() -> new IllegalArgumentException("Cliente non trovato"));
+
+        Utente utenteVeterinario = utenteRepository.findById(veterinarioId)
+                .orElseThrow(() -> new IllegalArgumentException("Veterinario non trovato"));
+
+        if (!(utenteCliente instanceof Cliente)) {
+            throw new IllegalArgumentException("L'utente non è un cliente valido");
+        }
+        if (!(utenteVeterinario instanceof Veterinario)) {
+            throw new IllegalArgumentException("L'utente non è un veterinario valido");
+        }
+
+        Cliente cliente = (Cliente) utenteCliente;
+        Veterinario veterinario = (Veterinario) utenteVeterinario;
+
+        Animale animale = new Animale();
+        animale.setName(name);
+        animale.setSpecies(species);
+        animale.setBreed(breed);
+        animale.setAge(age != null ? age : 0);
+        animale.setState(state);
+        animale.setMicrochip(microchip);
+        animale.setVeterinaryNotes(veterinaryNotes);
+        animale.setNextVisit(nextVisit);
+        animale.setSymptoms(symptoms);
+        animale.setWeight(weight != null ? weight : 0.0);
+        animale.setCliente(cliente);
+        animale.setVeterinario(veterinario);
+
+        animaleRepository.save(animale);
+
+        System.out.println("Animale creato: " + animale.getName() + " per il cliente " + cliente.getFirstName());
+
+        return "Animale creato con successo: " + animale.getName();
+    }
+
+
+
 
 }

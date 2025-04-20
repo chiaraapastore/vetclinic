@@ -127,7 +127,7 @@ public class VeterinarianService {
             return "Veterinario non trovato.";
         }
 
-        VeterinarioDTO veterinarian = (VeterinarioDTO) utenteOpt.get();
+        Veterinario veterinarian = (Veterinario) utenteOpt.get();
         Medicine medicine = medicineRepository.findById(medicineId)
                 .orElseThrow(() -> new RuntimeException("Medicinale non trovato"));
 
@@ -188,9 +188,9 @@ public class VeterinarianService {
     }
 
     @Transactional
-    public List<VeterinarioDTO> getVeterinariesByDepartment(Long departmentId) {
+    public List<Veterinario> getVeterinariesByDepartment(Long departmentId) {
         return utenteRepository.findByDepartmentId(departmentId).stream()
-                .map(dottore -> new VeterinarioDTO(
+                .map(dottore -> new Veterinario(
                         dottore.getId(),
                         dottore.getFirstName(),
                         dottore.getLastName(),

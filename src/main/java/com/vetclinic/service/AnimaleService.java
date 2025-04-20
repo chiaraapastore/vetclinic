@@ -16,20 +16,23 @@ import java.io.ByteArrayOutputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class AnimaleService {
 
+    private final AdminService adminService;
     private final AnimaleRepository animaleRepository;
     private final ClienteRepository clienteRepository;
     private final FatturaRepository fatturaRepository;
     private final AuthenticationService authenticationService;
 
-    public AnimaleService(AnimaleRepository animaleRepository, ClienteRepository clienteRepository, FatturaRepository fatturaRepository,AuthenticationService authenticationService) {
+    public AnimaleService(AdminService adminService,AnimaleRepository animaleRepository, ClienteRepository clienteRepository, FatturaRepository fatturaRepository,AuthenticationService authenticationService) {
         this.animaleRepository = animaleRepository;
         this.clienteRepository = clienteRepository;
         this.authenticationService = authenticationService;
         this.fatturaRepository = fatturaRepository;
+        this.adminService = adminService;
     }
 
     @Transactional
@@ -82,9 +85,8 @@ public class AnimaleService {
 
         Cliente cliente = animale.getCliente();
 
-        Fattura fattura = fatturaRepository.findByCliente(cliente)
+        Fattura fattura = fatturaRepository.findFirstByCliente(cliente)
                 .orElseThrow(() -> new RuntimeException("Fattura non trovata per il cliente"));
-
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         Document document = new Document(PageSize.A4, 50, 50, 50, 100);
@@ -298,4 +300,9 @@ public class AnimaleService {
         table.addCell(h1);
         table.addCell(h2);
     }
+
+    public String createAnimalForClient(Map<String, Object> payload) {
+        return adminService.createAnimalForClient(payload);
+    }
+
 }

@@ -23,7 +23,7 @@ public class Somministrazione {
 
     @ManyToOne
     @JoinColumn(name = "veterinario_id")
-    private VeterinarioDTO veterinario;
+    private Veterinario veterinario;
 
     @ManyToOne
     @JoinColumn(name = "animal_id")

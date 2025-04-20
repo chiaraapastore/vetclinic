@@ -1,8 +1,16 @@
 package com.vetclinic.controller;
 
+import java.util.List;
 import com.vetclinic.models.Animale;
 import com.vetclinic.models.Cliente;
+import com.vetclinic.models.DocumentoClinico;
+import com.vetclinic.models.Fattura;
+import com.vetclinic.service.AnimaleService;
 import com.vetclinic.service.ClienteService;
+import com.vetclinic.service.DocumentoClinicoService;
+import com.vetclinic.service.FatturaService;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,9 +23,15 @@ import java.util.Set;
 public class ClienteController {
 
     private final ClienteService clienteService;
+    private final AnimaleService animaleService;
+    private final DocumentoClinicoService documentoClinicoService;
+    private final FatturaService fatturaService;
 
-    public ClienteController(ClienteService clienteService) {
+    public ClienteController(ClienteService clienteService, AnimaleService animaleService, DocumentoClinicoService documentoClinicoService, FatturaService fatturaService) {
         this.clienteService = clienteService;
+        this.animaleService = animaleService;
+        this.documentoClinicoService = documentoClinicoService;
+        this.fatturaService = fatturaService;
     }
 
     @GetMapping("/me")
@@ -47,5 +61,31 @@ public class ClienteController {
     public ResponseEntity<Set<Animale>> getAnimalsOfClient() {
         Set<Animale> animali = clienteService.getAnimalsOfClient();
         return ResponseEntity.ok(animali);
+    }
+
+
+    @GetMapping("/animals/{animalId}/download-pdf")
+    public ResponseEntity<byte[]> downloadAnimalDocument(@PathVariable Long animalId) throws Exception {
+        byte[] pdf = animaleService.generateDocumentoClinicoAndFatturaPdf(animalId);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_PDF);
+        headers.setContentDispositionFormData("attachment", "documento_clinico_animale_" + animalId + ".pdf");
+
+        return ResponseEntity.ok()
+                .headers(headers)
+                .body(pdf);
+    }
+
+    @GetMapping("/animals/{animalId}/documents")
+    public ResponseEntity<List<DocumentoClinico>> getAnimalDocuments(@PathVariable Long animalId) {
+        List<DocumentoClinico> documents = clienteService.getDocumentsOfClientAnimal(animalId);
+        return ResponseEntity.ok(documents);
+    }
+
+    @GetMapping("/fatture")
+    public ResponseEntity<List<Fattura>> getMyInvoices() {
+        List<Fattura> fatture = clienteService.getInvoicesOfClient();
+        return ResponseEntity.ok(fatture);
     }
 }

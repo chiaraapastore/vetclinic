@@ -1,5 +1,6 @@
 package com.vetclinic.service;
 
+import java.util.List;
 import com.vetclinic.config.AuthenticationService;
 import com.vetclinic.models.*;
 import com.vetclinic.repository.FatturaRepository;
@@ -23,7 +24,7 @@ public class FatturaService {
     }
 
     @Transactional
-    public Fattura createInvoice(Long appointmentId, double amount) {
+    public Fattura createInvoice(Appuntamento appointmentId, double amount) {
         Utente client = utenteRepository.findByUsername(authenticationService.getUsername());
         if (client == null) {
             throw new IllegalArgumentException("Cliente non trovato");
@@ -34,6 +35,7 @@ public class FatturaService {
         invoice.setIssueDate(new java.util.Date());
         invoice.setAmount(amount);
         invoice.setStatus("PENDING");
+        invoice.setAppuntamento(appointmentId);
 
         return fatturaRepository.save(invoice);
     }
@@ -59,4 +61,13 @@ public class FatturaService {
         fatturaRepository.delete(fattura);
     }
 
+    @Transactional
+    public List<Fattura> getInvoicesByClienteUsername(String username) {
+        Utente utente = utenteRepository.findByUsername(username);
+        if (utente == null || !(utente instanceof Cliente)) {
+            throw new IllegalArgumentException("Cliente non trovato o username non valido");
+        }
+        Cliente cliente = (Cliente) utente;
+        return fatturaRepository.findByCliente(cliente);
+    }
 }

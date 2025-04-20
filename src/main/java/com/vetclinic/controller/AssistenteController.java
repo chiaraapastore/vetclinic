@@ -97,8 +97,8 @@ public class AssistenteController {
     }
 
     @GetMapping("/get-veterinaries-by-department/{departmentId}")
-    public ResponseEntity<List<VeterinarioDTO>> getVeterinariesByDepartment(@PathVariable Long departmentId) {
-        List<VeterinarioDTO> veterinaries = assistenteService.getVeterinariesByDepartment(departmentId);
+    public ResponseEntity<List<Veterinario>> getVeterinariesByDepartment(@PathVariable Long departmentId) {
+        List<Veterinario> veterinaries = assistenteService.getVeterinariesByDepartment(departmentId);
         return ResponseEntity.ok(veterinaries);
     }
 

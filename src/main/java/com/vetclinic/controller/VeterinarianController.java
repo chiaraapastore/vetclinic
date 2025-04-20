@@ -91,9 +91,8 @@ public class VeterinarianController {
     }
 
     @GetMapping("/department/{departmentId}")
-    public ResponseEntity<List<VeterinarioDTO>> getVeterinariesByDepartment(@PathVariable Long departmentId) {
-        List<VeterinarioDTO> dottori = veterinarianService.getVeterinariesByDepartment(departmentId).stream()
-                .map(dottore -> new VeterinarioDTO(dottore.getId(), dottore.getFirstName(),
+    public ResponseEntity<List<Veterinario>> getVeterinariesByDepartment(@PathVariable Long departmentId) {
+        List<Veterinario> dottori = veterinarianService.getVeterinariesByDepartment(departmentId).stream().map( dottore -> new Veterinario(dottore.getId(), dottore.getFirstName(),
                         dottore.getLastName(), dottore.getEmail(), dottore.getRegistrationNumber(), dottore.getReparto().getName()))
                 .collect(Collectors.toList());
         if (dottori.isEmpty()) {

@@ -25,7 +25,7 @@ public class Appuntamento {
 
     @ManyToOne
     @JoinColumn(name = "veterinario_id")
-    private VeterinarioDTO veterinarian;
+    private Veterinario veterinarian;
 
     private Date appointmentDate;
 

@@ -27,13 +27,15 @@ public class Reparto {
     @JoinColumn(name = "capo_reparto_id")
     private Utente headOfDepartment;
 
-    @ManyToOne
-    @JoinColumn(name = "assistente_id")
-    private Assistente assistente;
 
     @OneToOne
     @JoinColumn(name = "veterinario_id")
-    private VeterinarioDTO veterinario;
+    private Veterinario veterinario;
+
+
+    @ManyToOne
+    @JoinColumn(name = "assistente_id")
+    private Assistente assistente;
 
 
 

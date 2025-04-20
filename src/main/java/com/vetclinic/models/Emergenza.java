@@ -24,7 +24,7 @@ public class Emergenza {
 
     @ManyToOne
     @JoinColumn(name = "veterinario_id")
-    private VeterinarioDTO veterinarian;
+    private Veterinario veterinarian;
 
     private Date emergencyDate;
 
