@@ -3,9 +3,10 @@ package com.vetclinic.service;
 import com.vetclinic.config.AuthenticationService;
 import com.vetclinic.models.*;
 import com.vetclinic.repository.*;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.Date;
@@ -27,7 +28,6 @@ public class AssistenteService {
     private final PagamentoRepository pagamentoRepository;
     private final SomministrazioneRepository somministrazioneRepository;
 
-
     public AssistenteService(AppuntamentoRepository appuntamentoRepository, MedicineRepository medicineRepository,
                              AnimaleRepository pazienteRepository, NotificheService notificheService, AssistenteRepository assistenteRepository,
                              UtenteRepository utenteRepository, AuthenticationService authenticationService, AnimaleRepository animaleRepository, FatturaRepository fatturaRepository, PagamentoRepository pagamentoRepository, SomministrazioneRepository somministrazioneRepository) {
@@ -48,13 +48,13 @@ public class AssistenteService {
     public Appuntamento createAppointment(Long animalId, Long veterinarianId, Date appointmentDate, String reason) {
         Utente assistant = utenteRepository.findByUsername(authenticationService.getUsername());
         if (assistant == null) {
-            throw new IllegalArgumentException("Assistente non trovato");
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Assistente non trovato");
         }
         Animale animal = pazienteRepository.findById(animalId)
-                .orElseThrow(() -> new IllegalArgumentException("Animale non trovato"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Animale non trovato"));
 
         Utente veterinarian = utenteRepository.findByVeterinarianId(veterinarianId)
-                .orElseThrow(() -> new IllegalArgumentException("Veterinario non trovato"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Veterinario non trovato"));
 
         Appuntamento appointment = new Appuntamento();
         appointment.setAnimal(animal);
@@ -65,15 +65,14 @@ public class AssistenteService {
         return appuntamentoRepository.save(appointment);
     }
 
-
     @Transactional
     public void deleteAppointment(Long appointmentId) {
         Utente assistant = utenteRepository.findByUsername(authenticationService.getUsername());
         if (assistant == null) {
-            throw new IllegalArgumentException("Assistente non trovato");
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Assistente non trovato");
         }
         Appuntamento appointment = appuntamentoRepository.findById(appointmentId)
-                .orElseThrow(() -> new IllegalArgumentException("Appuntamento non trovato"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Appuntamento non trovato"));
         appuntamentoRepository.delete(appointment);
         notificheService.sendAppointmentCanceledNotification(appointment.getAnimal().getCliente());
     }
@@ -82,53 +81,60 @@ public class AssistenteService {
     public void remindAppointment(Long appointmentId) {
         Utente assistant = utenteRepository.findByUsername(authenticationService.getUsername());
         if (assistant == null) {
-            throw new IllegalArgumentException("Assistente non trovato");
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Assistente non trovato");
         }
         Appuntamento appointment = appuntamentoRepository.findById(appointmentId)
-                .orElseThrow(() -> new IllegalArgumentException("Appuntamento non trovato"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Appuntamento non trovato"));
         notificheService.sendAppointmentReminder(appointment.getAnimal().getCliente(), appointment.getAppointmentDate());
     }
-
 
     @Transactional
     public void checkMedicineExpiration(Long departmentHeadId, Long medicineId) {
         Utente assistant = utenteRepository.findByUsername(authenticationService.getUsername());
         if (assistant == null) {
-            throw new IllegalArgumentException("Assistente non trovato");
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Assistente non trovato");
         }
         Utente departmentHead = utenteRepository.findById(departmentHeadId)
-                .orElseThrow(() -> new IllegalArgumentException("Capo Reparto non trovato"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Capo Reparto non trovato"));
         Medicine medicine = medicineRepository.findById(medicineId)
-                .orElseThrow(() -> new IllegalArgumentException("Medicinale non trovato"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Medicinale non trovato"));
         notificheService.sendVeterinarianNotificationToDepartmentHead(assistant, departmentHead, medicine.getName());
     }
 
-
     @Transactional
     public List<Medicine> viewDepartmentMedicines(Long departmentId) {
-        Utente assistant = utenteRepository.findByUsername(authenticationService.getUsername());
-        if (assistant == null) {
-            throw new IllegalArgumentException("Assistente non trovato");
-        }
-        List<Medicine> medicines = medicineRepository.findByDepartmentId(departmentId);
-        medicines.forEach(medicine -> medicine.setDescription(null));
-        return medicines;
+        List<Medicine> medicinali = medicineRepository.findByDepartmentId(departmentId);
+
+        medicinali.forEach(medicinale -> {
+            medicinale.setDescription(null);
+        });
+
+        return medicinali;
     }
+
+
 
     @Transactional
     public List<Animale> getVeterinarianPatients() {
-        Utente veterinarian = utenteRepository.findByUsername(authenticationService.getUsername());
-        if (veterinarian == null) {
-            throw new IllegalArgumentException("Veterinario non trovato");
-        }
-        return pazienteRepository.findByVeterinario(veterinarian);
+
+        Utente assistente = utenteRepository.findByKeycloakId(authenticationService.getUserId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Assistente non trovato"));
+
+        Long repartoId = assistente.getReparto().getId();
+
+
+        List<Utente> veterinariNelReparto = utenteRepository.findByDepartmentId(repartoId).stream()
+                .filter(u -> "veterinario".equalsIgnoreCase(u.getRole()))
+                .toList();
+
+        return animaleRepository.findByVeterinarioIn(veterinariNelReparto);
     }
 
 
     @Transactional
     public Assistente getAssistenteById(Long id) {
         return assistenteRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Assistente non trovato con ID: " + id));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Assistente non trovato con ID: " + id));
     }
 
     @Transactional
@@ -151,16 +157,16 @@ public class AssistenteService {
         return utenteRepository.findByDepartmentId(departmentId).stream()
                 .filter(utente -> "veterinario".equalsIgnoreCase(utente.getRole()))
                 .map(veterinarian -> {
-                    Veterinario veterinarianDTO = new Veterinario();
-                    veterinarianDTO.setId(veterinarian.getId());
-                    veterinarianDTO.setFirstName(veterinarian.getFirstName());
-                    veterinarianDTO.setLastName(veterinarian.getLastName());
-                    veterinarianDTO.setEmail(veterinarian.getEmail());
-                    veterinarianDTO.setRegistrationNumber(veterinarian.getRegistrationNumber());
-                    veterinarianDTO.setSpecialization(((Veterinario) veterinarian).getSpecialization());
-                    veterinarianDTO.setAvailable(((Veterinario) veterinarian).getAvailable());
-                    veterinarianDTO.setReparto(veterinarian.getReparto());
-                    return veterinarianDTO;
+                    Veterinario veterinario = new Veterinario();
+                    veterinario.setId(veterinarian.getId());
+                    veterinario.setFirstName(veterinarian.getFirstName());
+                    veterinarian.setLastName(veterinarian.getLastName());
+                    veterinario.setEmail(veterinarian.getEmail());
+                    veterinario.setRegistrationNumber(veterinarian.getRegistrationNumber());
+                    veterinario.setSpecialization(((Veterinario) veterinarian).getSpecialization());
+                    veterinario.setAvailable(((Veterinario) veterinarian).getAvailable());
+                    veterinario.setReparto(veterinarian.getReparto());
+                    return veterinario;
                 })
                 .collect(Collectors.toList());
     }
@@ -168,29 +174,25 @@ public class AssistenteService {
     @Transactional
     public Reparto getRepartoByVeterinarian(String emailDottore) {
         return utenteRepository.findRepartoByEmailVeterinarian(emailDottore)
-                .orElseThrow(() -> new RuntimeException("Nessun dottore trovato con email: " + emailDottore));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Nessun dottore trovato con email: " + emailDottore));
     }
-
-
 
     @Transactional
     public String administerMedicine(Long animaleId, Long medicineId, int quantita, Long veterinarianId) {
         Animale animale = animaleRepository.findById(animaleId)
-                .orElseThrow(() -> new IllegalArgumentException("Animale non trovato"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Animale non trovato"));
         Medicine medicine = medicineRepository.findById(medicineId)
-                .orElseThrow(() -> new IllegalArgumentException("Medicinale non trovato"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Medicinale non trovato"));
 
         if (medicine.getAvailableQuantity() < quantita) {
-            throw new IllegalArgumentException("Quantità insufficiente del medicinale");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Quantità insufficiente del medicinale");
         }
-
 
         medicine.setAvailableQuantity(medicine.getAvailableQuantity() - quantita);
         medicineRepository.save(medicine);
 
-
         Utente veterinarian = utenteRepository.findById(veterinarianId)
-                .orElseThrow(() -> new IllegalArgumentException("Veterinario non trovato"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Veterinario non trovato"));
         notificheService.sendNotificationSomministration(veterinarian, veterinarian, medicine.getName());
 
         Somministrazione somministrazione = new Somministrazione();
@@ -206,8 +208,7 @@ public class AssistenteService {
     @Transactional
     public String managePayment(Long clienteId, double amount, String paymentMethod, String cardType) {
         Cliente cliente = (Cliente) utenteRepository.findById(clienteId)
-                .orElseThrow(() -> new IllegalArgumentException("Cliente non trovato"));
-
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Cliente non trovato"));
 
         Fattura fattura = new Fattura();
         fattura.setCliente(cliente);
@@ -215,7 +216,6 @@ public class AssistenteService {
         fattura.setAmount(amount);
         fattura.setStatus("PENDING");
         fatturaRepository.save(fattura);
-
 
         Pagamento pagamento = new Pagamento();
         pagamento.setInvoice(fattura);
@@ -226,10 +226,8 @@ public class AssistenteService {
         pagamento.setStatus("SUCCESS");
         pagamentoRepository.save(pagamento);
 
-
         fattura.setStatus("PAID");
         fatturaRepository.save(fattura);
-
 
         notificheService.sendAppointmentReminder(cliente, fattura.getIssueDate());
 

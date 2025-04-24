@@ -3,10 +3,7 @@ package com.vetclinic.controller;
 import com.vetclinic.models.Notifiche;
 import com.vetclinic.service.NotificheService;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -22,12 +19,24 @@ public class NotificheController {
     }
 
 
-    @GetMapping("/mark-all-read")
-    public ResponseEntity<List<Notifiche>> markAllNotificationsAsRead() {
-        notificheService.markAllNotificationsAsRead();
-        return ResponseEntity.ok().build();
+    @GetMapping("/list")
+    public ResponseEntity<List<Notifiche>> getAllNotificationsForUser() {
+        List<Notifiche> notifiche = notificheService.getAllNotificationsForCurrentUser();
+        return ResponseEntity.ok(notifiche);
     }
 
 
+    @GetMapping("/mark-all-read")
+    public ResponseEntity<List<Notifiche>> markAllNotificationsAsRead() {
+        List<Notifiche> notificheAggiornate = notificheService.markAllNotificationsAsRead();
+        return ResponseEntity.ok(notificheAggiornate);
+    }
+
+
+    @DeleteMapping("/delete-all")
+    public ResponseEntity<Void> deleteAllNotifications() {
+        notificheService.deleteAllNotificationsForCurrentUser();
+        return ResponseEntity.noContent().build();
+    }
 
 }

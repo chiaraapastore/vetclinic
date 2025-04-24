@@ -35,7 +35,7 @@ public class Utente {
     @Column(name = "profile_image")
     private String profileImage;
     private String role;
-    private int countNotification;
+    private Integer countNotification;
     private String keycloakId;
 
     @Setter

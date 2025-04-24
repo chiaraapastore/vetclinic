@@ -10,4 +10,5 @@ import java.util.List;
 public interface NotificheRepository extends JpaRepository<Notifiche, Long> {
     List<Notifiche> findBySentToIdAndIsReadFalse(Long id);
     List<Notifiche> findBySentToId(Long id);
+    void deleteBySentToId(Long id);
 }

@@ -5,8 +5,10 @@ import com.vetclinic.config.AuthenticationService;
 import com.vetclinic.models.*;
 import com.vetclinic.repository.NotificheRepository;
 import com.vetclinic.repository.UtenteRepository;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 
 import java.time.LocalDate;
@@ -52,15 +54,13 @@ public class NotificheService {
     public List<Notifiche> markAllNotificationsAsRead() {
         Utente user = utenteRepository.findByUsername(authenticationService.getUsername());
         if (user == null) {
-            throw new IllegalArgumentException("Assistente non trovato");
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Utente non trovato");
         }
         List<Notifiche> unreadNotifications = notificheRepository.findBySentToIdAndIsReadFalse(user.getId());
 
         if (!unreadNotifications.isEmpty()) {
-
             unreadNotifications.forEach(notification -> notification.setLetta(true));
             notificheRepository.saveAll(unreadNotifications);
-
             user.setCountNotification(0);
             utenteRepository.save(user);
         }
@@ -70,7 +70,7 @@ public class NotificheService {
 
     @Transactional
     public void sendNotificationTurni(Utente veterinarian, Utente headOfDepartment, LocalDate startDate, LocalDate endDate) {
-        String message = "Il sottoscritto"+veterinarian.getFirstName()+" "+veterinarian.getLastName()+"dovrà coprire i turni dal giorno"+startDate+"al giorno"+endDate;
+        String message = "Il sottoscritto "+veterinarian.getFirstName()+veterinarian.getLastName()+" dovrà coprire i turni dal giorno "+startDate+" al giorno "+endDate;
         createAndSendNotification(veterinarian,headOfDepartment, message, "turni");
     }
 
@@ -83,7 +83,7 @@ public class NotificheService {
 
     @Transactional
     public void sendNotificationSomministration(Utente veterinarian, Utente headOfDepartment, String nameOfMedicine){
-        String message = "Il dottore"+veterinarian.getFirstName()+" "+veterinarian.getLastName()+"ha somministrato il farmaco"+nameOfMedicine+"al paziente";
+        String message = "Il dottore "+veterinarian.getFirstName()+veterinarian.getLastName()+" ha somministrato il farmaco "+nameOfMedicine+" al paziente";
         createAndSendNotification(veterinarian,headOfDepartment, message, "farmaco");
     }
 
@@ -99,7 +99,7 @@ public class NotificheService {
 
     @Transactional
     public void sendAppointmentReminder(Cliente owner, Date appointmentDate) {
-        String message = "Promemoria: L'appuntamento per " + owner.getFirstName() + " " + owner.getLastName() +  " è fissato per " + appointmentDate;
+        String message = "Promemoria: L'appuntamento per " + owner.getFirstName()  + owner.getLastName() +  " è fissato per " + appointmentDate;
         Utente assistant = utenteRepository.findByUsername(authenticationService.getUsername());
         if (assistant == null) {
             throw new IllegalArgumentException("Assistente non trovato");
@@ -109,7 +109,7 @@ public class NotificheService {
 
     @Transactional
     public void sendEmergencyNotificationToHeadOfDepartment(Veterinario veterinarian, Utente headOfDepartment, String description, Medicine medicine) {
-        String message = "Emergenza segnalata dal veterinario " + veterinarian.getFirstName() + " " + veterinarian.getLastName() +
+        String message = "Emergenza segnalata dal veterinario " + veterinarian.getFirstName()  + veterinarian.getLastName() +
                 ": " + description + ". Farmaco richiesto: " + medicine.getName() + ". Disponibilità: " + medicine.getAvailableQuantity();
         createAndSendNotification(veterinarian, headOfDepartment, message, "emergenza");
     }
@@ -148,7 +148,7 @@ public class NotificheService {
     @Transactional
     public void sendEmergencyNotificationToAssistant(Veterinario veterinarian, Utente assistant, String description, Medicine medicine) {
 
-        String message = "Emergenza: " + veterinarian.getFirstName() + " " + veterinarian.getLastName() + " ha segnalato un'emergenza per l'animale " +
+        String message = "Emergenza: " + veterinarian.getFirstName() + veterinarian.getLastName() + " ha segnalato un'emergenza per l'animale " +
                 veterinarian.getReparto().getName() + ". Descrizione: " + description + ". Farmaco coinvolto: " + medicine.getName();
         createAndSendNotification(veterinarian, assistant, message, "emergenza");
     }
@@ -156,17 +156,17 @@ public class NotificheService {
     @Transactional
     public void sendPaymentNotificationToClient(Cliente client, Pagamento payment) {
         String message = "Il pagamento di €" + payment.getAmount() + " per il servizio richiesto è stato completato con successo. Data del pagamento: " + payment.getPaymentDate();
-        createAndSendNotifications(client, message, "payment_confirmation");
+        createAndSendNotificationPayment(client, message, "payment_confirmation");
     }
 
 
     @Transactional
     public void sendPaymentNotificationToVeterinarian(Veterinario veterinarian, Pagamento payment) {
-        String message = "Il pagamento di €" + payment.getAmount() + " per l'appuntamento con il cliente " + veterinarian.getFirstName() + " " + veterinarian.getLastName() + " è stato completato con successo.";
-        createAndSendNotifications(veterinarian, message, "payment_confirmation");
+        String message = "Il pagamento di €" + payment.getAmount() + " per l'appuntamento con il cliente " + veterinarian.getFirstName() + veterinarian.getLastName() + " è stato completato con successo.";
+        createAndSendNotificationPayment(veterinarian, message, "payment_confirmation");
     }
 
-    private void createAndSendNotifications(Utente receiver, String message, String type) {
+    private void createAndSendNotificationPayment(Utente receiver, String message, String type) {
         if (receiver == null) {
             return;
         }
@@ -210,6 +210,25 @@ public class NotificheService {
         createAndSendNotification(veterinarian, headOfDepartment, message, "anomalia");
 
 
+    }
+
+    public List<Notifiche> getAllNotificationsForCurrentUser() {
+        Utente user = utenteRepository.findByUsername(authenticationService.getUsername());
+        if (user == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Utente non trovato");
+        }
+        return notificheRepository.findBySentToId(user.getId());
+    }
+
+    @Transactional
+    public void deleteAllNotificationsForCurrentUser() {
+        Utente user = utenteRepository.findByUsername(authenticationService.getUsername());
+        if (user == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Utente non trovato");
+        }
+        notificheRepository.deleteBySentToId(user.getId());
+        user.setCountNotification(0);
+        utenteRepository.save(user);
     }
 
 

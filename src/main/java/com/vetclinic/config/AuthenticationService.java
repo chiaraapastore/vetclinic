@@ -21,7 +21,7 @@ public class AuthenticationService {
             HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
             String authorizationHeader = request.getHeader("Authorization");
 
-            System.out.println("Token ricevuto: " + authorizationHeader);
+
 
             if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
                 throw new IllegalArgumentException(" Token mancante o malformato");
@@ -30,7 +30,6 @@ public class AuthenticationService {
             String token = authorizationHeader.split(" ")[1];
             String username = JwtUtils.getNameFromToken(token);
 
-            System.out.println("Username estratto dal token: " + username);
 
             return username;
         } catch (Exception e) {

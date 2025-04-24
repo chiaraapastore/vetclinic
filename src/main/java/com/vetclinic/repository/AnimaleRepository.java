@@ -15,5 +15,7 @@ public interface AnimaleRepository extends JpaRepository<Animale, Long> {
     List<Animale> findByCliente(Cliente cliente);
 
     List<Animale> findByVeterinario(Utente veterinario);
+
+    List<Animale> findByVeterinarioIn(List<Utente> veterinariNelReparto);
 }
 
