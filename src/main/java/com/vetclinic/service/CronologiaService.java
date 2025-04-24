@@ -37,65 +37,98 @@ public class CronologiaService {
 
     @Transactional
     public void addEventToAnimal(Long animaleId, String eventType, String description) {
+
         Animale animale = animaleRepository.findById(animaleId)
                 .orElseThrow(() -> new IllegalArgumentException("Animale non trovato"));
 
-        Utente veterinario = utenteRepository.findByUsername(authenticationService.getUsername());
-        if (veterinario == null) {
-            throw new IllegalArgumentException("Veterinario non trovato");
+        Utente utente = utenteRepository.findByUsername(authenticationService.getUsername());
+        if (utente == null) {
+            throw new IllegalArgumentException("Utente non trovato");
         }
 
-        Utente assistente = utenteRepository.findByUsername(authenticationService.getUsername());
-        if (assistente == null) {
-            throw new IllegalArgumentException("Assistente non trovato");
+        Veterinario veterinario = null;
+        Assistente assistente = null;
+
+        if (utente instanceof Veterinario) {
+            veterinario = (Veterinario) utente;
+        } else if (utente instanceof Assistente) {
+            assistente = (Assistente) utente;
+        }
+
+        if (veterinario == null && assistente == null) {
+            throw new IllegalArgumentException("L'utente non è né un veterinario né un assistente");
         }
 
         CronologiaAnimale cronologiaPaziente = new CronologiaAnimale();
-        cronologiaPaziente.setAnimale(animale);
-        cronologiaPaziente.setAssistant((Assistente) assistente);
-        cronologiaPaziente.setVeterinarian((Veterinario) veterinario);
+        cronologiaPaziente.setAnimaleId(animale.getId());
         cronologiaPaziente.setEventDate(new Date());
         cronologiaPaziente.setEventType(eventType);
         cronologiaPaziente.setDescription(description);
 
+        if (veterinario != null) {
+            cronologiaPaziente.setVeterinarian(veterinario);
+        }
+        if (assistente != null) {
+            cronologiaPaziente.setAssistente(assistente);
+        }
+
+        if (animale.getCliente() != null) {
+            cronologiaPaziente.setCliente(animale.getCliente());
+        }
+
         cronologiaRepository.save(cronologiaPaziente);
     }
 
+
     @Transactional
     public CronologiaAnimale getAnimalHistory(Long clienteId, Long animaleId) {
+
         Animale animale = animaleRepository.findById(animaleId)
                 .orElseThrow(() -> new RuntimeException("Animale non trovato"));
 
-        Cliente cliente = clienteRepository.findById(clienteId)
-                .orElseThrow(() -> new RuntimeException("Cliente non trovato"));
 
         if (!animale.getCliente().getId().equals(clienteId)) {
             throw new RuntimeException("Questo animale non appartiene al cliente.");
         }
 
-        List<Operazione> listOperations = new ArrayList<>(operazioneRepository.findByAnimale(animale));
-        List<Trattamento> listTreatments = new ArrayList<>(trattamentoRepository.findByAnimale(animale));
-        List<Vaccino> listVaccinations = new ArrayList<>(vaccinoRepository.findByAnimale(animale));
-        List<Esame> examsList = esameRepository.findByAnimale(animale);
-        Set<Esame> exams = new HashSet<>(examsList);
-        Set<Operazione> operations = new HashSet<>(listOperations);
-        Set<Trattamento> treatments = new HashSet<>(listTreatments );
-        Set<Vaccino>vaccinations = new HashSet<>(listVaccinations);
+        List<CronologiaAnimale> history = cronologiaRepository.findByAnimaleId(animaleId);
 
-        CronologiaAnimale cronologia = new CronologiaAnimale();
-        cronologia.setAnimale(animale);
-        cronologia.setCliente(cliente);
+        List<Operazione> operations = operazioneRepository.findByAnimaleId(animaleId);
+        List<Trattamento> treatments = trattamentoRepository.findByAnimalId(animaleId);
+        List<Vaccino> vaccinations = vaccinoRepository.findByAnimaleId(animaleId);
+        List<Esame> exams = esameRepository.findByAnimaleId(animaleId);
 
+        CronologiaAnimale cronologia = history.isEmpty() ? null : history.get(0);
 
-        cronologia.setOperazione(operations);
+        if (!operations.isEmpty()) {
+            cronologia.setOperazioneId(operations.get(0).getId());
+        }
+
         cronologia.setSymptoms(animale.getSymptoms());
-        cronologia.setEsame(exams);
-        cronologia.setTrattamento(treatments);
         cronologia.setNoteVet(animale.getVeterinaryNotes());
         cronologia.setFollowUp(animale.getNextVisit());
-        cronologia.setMedicalHistory(animale.getHistoricalDiseases().toString());
-        cronologia.setVaccini(vaccinations);
+
+        if (!treatments.isEmpty()) {
+            cronologia.setTrattamentoId(treatments.get(0).getId());
+        }
+
+        if (!vaccinations.isEmpty()) {
+            cronologia.setVaccinoId(vaccinations.get(0).getId());
+        }
+
+        if (!exams.isEmpty()) {
+            cronologia.setEsameId(exams.get(0).getId());
+        }
+
+        cronologia.setEventDate(new Date());
+        cronologia.setEventType("TipoEvento");
 
         return cronologia;
     }
+
+
+
+
+
+
 }

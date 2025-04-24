@@ -1,5 +1,6 @@
 package com.vetclinic.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -19,10 +20,12 @@ public class Emergenza {
     private Long id;
 
     @ManyToOne
+    @JsonIgnore
     @JoinColumn(name = "animal_id")
     private Animale animal;
 
     @ManyToOne
+    @JsonIgnore
     @JoinColumn(name = "veterinario_id")
     private Veterinario veterinarian;
 
@@ -31,6 +34,7 @@ public class Emergenza {
     private String description;
 
     @ManyToOne
+    @JsonIgnore
     @JoinColumn(name = "medicine_id")
     private Medicine medicine;
 

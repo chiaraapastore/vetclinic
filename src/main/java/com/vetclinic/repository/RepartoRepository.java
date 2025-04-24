@@ -15,7 +15,6 @@ import java.util.Optional;
 public interface RepartoRepository extends JpaRepository<Reparto, Long> {
 
     Optional<Reparto> findFirstByName(String repartoName);
-
-    Optional<Reparto> findByHeadOfDepartment(Utente capoReparto);
+    Optional<Reparto> findByCapoRepartoId(Long capoRepartoId);
 
 }

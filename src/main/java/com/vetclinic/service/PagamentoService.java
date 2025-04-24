@@ -44,13 +44,9 @@ public class PagamentoService {
         Appuntamento appointment = appuntamentoRepository.findById(appointmentId)
                 .orElseThrow(() -> new RuntimeException("Appuntamento non trovato"));
 
-
         if (!appointment.getCliente().equals(client)) {
             throw new IllegalArgumentException("L'appuntamento non appartiene al cliente");
         }
-
-
-
 
         Fattura invoice = new Fattura();
         invoice.setCliente((Cliente) client);
@@ -60,26 +56,23 @@ public class PagamentoService {
 
         fatturaRepository.save(invoice);
 
-
         Pagamento payment = new Pagamento();
-        payment.setInvoice(invoice);
+        payment.setFatturaId(invoice.getId());
         payment.setAmount(amount);
         payment.setPaymentDate(new java.util.Date());
         payment.setStatus("COMPLETED");
 
-
         pagamentoRepository.save(payment);
-
 
         appointment.setStatus("PAID");
         appuntamentoRepository.save(appointment);
-
 
         notificheService.sendPaymentNotificationToClient((Cliente) client, payment);
         notificheService.sendPaymentNotificationToVeterinarian(appointment.getVeterinarian(), payment);
 
         return payment;
     }
+
 
 
     @Transactional

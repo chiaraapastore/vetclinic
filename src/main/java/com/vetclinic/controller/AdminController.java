@@ -41,108 +41,42 @@ public class AdminController {
     }
 
 
+
     @PostMapping("/create-department")
     public ResponseEntity<Map<String, String>> createDepartment(@RequestBody Map<String, String> payload) {
-        String repartoName = payload.get("repartoNome");
-
-        if (repartoName == null || repartoName.isEmpty()) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Il nome del reparto è obbligatorio."));
+        try {
+            String response = adminService.createDepartment(payload);
+            return ResponseEntity.ok(Map.of("message", response));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", e.getMessage()));
         }
-
-        Optional<Reparto> existingReparto = repartoRepository.findFirstByName(repartoName);
-        if (existingReparto.isPresent()) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Il reparto esiste già!"));
-        }
-        Reparto nuovoReparto = new Reparto();
-        nuovoReparto.setName(repartoName);
-        repartoRepository.save(nuovoReparto);
-
-        return ResponseEntity.ok(Map.of("message", "Reparto aggiunto con successo!"));
     }
-
 
     @PostMapping("/assign-head-of-department")
     public ResponseEntity<Map<String, String>> assignHeadOfDepartment(@RequestBody Map<String, Long> payload) {
-        Long utenteId = payload.get("utenteId");
-        Long repartoId = payload.get("repartoId");
-
-        System.out.println("API ricevuta: Assegna capo reparto ID " + utenteId + " al reparto ID " + repartoId);
-
-        if (utenteId == null || repartoId == null) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Parametri mancanti."));
+        try {
+            String response = adminService.assignHeadOfDepartment(payload);
+            return ResponseEntity.ok(Map.of("message", response));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", e.getMessage()));
         }
-
-        Optional<Utente> userOpt = utenteRepository.findById(utenteId);
-        Optional<Reparto> departmentOpt = repartoRepository.findById(repartoId);
-
-        if (userOpt.isEmpty()) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Utente non trovato."));
-        }
-
-        if (departmentOpt.isEmpty()) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Reparto non trovato."));
-        }
-
-        Utente utente = userOpt.get();
-        Reparto nuovoReparto = departmentOpt.get();
-
-        Optional<Reparto> repartoAttualeOpt = repartoRepository.findByHeadOfDepartment(utente);
-        repartoAttualeOpt.ifPresent(repartoAttuale -> {
-            repartoAttuale.setHeadOfDepartment(null);
-            repartoRepository.save(repartoAttuale);
-        });
-
-        nuovoReparto.setHeadOfDepartment(utente);
-        utente.setReparto(nuovoReparto);
-        utenteRepository.save(utente);
-        repartoRepository.save(nuovoReparto);
-
-        System.out.println("Capo reparto aggiornato con successo: " + utente.getFirstName() + " → " + nuovoReparto.getName());
-
-        return ResponseEntity.ok(Map.of("message", "Capo reparto assegnato con successo!"));
     }
-
 
     @PostMapping("/assign-doctor-to-department/{utenteId}/{repartoId}")
     public ResponseEntity<Map<String, String>> assignDoctorToDepartment(@PathVariable Long utenteId, @PathVariable Long repartoId) {
-        System.out.println("Ricevuta richiesta: Cambio reparto per dottore ID " + utenteId + " → Reparto ID " + repartoId);
-
-        Optional<Utente> dottoreOpt = utenteRepository.findById(utenteId);
-        Optional<Reparto> repartoOpt = repartoRepository.findById(repartoId);
-
-        if (dottoreOpt.isEmpty()) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Dottore non trovato."));
+        try {
+            String message = adminService.assignDoctorToDepartment(utenteId, repartoId);
+            return ResponseEntity.ok(Map.of("message", message));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "Errore interno: " + e.getMessage()));
         }
-
-        if (repartoOpt.isEmpty()) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Reparto non trovato."));
-        }
-
-        Utente dottore = dottoreOpt.get();
-        Reparto reparto = repartoOpt.get();
-
-
-        if (dottore instanceof Veterinario) {
-            Veterinario veterinario = (Veterinario) dottore;
-
-
-            if (reparto.getVeterinario() == null) {
-                reparto.setVeterinario(veterinario);
-                repartoRepository.save(reparto);
-            }
-        } else {
-            return ResponseEntity.badRequest().body(Map.of("error", "L'utente non è un veterinario."));
-        }
-
-
-        dottore.setReparto(reparto);
-        utenteRepository.saveAndFlush(dottore);
-
-        System.out.println("Dottore aggiornato al reparto: " + reparto.getName());
-
-        return ResponseEntity.ok(Map.of("message", "Dottore assegnato al reparto " + reparto.getName()));
     }
-
 
 
 
@@ -168,38 +102,15 @@ public class AdminController {
 
     @PostMapping("/create-cliente")
     public ResponseEntity<Object> createCliente(@RequestBody Map<String, String> payload) {
-        String username= payload.get("username");
-        String firstName = payload.get("firstName");
-        String lastName = payload.get("lastName");
-        String email = payload.get("email");
-        String phoneNumber = payload.get("phoneNumber");
-        String address = payload.get("address");
-
-        if (firstName == null || lastName == null || email == null ||
-                phoneNumber == null || address == null ||
-                firstName.isEmpty() || lastName.isEmpty() || email.isEmpty() || phoneNumber.isEmpty() || address.isEmpty()) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Tutti i campi sono obbligatori."));
-        }
-
-        Cliente cliente = new Cliente();
-        cliente.setFirstName(firstName);
-        cliente.setLastName(lastName);
-        cliente.setEmail(email);
-        cliente.setPhoneNumber(phoneNumber);
-        cliente.setAddress(address);
-        cliente.setUsername(username);
-        cliente.setRole("cliente");
-
         try {
-            keycloakService.createUser(cliente);
-            clienteRepository.save(cliente);
-            return ResponseEntity.ok(Map.of("message", "Cliente creato con successo!"));
+            String message = adminService.createCliente(payload);
+            return ResponseEntity.ok(Map.of("message", message));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", e.getMessage()));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "Errore interno: " + e.getMessage()));
         }
-
     }
-
 
 
     @GetMapping("/veterinaries")
@@ -220,43 +131,16 @@ public class AdminController {
 
     @PostMapping("/create-veterinarian")
     public ResponseEntity<Map<String, String>> createVeterinarian(@RequestBody Map<String, String> payload) {
-        String username= payload.get("username");
-        String firstName = payload.get("firstName");
-        String registration_number = payload.get("registration_number");
-        String lastName = payload.get("lastName");
-        String email = payload.get("email");
-        String repartoName = payload.get("repartoNome");
-
-
-        if (firstName == null || lastName == null || email == null || repartoName == null ||
-                firstName.isEmpty() || lastName.isEmpty() || email.isEmpty() || repartoName.isEmpty()) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Tutti i campi sono obbligatori, incluso il reparto."));
+        try {
+            String message = adminService.createVeterinarian(payload);
+            return ResponseEntity.ok(Map.of("message", message));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "Errore interno: " + e.getMessage()));
         }
-
-        Optional<Reparto> repartoOpt = repartoRepository.findFirstByName(repartoName);
-        if (repartoOpt.isEmpty()) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Errore: Il reparto specificato non esiste."));
-        }
-
-        Reparto reparto = repartoOpt.get();
-
-
-        Utente dottore = new Utente();
-        dottore.setFirstName(firstName);
-        dottore.setRegistrationNumber(registration_number);
-        dottore.setLastName(lastName);
-        dottore.setEmail(email);
-        dottore.setRole("veterinario");
-        dottore.setUsername(username);
-        dottore.setReparto(reparto);
-
-        keycloakService.createUser(dottore);
-        utenteRepository.save(dottore);
-
-
-        return ResponseEntity.ok(Map.of("message", "Dottore creato con successo e assegnato al reparto " + reparto.getName()));
-
     }
+
 
 
     @PostMapping("/create-head-of-department")

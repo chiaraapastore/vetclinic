@@ -1,8 +1,12 @@
 package com.vetclinic.service;
 
 
+import com.itextpdf.text.log.Logger;
+import com.itextpdf.text.log.LoggerFactory;
 import com.vetclinic.config.AuthenticationService;
+import com.vetclinic.exception.UtenteNotFoundException;
 import com.vetclinic.models.Utente;
+import com.vetclinic.models.UtenteDTO;
 import com.vetclinic.repository.UtenteRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -69,17 +73,28 @@ public class UtenteService {
         return utenteRepository.findByUsername(username) != null;
     }
 
-    @Transactional
-    public Utente getUserDetailsDataBase() {
-        String username = authenticationService.getUsername();
-        return utenteRepository.findByUsername(username);
+
+    public Utente getUserDetailsDataBase(Long utenteId) {
+        Utente utente = utenteRepository.findUtenteById(utenteId)
+                .orElseThrow(() -> new RuntimeException("Utente non trovato con Keycloak ID: " + utenteId));
+        System.out.println("Utente recuperato: " + utente);
+        return utente;
     }
+
+
+    private static final Logger log = LoggerFactory.getLogger(Utente.class);
+
 
     @Transactional
     public Utente getUtenteByKeycloakId(String keycloakId) {
-        return utenteRepository.findByKeycloakId(keycloakId)
-                .orElseThrow(() -> new RuntimeException("Nessun utente trovato con Keycloak ID: " + keycloakId));
+        Utente utente = utenteRepository.findByKeycloakId(keycloakId)
+                .orElseThrow(() -> new RuntimeException("Utente non trovato con Keycloak ID: " + keycloakId));
+
+
+        System.out.println("Utente recuperato: " + utente);
+        return utente;
     }
+
 
 
     @Transactional
@@ -101,6 +116,23 @@ public class UtenteService {
         utenteRepository.save(utente);
 
         return utente.getProfileImage();
+    }
+
+    public UtenteDTO getUserInfoByKeycloakId(String keycloakId) throws UtenteNotFoundException {
+        Utente utente = utenteRepository.findByKeycloakId(keycloakId)
+                .orElseThrow(() -> new UtenteNotFoundException("Utente non trovato"));
+
+        UtenteDTO utenteDTO = new UtenteDTO(utente);
+
+        if (utente.getReparto() != null) {
+            utenteDTO.setRepartoId(utente.getReparto().getId());
+            utenteDTO.setNameDepartment(utente.getReparto().getName());
+        } else {
+            utenteDTO.setRepartoId(null);
+            utenteDTO.setNameDepartment("Nessun reparto assegnato");
+        }
+
+        return utenteDTO;
     }
 }
 

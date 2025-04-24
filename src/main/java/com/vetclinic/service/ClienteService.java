@@ -4,6 +4,7 @@ import com.vetclinic.models.Animale;
 import com.vetclinic.models.Cliente;
 import com.vetclinic.models.DocumentoClinico;
 import com.vetclinic.models.Fattura;
+import com.vetclinic.repository.AnimaleRepository;
 import com.vetclinic.repository.ClienteRepository;
 import com.vetclinic.config.AuthenticationService;
 import com.vetclinic.repository.DocumentoClinicoRepository;
@@ -22,12 +23,14 @@ public class ClienteService {
     private final AuthenticationService authenticationService;
     private final FatturaRepository fatturaRepository;
     private final DocumentoClinicoRepository documentoClinicoRepository;
+    private final AnimaleRepository animaleRepository;
 
-    public ClienteService(ClienteRepository clienteRepository, AuthenticationService authenticationService, FatturaRepository flatturaRepository, DocumentoClinicoRepository documentoClinicoRepository) {
+    public ClienteService(ClienteRepository clienteRepository, AnimaleRepository animaleRepository,AuthenticationService authenticationService, FatturaRepository flatturaRepository, DocumentoClinicoRepository documentoClinicoRepository) {
         this.clienteRepository = clienteRepository;
         this.authenticationService = authenticationService;
         this.fatturaRepository = flatturaRepository;
         this.documentoClinicoRepository = documentoClinicoRepository;
+        this.animaleRepository = animaleRepository;
     }
 
     @Transactional
@@ -51,7 +54,6 @@ public class ClienteService {
         cliente.setLastName(lastName);
         cliente.setPhoneNumber(phoneNumber);
         cliente.setEmail(email);
-        cliente.setAddress(address);
 
         return clienteRepository.save(cliente);
     }
@@ -63,12 +65,13 @@ public class ClienteService {
     }
 
     @Transactional
-    public Set<Animale> getAnimalsOfClient() {
+    public List<Animale> getAnimalsOfClient() {
         String username = authenticationService.getUsername();
         Cliente cliente = clienteRepository.findByUsername(username)
                 .orElseThrow(() -> new IllegalArgumentException("Cliente non trovato"));
-        return cliente.getAnimaleSet();
+        return animaleRepository.findByClienteId(cliente.getId());
     }
+
 
     @Transactional
     public List<DocumentoClinico> getDocumentsOfClientAnimal(Long animaleId) {
@@ -76,11 +79,16 @@ public class ClienteService {
         Cliente cliente = clienteRepository.findByUsername(username)
                 .orElseThrow(() -> new IllegalArgumentException("Cliente non trovato"));
 
-        Animale animale = animaleSetFind(cliente.getAnimaleSet(), animaleId);
+        Animale animale = animaleRepository.findById(animaleId)
+                .orElseThrow(() -> new IllegalArgumentException("Animale non trovato"));
 
+        if (!animale.getCliente().getId().equals(cliente.getId())) {
+            throw new IllegalArgumentException("L'animale non appartiene al cliente");
+        }
 
         return documentoClinicoRepository.findByAnimaleId(animale.getId());
     }
+
 
     @Transactional
     public List<Fattura> getInvoicesOfClient() {

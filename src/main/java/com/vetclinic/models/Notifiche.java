@@ -1,5 +1,6 @@
 package com.vetclinic.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -25,10 +26,12 @@ public class Notifiche {
     private Date notificationDate;
 
     @ManyToOne
+    @JsonIgnore
     @JoinColumn(name = "animale_id")
     private Animale animal;
 
     @ManyToOne
+    @JsonIgnore
     @JoinColumn(name = "cliente_id")
     private Cliente client;
 
@@ -36,10 +39,12 @@ public class Notifiche {
     private NotificationType type;
 
     @ManyToOne
+    @JsonIgnore
     @JoinColumn(name = "sent_by_id")
     private Utente sentBy;
 
     @ManyToOne
+    @JsonIgnore
     @JoinColumn(name = "sent_to_id")
     private Utente sentTo;
 

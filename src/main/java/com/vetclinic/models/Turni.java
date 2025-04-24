@@ -1,5 +1,6 @@
 package com.vetclinic.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -20,6 +21,7 @@ public class Turni {
     private boolean approved;
 
     @ManyToOne
+    @JsonIgnore
     @JoinColumn(name = "utente_id")
     private Utente utente;
 

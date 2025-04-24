@@ -4,6 +4,8 @@ package com.vetclinic.service;
 import com.vetclinic.config.AuthenticationService;
 import com.vetclinic.models.*;
 import com.vetclinic.repository.*;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -50,16 +52,10 @@ public class AdminService {
     public List<Veterinario> getAllVeterinaries() {
         return utenteRepository.findAll().stream()
                 .filter(utente -> "veterinario".equalsIgnoreCase(utente.getRole()))
-                .map(utente -> new Veterinario(
-                        utente.getId(),
-                        utente.getFirstName(),
-                        utente.getLastName(),
-                        utente.getEmail(),
-                        utente.getRegistrationNumber(),
-                        utente.getReparto() != null ? utente.getReparto().getName() : "Nessun reparto"
-                ))
+                .map(utente -> (Veterinario) utente)
                 .collect(Collectors.toList());
     }
+
 
 
 
@@ -73,16 +69,10 @@ public class AdminService {
     public List<Veterinario> getHeadOfDepartments() {
         return utenteRepository.findAll().stream()
                 .filter(utente -> "capo-reparto".equalsIgnoreCase(utente.getRole()))
-                .map(utente -> new Veterinario(
-                        utente.getId(),
-                        utente.getFirstName(),
-                        utente.getLastName(),
-                        utente.getEmail(),
-                        utente.getRegistrationNumber(),
-                        (utente.getReparto() != null) ? utente.getReparto().getName() : "Nessun reparto"
-                ))
+                .map(utente -> (Veterinario) utente)
                 .collect(Collectors.toList());
     }
+
 
 
     @Transactional
@@ -100,6 +90,7 @@ public class AdminService {
         utenteRepository.save(capoReparto);
         notificationService.sendWelcomeNotification(utenteAdmin, capoReparto);
         return "Capo Reparto creato con successo e assegnato al reparto " + department.getName();
+
     }
 
 
@@ -194,7 +185,6 @@ public class AdminService {
         utenteRepository.save(assistente);
 
 
-        reparto.setAssistente(assistente);
         repartoRepository.save(reparto);
 
         return "Assistente " + firstName + " " + lastName + " creato con successo e assegnato al reparto " + reparto.getName();
@@ -350,7 +340,154 @@ public class AdminService {
         return "Animale creato con successo: " + animale.getName();
     }
 
+    public String createDepartment(Map<String, String> payload) {
+        String repartoName = payload.get("repartoNome");
+
+        if (repartoName == null || repartoName.isEmpty()) {
+            throw new IllegalArgumentException("Il nome del reparto è obbligatorio.");
+        }
+
+        Optional<Reparto> existingReparto = repartoRepository.findFirstByName(repartoName);
+        if (existingReparto.isPresent()) {
+            throw new IllegalArgumentException("Il reparto esiste già!");
+        }
+        Reparto nuovoReparto = new Reparto();
+        nuovoReparto.setName(repartoName);
+        repartoRepository.save(nuovoReparto);
+
+        return "Reparto aggiunto con successo!";
+    }
+
+    public String assignHeadOfDepartment(Map<String, Long> payload) {
+        Long utenteId = payload.get("utenteId");
+        Long repartoId = payload.get("repartoId");
+
+        System.out.println("API ricevuta: Assegna capo reparto ID " + utenteId + " al reparto ID " + repartoId);
+
+        if (utenteId == null || repartoId == null) {
+            throw new IllegalArgumentException("Parametri mancanti.");
+        }
+
+        Optional<Utente> userOpt = utenteRepository.findById(utenteId);
+        Optional<Reparto> departmentOpt = repartoRepository.findById(repartoId);
+
+        if (userOpt.isEmpty()) {
+            throw new IllegalArgumentException("Utente non trovato.");
+        }
+
+        if (departmentOpt.isEmpty()) {
+            throw new IllegalArgumentException("Reparto non trovato.");
+        }
+
+        Utente utente = userOpt.get();
+        Reparto nuovoReparto = departmentOpt.get();
+
+        if (!(utente instanceof CapoReparto)) {
+            throw new IllegalArgumentException("L'utente non è un capo reparto.");
+        }
+
+        CapoReparto capoReparto = (CapoReparto) utente;
+
+        Optional<Reparto> repartoAttualeOpt = repartoRepository.findByCapoRepartoId(utente.getId());
+        repartoAttualeOpt.ifPresent(repartoAttuale -> {
+            repartoRepository.save(repartoAttuale);
+        });
+
+        capoReparto.setReparto(nuovoReparto);
+        utenteRepository.save(capoReparto);
+        repartoRepository.save(nuovoReparto);
+
+        System.out.println("Capo reparto aggiornato con successo: " + capoReparto.getFirstName() + " → " + nuovoReparto.getName());
+
+        return "Capo reparto assegnato con successo!";
+    }
+
+    public String assignDoctorToDepartment(Long utenteId, Long repartoId) {
+        System.out.println("Ricevuta richiesta: Cambio reparto per dottore ID " + utenteId + " → Reparto ID " + repartoId);
+        Reparto reparto = repartoRepository.findById(repartoId).orElseThrow(()-> new IllegalArgumentException("Reparto non trovato"));
+
+        Utente dottore = utenteRepository.findById(utenteId).orElseThrow(()-> new IllegalArgumentException("Utente non trovato"));
+
+        if(!dottore.getRole().equals("veterinarian")) {
+            throw new IllegalArgumentException("L'utente non è un veterinarian.");
+        }
+        dottore.setReparto(reparto);
+        utenteRepository.saveAndFlush(dottore);
+
+        System.out.println("Dottore aggiornato al reparto: " + reparto.getName());
+
+        return "Dottore assegnato al reparto " + reparto.getName();
+    }
+
+    public String createCliente(Map<String, String> payload) {
+        String username= payload.get("username");
+        String firstName = payload.get("firstName");
+        String lastName = payload.get("lastName");
+        String email = payload.get("email");
+        String phoneNumber = payload.get("phoneNumber");
+        String address = payload.get("address");
+
+        if (firstName == null || lastName == null || email == null ||
+                phoneNumber == null || address == null ||
+                firstName.isEmpty() || lastName.isEmpty() || email.isEmpty() || phoneNumber.isEmpty() || address.isEmpty()) {
+            throw new IllegalArgumentException("Tutti i campi sono obbligatori.");
+        }
+
+        Cliente cliente = new Cliente();
+        cliente.setFirstName(firstName);
+        cliente.setLastName(lastName);
+        cliente.setEmail(email);
+        cliente.setPhoneNumber(phoneNumber);
+        cliente.setUsername(username);
+        cliente.setRole("cliente");
+
+        try {
+            keycloakService.createUser(cliente);
+            clienteRepository.save(cliente);
+        } catch (Exception e) {
+            throw new RuntimeException("Errore nella creazione del cliente su Keycloak o nel salvataggio nel database: " + e.getMessage());
+        }
+        return "Cliente creato con successo!";
+    }
+
+    public String createVeterinarian(Map<String, String> payload) {
+        String username = payload.get("username");
+        String firstName = payload.get("firstName");
+        String registration_number = payload.get("registration_number");
+        String lastName = payload.get("lastName");
+        String email = payload.get("email");
+        String repartoName = payload.get("repartoNome");
 
 
+        if (firstName == null || lastName == null || email == null || repartoName == null ||
+                firstName.isEmpty() || lastName.isEmpty() || email.isEmpty() || repartoName.isEmpty()) {
+            throw new IllegalArgumentException("Tutti i campi sono obbligatori, incluso il reparto.");
+        }
 
+        Optional<Reparto> repartoOpt = repartoRepository.findFirstByName(repartoName);
+        if (repartoOpt.isEmpty()) {
+            throw new IllegalArgumentException("Errore: Il reparto specificato non esiste.");
+        }
+
+        Reparto reparto = repartoOpt.get();
+
+
+        Utente dottore = new Utente();
+        dottore.setFirstName(firstName);
+        dottore.setRegistrationNumber(registration_number);
+        dottore.setLastName(lastName);
+        dottore.setEmail(email);
+        dottore.setRole("veterinario");
+        dottore.setUsername(username);
+        dottore.setReparto(reparto);
+
+        try {
+            keycloakService.createUser(dottore);
+            utenteRepository.save(dottore);
+        } catch (Exception e) {
+            throw new RuntimeException("Errore nella creazione del veterinario su Keycloak o nel salvataggio nel database: " + e.getMessage());
+        }
+
+        return "Dottore creato con successo e assegnato al reparto " + reparto.getName();
+    }
 }

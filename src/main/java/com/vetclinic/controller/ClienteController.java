@@ -58,8 +58,8 @@ public class ClienteController {
     }
 
     @GetMapping("/animals")
-    public ResponseEntity<Set<Animale>> getAnimalsOfClient() {
-        Set<Animale> animali = clienteService.getAnimalsOfClient();
+    public ResponseEntity<List<Animale>> getAnimalsOfClient() {
+        List<Animale> animali = clienteService.getAnimalsOfClient();
         return ResponseEntity.ok(animali);
     }
 

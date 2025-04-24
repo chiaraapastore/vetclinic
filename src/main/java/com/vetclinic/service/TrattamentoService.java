@@ -1,5 +1,6 @@
 package com.vetclinic.service;
 
+
 import com.vetclinic.models.Trattamento;
 import com.vetclinic.repository.TrattamentoRepository;
 import jakarta.transaction.Transactional;
@@ -17,9 +18,10 @@ public class TrattamentoService {
     }
 
     @Transactional
-    public List<Trattamento> getTreatmentsByAnimal(Long animalId) {
-        return treatmentRepository.findByAnimaleId(animalId);
+    public List<Trattamento> getTreatmentsByAnimal(Long animaleId) {
+        return treatmentRepository.findByAnimalId(animaleId);
     }
+
 
     @Transactional
     public Trattamento addTreatment(Trattamento treatment) {

@@ -1,6 +1,7 @@
 package com.vetclinic.models;
 
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -20,6 +21,7 @@ public class Fattura {
     private Long id;
 
     @ManyToOne
+    @JsonIgnore
     @JoinColumn(name = "cliente_id")
     private Cliente cliente;
 
@@ -30,10 +32,12 @@ public class Fattura {
     private String status;
 
     @ManyToOne
+    @JsonIgnore
     @JoinColumn(name = "payment_method_id")
     private Pagamento paymentMethod;
 
     @ManyToOne
+    @JsonIgnore
     @JoinColumn(name = "appuntamento_id")
     private Appuntamento appuntamento;
 

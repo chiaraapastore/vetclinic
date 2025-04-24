@@ -1,5 +1,6 @@
 package com.vetclinic.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -21,6 +22,7 @@ public class Ferie {
     private boolean approved;
 
     @ManyToOne
+    @JsonIgnore
     @JoinColumn(name = "utente_id")
     private Utente utente;
 

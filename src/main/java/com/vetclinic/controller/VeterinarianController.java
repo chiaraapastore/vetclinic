@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @RestController
 @CrossOrigin(origins = "http://localhost:4200")
@@ -92,14 +91,16 @@ public class VeterinarianController {
 
     @GetMapping("/department/{departmentId}")
     public ResponseEntity<List<Veterinario>> getVeterinariesByDepartment(@PathVariable Long departmentId) {
-        List<Veterinario> dottori = veterinarianService.getVeterinariesByDepartment(departmentId).stream().map( dottore -> new Veterinario(dottore.getId(), dottore.getFirstName(),
-                        dottore.getLastName(), dottore.getEmail(), dottore.getRegistrationNumber(), dottore.getReparto().getName()))
-                .collect(Collectors.toList());
+
+        List<Veterinario> dottori = veterinarianService.getVeterinariesByDepartment(departmentId);
+
         if (dottori.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
+
         return ResponseEntity.ok(dottori);
     }
+
 
     @GetMapping("/{emailVeterinarian}/department")
     public ResponseEntity<Reparto> getDepartmentByVeterinarian(@PathVariable String emailVeterinarian) {

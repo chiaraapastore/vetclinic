@@ -1,5 +1,6 @@
 package com.vetclinic.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -20,6 +21,7 @@ import java.util.Date;
         private Long id;
 
         @ManyToOne
+        @JsonIgnore
         @JoinColumn(name = "medicine_id")
         private Medicine medicine;
 
@@ -30,6 +32,7 @@ import java.util.Date;
         private Date deliveryDate;
 
         @ManyToOne
+        @JsonIgnore
         @JoinColumn(name = "fornitore_id")
         private Fornitore supplier;
 

@@ -42,13 +42,11 @@ public class RepartoService {
         Utente loggedUser = utenteRepository.findByUsername(authenticationService.getUsername());
 
         if (!loggedUser.getRole().equals("admin") &&
-                !loggedUser.getRole().equals("capo-reparto") &&
-                !department.getHeadOfDepartment().equals(loggedUser)) {
-            throw new RuntimeException("Non hai i permessi per aggiornare questo reparto.");
+                !(loggedUser.getReparto()!= null && loggedUser.getReparto().getId().equals(department.getId()))){
+             throw new RuntimeException("Non hai i permessi per aggiornare questo reparto.");
         }
 
         department.setName(updatedDepartment.getName());
-        department.setHeadOfDepartment(updatedDepartment.getHeadOfDepartment());
         return departmentRepository.save(department);
     }
 
@@ -59,13 +57,14 @@ public class RepartoService {
 
         Utente loggedUser = utenteRepository.findByUsername(authenticationService.getUsername());
 
-        if (!loggedUser.getRole().equals("admin") &&
-                !loggedUser.getRole().equals("capo-reparto") &&
-                !department.getHeadOfDepartment().equals(loggedUser)) {
-            throw new RuntimeException("Non hai i permessi per cancellare questo reparto.");
-        }
+        boolean isAdmin = authenticationService.getUsername().equals("admin");
+        boolean isCapoReparto = loggedUser.getRole().equals("capo-reparto") && loggedUser.getReparto()!=null && loggedUser.getReparto().getId().equals(id);
 
-        departmentRepository.deleteById(id);
+       if(!isAdmin && !isCapoReparto){
+           throw new RuntimeException("Non hai i permessi per cancellare questo reparto.");
+       }
+
+        departmentRepository.delete(department);
     }
 
     @Transactional
@@ -75,11 +74,10 @@ public class RepartoService {
 
         Utente loggedUser = utenteRepository.findByUsername(authenticationService.getUsername());
 
-        if (!loggedUser.getRole().equals("admin") &&
-                !loggedUser.getRole().equals("capo-reparto") &&
-                !department.getHeadOfDepartment().equals(loggedUser) &&
-                !department.getAssistente().equals(loggedUser) &&
-                !department.getVeterinario().equals(loggedUser)) {
+        boolean isAdmin = loggedUser.getRole().equals("admin");
+        boolean isAssignedToReparto = loggedUser.getReparto() != null && loggedUser.getReparto().getId().equals(departmentId);
+
+        if (!isAdmin && !isAssignedToReparto) {
             throw new RuntimeException("Non hai i permessi per visualizzare questo reparto.");
         }
 

@@ -1,5 +1,6 @@
 package com.vetclinic.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
@@ -46,30 +47,38 @@ public class Animale {
         private double weight;
 
         @ManyToOne
+        @JsonIgnore
         @JoinColumn(name = "cliente_id")
         private Cliente cliente;
 
-
-        @OneToMany(mappedBy = "animale")
-        private Set<Vaccino> vaccini;
-
-
-        @OneToMany(mappedBy = "animale")
-        private Set<Medicine> medicine;
-
-        @OneToMany(mappedBy = "animale")
-        private Set<CronologiaAnimale> historicalDiseases;
-
-        @OneToMany(mappedBy = "animale")
-        private Set<Operazione> operazione;
-
-        @OneToMany(mappedBy = "animale")
-        private Set<Esame> esame;
-
-        @OneToMany(mappedBy = "animale")
-        private Set<Trattamento> trattamento;
+        @ManyToOne
+        @JsonIgnore
+        @JoinColumn(name = "vaccino")
+        private Vaccino vaccini;
 
         @ManyToOne
+        @JsonIgnore
+        @JoinColumn(name = "medicine")
+        private Medicine medicine;
+
+
+        @ManyToOne
+        @JsonIgnore
+        @JoinColumn(name = "operazione")
+        private Operazione operazione;
+
+        @ManyToOne
+        @JsonIgnore
+        @JoinColumn(name = "esame")
+        private Esame esame;
+
+        @ManyToOne
+        @JsonIgnore
+        @JoinColumn(name = "trattamento")
+        private Trattamento trattamento;
+
+        @ManyToOne
+        @JsonIgnore
         @JoinColumn(name = "veterinario_id")
         private Veterinario veterinario;
 

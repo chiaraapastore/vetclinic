@@ -50,12 +50,15 @@ public class VeterinarianService {
             Animale animale = animaleRepository.findById(pazienteId)
                     .orElseThrow(() -> new RuntimeException("Paziente non trovato"));
 
+            Veterinario veterinario = (Veterinario) utente;
+
             Operazione operazione = new Operazione();
-            operazione.setAnimale(animale);
-            operazione.setVeterinario(utente);
+            operazione.setVeterinario(veterinario);
             operazione.setTipoOperazione(tipoOperazione);
             operazione.setDescrizione(descrizioneOperazione);
             operazione.setDataOra(LocalDateTime.now());
+
+            operazione.setAnimaleId(animale.getId());
 
             operazioneRepository.save(operazione);
 
@@ -68,6 +71,8 @@ public class VeterinarianService {
             throw new RuntimeException("Errore durante l'esecuzione dell'operazione: " + e.getMessage(), e);
         }
     }
+
+
 
     @Transactional
     public Somministrazione administersMedicines(Long pazienteId, Long capoRepartoId, String nomeMedicinale, int quantita) {
@@ -148,7 +153,9 @@ public class VeterinarianService {
 
         emergenzaRepository.save(emergenza);
 
-        notificheService.sendEmergencyNotificationToHeadOfDepartment(veterinarian, veterinarian.getReparto().getHeadOfDepartment(), description, medicine);
+        Utente capoReparto = utenteRepository.findByReparto_IdAndRole(veterinarian.getReparto().getId(), "capo_reparto").orElseThrow(()-> new IllegalArgumentException("Capo reparto non trovato"));
+
+        notificheService.sendEmergencyNotificationToHeadOfDepartment(veterinarian, capoReparto, description, medicine);
 
 
         Utente assistant = utenteRepository.findByUsername(authenticationService.getUsername());
@@ -189,22 +196,20 @@ public class VeterinarianService {
 
     @Transactional
     public List<Veterinario> getVeterinariesByDepartment(Long departmentId) {
+
         return utenteRepository.findByDepartmentId(departmentId).stream()
-                .map(dottore -> new Veterinario(
-                        dottore.getId(),
-                        dottore.getFirstName(),
-                        dottore.getLastName(),
-                        dottore.getEmail(),
-                        dottore.getRegistrationNumber(),
-                        dottore.getReparto().getName()
-                ))
+                .filter(utente -> "veterinario".equalsIgnoreCase(utente.getRole()))
+                .map(utente -> (Veterinario) utente)
                 .collect(Collectors.toList());
     }
 
+
     @Transactional
     public Reparto getDepartmentByVeterinarian(String emailVeterinarian) {
-        return utenteRepository.findRepartoByEmailVeterinarian(emailVeterinarian)
+        Utente veterinario = utenteRepository.findVeterinarioByEmail(emailVeterinarian)
                 .orElseThrow(() -> new RuntimeException("Nessun veterinario trovato con email: " + emailVeterinarian));
+
+        return veterinario.getReparto();
     }
 
     @Transactional

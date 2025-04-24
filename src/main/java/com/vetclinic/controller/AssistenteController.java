@@ -77,10 +77,11 @@ public class AssistenteController {
 
 
     @GetMapping("/view-department-medicines/{departmentId}")
-    public ResponseEntity<List<Medicine>> viewDepartmentMedicines(@PathVariable Long departmentId) {
-        List<Medicine> medicines = assistenteService.viewDepartmentMedicines(departmentId);
+    public ResponseEntity<List<MedicineDTO>> viewDepartmentMedicines(@PathVariable Long departmentId) {
+        List<MedicineDTO> medicines = assistenteService.viewDepartmentMedicines(departmentId);
         return ResponseEntity.ok(medicines);
     }
+
 
 
     @GetMapping("/get-veterinarian-patients")

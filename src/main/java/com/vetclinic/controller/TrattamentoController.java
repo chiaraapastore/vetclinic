@@ -23,6 +23,7 @@ public class TrattamentoController {
         return treatmentService.getTreatmentsByAnimal(animalId);
     }
 
+
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public Trattamento addTreatment(@RequestBody Trattamento treatment) {

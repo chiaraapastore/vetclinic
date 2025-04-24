@@ -1,6 +1,7 @@
 package com.vetclinic.models;
 
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
@@ -11,9 +12,6 @@ import lombok.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name = "utente")
-@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
-@DiscriminatorColumn(name = "dtype", discriminatorType = DiscriminatorType.STRING)
 
 public class Utente {
     @Id
@@ -38,8 +36,8 @@ public class Utente {
     private Integer countNotification;
     private String keycloakId;
 
-    @Setter
     @ManyToOne
+    @JsonIgnore
     @JoinColumn(name = "reparto_id", referencedColumnName = "id")
     private Reparto reparto;
 

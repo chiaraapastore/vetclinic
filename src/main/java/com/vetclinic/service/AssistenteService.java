@@ -101,16 +101,23 @@ public class AssistenteService {
         notificheService.sendVeterinarianNotificationToDepartmentHead(assistant, departmentHead, medicine.getName());
     }
 
-    @Transactional
-    public List<Medicine> viewDepartmentMedicines(Long departmentId) {
-        List<Medicine> medicinali = medicineRepository.findByDepartmentId(departmentId);
+    @Transactional(readOnly = true)
+    public List<MedicineDTO> viewDepartmentMedicines(Long departmentId) {
+        List<Medicine> medicines = medicineRepository.findByDepartmentId(departmentId);
 
-        medicinali.forEach(medicinale -> {
-            medicinale.setDescription(null);
-        });
-
-        return medicinali;
+        return medicines.stream().map(medicine -> new MedicineDTO(
+                medicine.getId(),
+                medicine.getName(),
+                medicine.getDescription(),
+                medicine.getDosage(),
+                medicine.getExpirationDate(),
+                medicine.getQuantity(),
+                medicine.getAvailableQuantity(),
+                medicine.getDepartment() != null ? medicine.getDepartment().getId() : null,
+                medicine.getDepartment() != null ? medicine.getDepartment().getName() : null
+        )).collect(Collectors.toList());
     }
+
 
 
 
@@ -173,8 +180,10 @@ public class AssistenteService {
 
     @Transactional
     public Reparto getRepartoByVeterinarian(String emailDottore) {
-        return utenteRepository.findRepartoByEmailVeterinarian(emailDottore)
+        Utente veterinario = utenteRepository.findVeterinarioByEmail(emailDottore)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Nessun dottore trovato con email: " + emailDottore));
+
+        return veterinario.getReparto();
     }
 
     @Transactional
@@ -218,7 +227,7 @@ public class AssistenteService {
         fatturaRepository.save(fattura);
 
         Pagamento pagamento = new Pagamento();
-        pagamento.setInvoice(fattura);
+        pagamento.setFatturaId(fattura.getId());
         pagamento.setAmount(amount);
         pagamento.setPaymentMethod(paymentMethod);
         pagamento.setPaymentDate(new Date());

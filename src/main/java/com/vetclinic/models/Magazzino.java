@@ -15,9 +15,7 @@ public class Magazzino {
 
     private int maximumCapacity;
 
-    @ManyToOne
-    @JoinColumn(name = "medicine_id")
-    private Medicine medicine;
+    private Long medicineId;
 
     private int currentStock;
 

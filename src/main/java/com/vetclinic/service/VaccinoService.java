@@ -34,18 +34,19 @@ public class VaccinoService {
         vaccino.setName(nome);
         vaccino.setType(tipo);
         vaccino.setAdministrationDate(dataSomministrazione);
-        vaccino.setAnimale(animale);
         vaccino.setVeterinario(veterinario);
+
+        vaccino.setAnimaleId(animale.getId());
 
         return vaccinoRepository.save(vaccino);
     }
 
+
     @Transactional
     public List<Vaccino> getVaccineByAnimal(Long animaleId) {
-        Animale animale = animaleRepository.findById(animaleId)
-                .orElseThrow(() -> new RuntimeException("Animale non trovato"));
-        return vaccinoRepository.findByAnimale(animale);
+        return vaccinoRepository.findByAnimaleId(animaleId);
     }
+
 
     @Transactional
     public List<Vaccino> getVaccineByVeterinarian(Long veterinarioId) {

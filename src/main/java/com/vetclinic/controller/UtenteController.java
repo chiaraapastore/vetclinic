@@ -1,9 +1,11 @@
 package com.vetclinic.controller;
 
 import com.vetclinic.config.AuthenticationService;
+import com.vetclinic.exception.UtenteNotFoundException;
 import com.vetclinic.models.TokenRequest;
 import com.vetclinic.models.Utente;
 import com.vetclinic.models.UtenteDTO;
+import com.vetclinic.repository.UtenteRepository;
 import com.vetclinic.service.KeycloakService;
 import com.vetclinic.service.UtenteService;
 import org.springframework.http.HttpStatus;
@@ -23,11 +25,13 @@ public class UtenteController {
     private final UtenteService utenteService;
     private final KeycloakService keycloakService;
     private final AuthenticationService authenticationService;
+    private final UtenteRepository utenteRepository;
 
-    public UtenteController(UtenteService utenteService, KeycloakService keycloakService, AuthenticationService authenticationService) {
+    public UtenteController(UtenteService utenteService, KeycloakService keycloakService, AuthenticationService authenticationService, UtenteRepository utenteRepository) {
         this.utenteService = utenteService;
         this.keycloakService = keycloakService;
         this.authenticationService = authenticationService;
+        this.utenteRepository = utenteRepository;
     }
 
     @PostMapping("/login")
@@ -55,25 +59,15 @@ public class UtenteController {
         if (jwt == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-
         String keycloakId = jwt.getClaim("sub");
-        Utente utente = utenteService.getUtenteByKeycloakId(keycloakId);
-
-        if (utente == null) {
+        try {
+            UtenteDTO utenteDTO = utenteService.getUserInfoByKeycloakId(keycloakId);
+            return ResponseEntity.ok(utenteDTO);
+        } catch (UtenteNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
-
-        UtenteDTO utenteDTO = new UtenteDTO(utente);
-
-        if (utente.getReparto() != null) {
-            utenteDTO.setRepartoId(utente.getReparto().getId());
-            utenteDTO.setNameDepartment(utente.getReparto().getName());
-        } else {
-            utenteDTO.setRepartoId(null);
-            utenteDTO.setNameDepartment("Nessun reparto assegnato");
-        }
-
-        return ResponseEntity.ok(utenteDTO);
     }
 
 
@@ -105,10 +99,13 @@ public class UtenteController {
 
 
 
-    @GetMapping("/userDetailsDataBase")
-    public ResponseEntity<Utente> getUserDetailsDataBase() {
+    @GetMapping("/userDetailsDataBase/{utenteId}")
+    public ResponseEntity<Utente> getUserDetailsDataBase(@PathVariable Long utenteId) {
         try{
-            return new ResponseEntity<>(utenteService.getUserDetailsDataBase(), HttpStatus.OK);
+            Utente utente= utenteService.getUserDetailsDataBase(utenteId);
+            System.out.println("Ciao");
+            System.out.println(utente);
+            return new ResponseEntity<>(utente, HttpStatus.OK);
         }catch (RuntimeException e) {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }

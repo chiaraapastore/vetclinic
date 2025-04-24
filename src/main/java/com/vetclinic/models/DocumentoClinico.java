@@ -1,6 +1,7 @@
 package com.vetclinic.models;
 
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -21,14 +22,17 @@ public class DocumentoClinico {
     private String documentName;
     private String documentPath;
     @ManyToOne
+    @JsonIgnore
     @JoinColumn(name = "animale_id")
     private Animale animale;
 
     @ManyToOne
+    @JsonIgnore
     @JoinColumn(name = "veterinario_id")
-    private Utente veterinario;
+    private Veterinario veterinario;
 
     @ManyToOne
+    @JsonIgnore
     @JoinColumn(name = "assistente_id")
     private Assistente assistant;
 }

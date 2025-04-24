@@ -1,5 +1,6 @@
 package com.vetclinic.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -28,11 +29,11 @@ public class Trattamento {
     @Temporal(TemporalType.DATE)
     private Date endDate;
 
-    @ManyToOne
-    @JoinColumn(name = "animal_id")
-    private Animale animale;
 
     @ManyToOne
-    @JoinColumn(name = "animale_id")
+    @JsonIgnore
+    @JoinColumn(name = "cronologia_animale")
     private CronologiaAnimale cronologiaAnimale;
+
+    private Long animalId;
 }
