@@ -131,19 +131,37 @@ public class NotificheService {
         notification.setSentBy(sender);
         notification.setSentTo(receiver);
         notification.setNotificationDate(new Date());
-        notification.setType(Notifiche.NotificationType.valueOf(type));
-        notification.setRead(false);
 
+        try {
+            notification.setType(Notifiche.NotificationType.valueOf(type.toUpperCase()));
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Tipo notifica non valido: " + type);
+        }
+
+        notification.setRead(false);
         notificheRepository.save(notification);
 
-        receiver.setCountNotification(receiver.getCountNotification() + 1);
+        receiver.setCountNotification(
+                (receiver.getCountNotification() != null ? receiver.getCountNotification() : 0) + 1
+        );
         utenteRepository.save(receiver);
     }
 
 
     private void sendNotificationFromAssistantToClient(Cliente client, String message, Notifiche.NotificationType type) {
+        if (client == null) {
+            return;
+        }
+        Notifiche notification = new Notifiche();
+        notification.setMessage(message);
+        notification.setClient(client);
+        notification.setNotificationDate(new Date());
+        notification.setType(type);
+        notification.setRead(false);
 
+        notificheRepository.save(notification);
     }
+
 
     @Transactional
     public void sendEmergencyNotificationToAssistant(Veterinario veterinarian, Utente assistant, String description, Medicine medicine) {

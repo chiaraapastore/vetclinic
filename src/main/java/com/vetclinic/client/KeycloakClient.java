@@ -4,6 +4,7 @@ package com.vetclinic.client;
 import com.vetclinic.models.RoleKeycloak;
 import com.vetclinic.models.TokenRequest;
 import com.vetclinic.models.UtenteKeycloak;
+import jakarta.validation.constraints.NotBlank;
 import org.keycloak.representations.idm.RoleRepresentation;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.MediaType;
@@ -52,6 +53,7 @@ public interface KeycloakClient {
             @RequestHeader("Authorization") String accessToken,
             @PathVariable("id") String userId,
             @RequestBody List<RoleRepresentation> roles);
+
 
 
 }

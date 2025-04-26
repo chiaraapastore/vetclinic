@@ -55,7 +55,15 @@ public class Notifiche {
     public enum NotificationType {
         EXPIRING_MEDICINE,
         MEDICINE_ADMINISTERED,
-        GENERAL_ALERT
+        GENERAL_ALERT,
+        WELCOME,
+        DEPARTMENT_CHANGE,
+        TURNI,
+        FARMACO,
+        FARMACO_SCADUTO,
+        ANOMALIA,
+        EMERGENZA,
+        PAYMENT_CONFIRMATION
     }
 
 

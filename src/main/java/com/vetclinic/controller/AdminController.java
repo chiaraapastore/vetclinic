@@ -145,29 +145,17 @@ public class AdminController {
 
     @PostMapping("/create-head-of-department")
     public ResponseEntity<Map<String, String>> createHeadOfDepartment(@RequestBody Map<String, String> payload) {
-        System.out.println("Richiesta ricevuta: " + payload);
-
-        String firstName = payload.get("firstName");
-        String lastName = payload.get("lastName");
-        String email = payload.get("email");
-        String repartoName = payload.get("repartoNome");
-
-        if (firstName == null || lastName == null || email == null || repartoName == null ||
-                firstName.isEmpty() || lastName.isEmpty() || email.isEmpty() || repartoName.isEmpty()) {
-            System.out.println("Errore: Campi mancanti!");
-            return ResponseEntity.badRequest().body(Map.of("error", "Tutti i campi sono obbligatori, incluso il reparto."));
+        try {
+            String message = adminService.createHeadOfDepartment(payload);
+            return ResponseEntity.ok(Map.of("message", message));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "Errore interno: " + e.getMessage()));
         }
-
-        Optional<Reparto> repartoOpt = repartoRepository.findFirstByName(repartoName);
-        if (repartoOpt.isEmpty()) {
-            System.out.println("Errore: Il reparto '" + repartoName + "' non esiste!");
-            return ResponseEntity.badRequest().body(Map.of("error", "Errore: Il reparto specificato non esiste."));
-        }
-
-        Reparto reparto = repartoOpt.get();
-        String response = adminService.createHeadOfDepartment(firstName, lastName, email, reparto);
-        return ResponseEntity.ok(Map.of("message", response));
     }
+
+
 
 
     @PostMapping("/add-medicinal")
@@ -197,20 +185,8 @@ public class AdminController {
 
     @PostMapping("/create-assistant")
     public ResponseEntity<Map<String, String>> createAssistant(@RequestBody Map<String, String> payload) {
-        String username = payload.get("username");
-        String firstName = payload.get("firstName");
-        String lastName = payload.get("lastName");
-        String email = payload.get("email");
-        String registrationNumber = payload.get("registrationNumber");
-        String repartoName = payload.get("repartoName");
-
-        if (username == null || firstName == null || lastName == null || email == null || repartoName == null ||
-                username.isEmpty() || firstName.isEmpty() || lastName.isEmpty() || email.isEmpty() || repartoName.isEmpty()) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Tutti i campi sono obbligatori, incluso il reparto."));
-        }
-
         try {
-            String message = adminService.createAssistant(username, firstName, lastName, email, registrationNumber, repartoName);
+            String message = adminService.createAssistant(payload);
             return ResponseEntity.ok(Map.of("message", message));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
@@ -218,6 +194,7 @@ public class AdminController {
             return ResponseEntity.internalServerError().body(Map.of("error", "Errore interno: " + e.getMessage()));
         }
     }
+
 
 
     @GetMapping("/orders")

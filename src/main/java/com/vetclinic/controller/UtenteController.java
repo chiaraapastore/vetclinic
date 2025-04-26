@@ -47,12 +47,19 @@ public class UtenteController {
     @PostMapping("/register")
     public ResponseEntity<Object> createUser(@RequestBody Utente utente) {
         try {
+            if (utenteService.userExistsByUsername(utente.getUsername())) {
+                return ResponseEntity.ok("Utente già esistente");
+            }
             ResponseEntity<Utente> savedUtente = keycloakService.createUser(utente);
-            return ResponseEntity.ok(savedUtente);
-        } catch (Exception e) {
+            return ResponseEntity.ok(savedUtente.getBody());
+        } catch (RuntimeException e) {
+            if (e.getMessage().contains("Utente con username")) {
+                return ResponseEntity.ok("Utente già esistente");
+            }
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
         }
     }
+
 
     @GetMapping("/user-info")
     public ResponseEntity<UtenteDTO> getUserInfo(@AuthenticationPrincipal Jwt jwt) {
@@ -99,13 +106,10 @@ public class UtenteController {
 
 
 
-    @GetMapping("/userDetailsDataBase/{utenteId}")
-    public ResponseEntity<Utente> getUserDetailsDataBase(@PathVariable Long utenteId) {
+    @GetMapping("/userDetailsDataBase")
+    public ResponseEntity<Utente> getUserDetailsDataBase() {
         try{
-            Utente utente= utenteService.getUserDetailsDataBase(utenteId);
-            System.out.println("Ciao");
-            System.out.println(utente);
-            return new ResponseEntity<>(utente, HttpStatus.OK);
+            return new ResponseEntity<>(utenteService.getUserDetailsDataBase(), HttpStatus.OK);
         }catch (RuntimeException e) {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }

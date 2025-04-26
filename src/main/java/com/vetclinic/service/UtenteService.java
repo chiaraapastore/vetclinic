@@ -70,15 +70,17 @@ public class UtenteService {
 
     @Transactional
     public boolean userExistsByUsername(String username) {
-        return utenteRepository.findByUsername(username) != null;
+        return utenteRepository.existsByUsernameIgnoreCase(username) || utenteRepository.existsByEmailIgnoreCase(username);
     }
 
 
-    public Utente getUserDetailsDataBase(Long utenteId) {
-        Utente utente = utenteRepository.findUtenteById(utenteId)
-                .orElseThrow(() -> new RuntimeException("Utente non trovato con Keycloak ID: " + utenteId));
-        System.out.println("Utente recuperato: " + utente);
-        return utente;
+
+
+
+    @Transactional
+    public Utente getUserDetailsDataBase() {
+        String username = authenticationService.getUsername();
+        return utenteRepository.findByUsername(username);
     }
 
 

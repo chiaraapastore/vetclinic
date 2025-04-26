@@ -26,5 +26,9 @@ public interface UtenteRepository extends JpaRepository<Utente, Long> {
     Optional<Utente> findVeterinarioByEmail(@Param("email") String email);
     Utente findByEmail(String email);
     Optional<Utente> findByReparto_IdAndRole(Long repartoId, String role);
+    boolean existsByUsernameIgnoreCase(String username);
+    boolean existsByEmailIgnoreCase(String email);
+
+
 }
 

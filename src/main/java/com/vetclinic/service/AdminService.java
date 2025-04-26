@@ -76,22 +76,51 @@ public class AdminService {
 
 
     @Transactional
-    public String createHeadOfDepartment(String firstName, String lastName, String email, Reparto department) {
+    public String createHeadOfDepartment(Map<String, String> payload) {
         Utente utenteAdmin = utenteRepository.findByUsername(authenticationService.getUsername());
         if (utenteAdmin == null) {
             throw new IllegalArgumentException("Utente non autenticato");
         }
-        Utente capoReparto = new Utente();
+
+        String username = payload.get("username");
+        String firstName = payload.get("firstName");
+        String lastName = payload.get("lastName");
+        String email = payload.get("email");
+        String repartoName = payload.get("repartoNome");
+
+        if (username == null || firstName == null || lastName == null || email == null || repartoName == null ||
+                username.isEmpty() || firstName.isEmpty() || lastName.isEmpty() || email.isEmpty() || repartoName.isEmpty()) {
+            throw new IllegalArgumentException("Tutti i campi sono obbligatori, incluso il reparto.");
+        }
+
+        Reparto reparto = repartoRepository.findFirstByName(repartoName)
+                .orElseThrow(() -> new IllegalArgumentException("Errore: Il reparto specificato non esiste."));
+
+        CapoReparto capoReparto = new CapoReparto();
+        capoReparto.setUsername(username);
         capoReparto.setFirstName(firstName);
         capoReparto.setLastName(lastName);
         capoReparto.setEmail(email);
-        capoReparto.setRole("capoReparto");
-        capoReparto.setReparto(department);
-        utenteRepository.save(capoReparto);
-        notificationService.sendWelcomeNotification(utenteAdmin, capoReparto);
-        return "Capo Reparto creato con successo e assegnato al reparto " + department.getName();
+        capoReparto.setRole("capo-reparto");
+        capoReparto.setReparto(reparto);
 
+        try {
+            keycloakService.createUser(capoReparto);
+            utenteRepository.save(capoReparto);
+
+            reparto.setCapoRepartoId(capoReparto.getId());
+            repartoRepository.save(reparto);
+
+            notificationService.sendWelcomeNotification(utenteAdmin, capoReparto);
+        } catch (Exception e) {
+            throw new RuntimeException("Errore nella creazione del capo reparto su Keycloak o nel salvataggio nel database: " + e.getMessage());
+        }
+
+        return "Capo Reparto creato con successo e assegnato al reparto " + reparto.getName();
     }
+
+
+
 
 
     @Transactional
@@ -167,7 +196,18 @@ public class AdminService {
 
 
     @Transactional
-    public String createAssistant(String username, String firstName, String lastName, String email, String registrationNumber, String repartoName) {
+    public String createAssistant(Map<String, String> payload) {
+        String username = payload.get("username");
+        String firstName = payload.get("firstName");
+        String lastName = payload.get("lastName");
+        String email = payload.get("email");
+        String registrationNumber = payload.get("registrationNumber");
+        String repartoName = payload.get("repartoName");
+
+        if (username == null || firstName == null || lastName == null || email == null || repartoName == null ||
+                username.isEmpty() || firstName.isEmpty() || lastName.isEmpty() || email.isEmpty() || repartoName.isEmpty()) {
+            throw new IllegalArgumentException("Tutti i campi sono obbligatori, incluso il reparto.");
+        }
 
         Reparto reparto = repartoRepository.findFirstByName(repartoName)
                 .orElseThrow(() -> new IllegalArgumentException("Reparto non trovato"));
@@ -181,14 +221,16 @@ public class AdminService {
         assistente.setRole("assistente");
         assistente.setReparto(reparto);
 
-        keycloakService.createUser(assistente);
-        utenteRepository.save(assistente);
-
-
-        repartoRepository.save(reparto);
+        try {
+            keycloakService.createUser(assistente);
+            utenteRepository.save(assistente);
+        } catch (Exception e) {
+            throw new RuntimeException("Errore nella creazione dell'assistente su Keycloak o nel salvataggio nel database: " + e.getMessage());
+        }
 
         return "Assistente " + firstName + " " + lastName + " creato con successo e assegnato al reparto " + reparto.getName();
     }
+
 
 
 
@@ -450,35 +492,30 @@ public class AdminService {
         return "Cliente creato con successo!";
     }
 
+    @Transactional
     public String createVeterinarian(Map<String, String> payload) {
         String username = payload.get("username");
         String firstName = payload.get("firstName");
-        String registration_number = payload.get("registration_number");
+        String registrationNumber = payload.get("registration_number");
         String lastName = payload.get("lastName");
         String email = payload.get("email");
         String repartoName = payload.get("repartoNome");
-
 
         if (firstName == null || lastName == null || email == null || repartoName == null ||
                 firstName.isEmpty() || lastName.isEmpty() || email.isEmpty() || repartoName.isEmpty()) {
             throw new IllegalArgumentException("Tutti i campi sono obbligatori, incluso il reparto.");
         }
 
-        Optional<Reparto> repartoOpt = repartoRepository.findFirstByName(repartoName);
-        if (repartoOpt.isEmpty()) {
-            throw new IllegalArgumentException("Errore: Il reparto specificato non esiste.");
-        }
+        Reparto reparto = repartoRepository.findFirstByName(repartoName)
+                .orElseThrow(() -> new IllegalArgumentException("Errore: Il reparto specificato non esiste."));
 
-        Reparto reparto = repartoOpt.get();
-
-
-        Utente dottore = new Utente();
+        Veterinario dottore = new Veterinario();
         dottore.setFirstName(firstName);
-        dottore.setRegistrationNumber(registration_number);
         dottore.setLastName(lastName);
         dottore.setEmail(email);
-        dottore.setRole("veterinario");
         dottore.setUsername(username);
+        dottore.setRegistrationNumber(registrationNumber);
+        dottore.setRole("veterinario");
         dottore.setReparto(reparto);
 
         try {
@@ -490,4 +527,5 @@ public class AdminService {
 
         return "Dottore creato con successo e assegnato al reparto " + reparto.getName();
     }
+
 }
