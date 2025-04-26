@@ -24,9 +24,10 @@ public class CronologiaController {
         return ResponseEntity.ok("Evento aggiunto con successo");
     }
 
-    @GetMapping("/{animaleId}")
-    public ResponseEntity<CronologiaAnimale> getAnimalHistory(@PathVariable Long clienteId, @PathVariable Long animaleId) {
-        CronologiaAnimale cronologia = cronologiaService.getAnimalHistory(clienteId, animaleId);
-        return ResponseEntity.ok(cronologia);
+    @GetMapping("/animal-history/{animaleId}")
+    public ResponseEntity<List<CronologiaAnimale>> getFullAnimalHistory(@PathVariable Long animaleId) {
+        List<CronologiaAnimale> history = cronologiaService.getFullAnimalHistory(animaleId);
+        return ResponseEntity.ok(history);
     }
+
 }

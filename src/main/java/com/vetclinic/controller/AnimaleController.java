@@ -2,6 +2,8 @@ package com.vetclinic.controller;
 
 import com.vetclinic.models.Animale;
 import com.vetclinic.service.AnimaleService;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -51,4 +53,17 @@ public class AnimaleController {
         animaleService.deleteAnimale(animaleId);
         return ResponseEntity.ok("Animale eliminato con successo");
     }
+
+    @GetMapping("/download-cartella-clinica/{animaleId}")
+    public ResponseEntity<byte[]> downloadMedicalRecord(@PathVariable Long animaleId) {
+        try {
+            byte[] pdfBytes = animaleService.generateCartellaClinicaPdf(animaleId);
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=cartella_clinica.pdf")
+                    .body(pdfBytes);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
 }

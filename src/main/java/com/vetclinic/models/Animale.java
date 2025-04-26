@@ -44,7 +44,7 @@ public class Animale {
         private String symptoms;
 
         @NotBlank(message = "Il peso è obbligatorio")
-        private double weight;
+        private Double weight;
 
         @ManyToOne
         @JsonIgnore

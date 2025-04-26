@@ -127,8 +127,12 @@ public class CronologiaService {
     }
 
 
+    @Transactional
+    public List<CronologiaAnimale> getFullAnimalHistory(Long animaleId) {
+        Animale animale = animaleRepository.findById(animaleId)
+                .orElseThrow(() -> new RuntimeException("Animale non trovato"));
 
-
-
+        return cronologiaRepository.findByAnimaleId(animaleId);
+    }
 
 }
