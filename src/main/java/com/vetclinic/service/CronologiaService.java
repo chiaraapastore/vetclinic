@@ -37,27 +37,8 @@ public class CronologiaService {
 
     @Transactional
     public void addEventToAnimal(Long animaleId, String eventType, String description) {
-
         Animale animale = animaleRepository.findById(animaleId)
                 .orElseThrow(() -> new IllegalArgumentException("Animale non trovato"));
-
-        Utente utente = utenteRepository.findByUsername(authenticationService.getUsername());
-        if (utente == null) {
-            throw new IllegalArgumentException("Utente non trovato");
-        }
-
-        Veterinario veterinario = null;
-        Assistente assistente = null;
-
-        if (utente instanceof Veterinario) {
-            veterinario = (Veterinario) utente;
-        } else if (utente instanceof Assistente) {
-            assistente = (Assistente) utente;
-        }
-
-        if (veterinario == null && assistente == null) {
-            throw new IllegalArgumentException("L'utente non è né un veterinario né un assistente");
-        }
 
         CronologiaAnimale cronologiaPaziente = new CronologiaAnimale();
         cronologiaPaziente.setAnimaleId(animale.getId());
@@ -65,19 +46,13 @@ public class CronologiaService {
         cronologiaPaziente.setEventType(eventType);
         cronologiaPaziente.setDescription(description);
 
-        if (veterinario != null) {
-            cronologiaPaziente.setVeterinarian(veterinario);
-        }
-        if (assistente != null) {
-            cronologiaPaziente.setAssistente(assistente);
-        }
-
         if (animale.getCliente() != null) {
             cronologiaPaziente.setCliente(animale.getCliente());
         }
 
         cronologiaRepository.save(cronologiaPaziente);
     }
+
 
 
     @Transactional
