@@ -12,5 +12,7 @@ public interface AppuntamentoRepository extends JpaRepository<Appuntamento, Long
     List<Appuntamento> findByAnimalId(Long animalId);
 
     List<Appuntamento> findByVeterinarianId(Long veterinarianId);
+    
+    List<Appuntamento> findByAnimalRepartoId(Long repartoId);
 
 }

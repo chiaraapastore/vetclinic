@@ -1,14 +1,20 @@
 package com.vetclinic.service;
 
 import com.vetclinic.config.AuthenticationService;
+import com.vetclinic.models.Animale;
 import com.vetclinic.models.Appuntamento;
 import com.vetclinic.models.Utente;
+import com.vetclinic.models.Veterinario;
+import com.vetclinic.repository.AnimaleRepository;
 import com.vetclinic.repository.AppuntamentoRepository;
 import com.vetclinic.repository.UtenteRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -18,21 +24,16 @@ public class AppuntamentoService {
     private final AppuntamentoRepository appuntamentoRepository;
     private final UtenteRepository utenteRepository;
     private final AuthenticationService authenticationService;
+    private final AnimaleRepository animaleRepository;
 
-    public AppuntamentoService(AppuntamentoRepository appuntamentoRepository, UtenteRepository utenteRepository, AuthenticationService authenticationService) {
+
+    public AppuntamentoService(AppuntamentoRepository appuntamentoRepository, UtenteRepository utenteRepository, AuthenticationService authenticationService, AnimaleRepository animaleRepository) {
         this.authenticationService = authenticationService;
         this.appuntamentoRepository = appuntamentoRepository;
         this.utenteRepository = utenteRepository;
+        this.animaleRepository = animaleRepository;
     }
 
-    @Transactional
-    public Appuntamento createAppointment(Appuntamento appuntamento) {
-        Utente authenticatedUtente = utenteRepository.findByUsername(authenticationService.getUsername());
-        if (authenticatedUtente == null) {
-            throw new IllegalArgumentException("Utente autenticato non trovato");
-        }
-        return appuntamentoRepository.save(appuntamento);
-    }
 
     @Transactional
     public Optional<Appuntamento> getAppointmentById(Long id) {
@@ -76,12 +77,11 @@ public class AppuntamentoService {
         return appuntamentoRepository.save(appuntamento);
     }
 
-    @Transactional
     public void deleteAppointment(Long id) {
-        Utente authenticatedUtente = utenteRepository.findByUsername(authenticationService.getUsername());
-        if (authenticatedUtente == null) {
-            throw new IllegalArgumentException("Utente autenticato non trovato");
-        }
-        appuntamentoRepository.deleteById(id);
+        Appuntamento appointment = appuntamentoRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Appuntamento non trovato"));
+
+        appuntamentoRepository.delete(appointment);
     }
+
 }

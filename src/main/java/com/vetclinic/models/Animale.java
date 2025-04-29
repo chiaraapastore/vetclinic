@@ -47,7 +47,6 @@ public class Animale {
         private Double weight;
 
         @ManyToOne
-        @JsonIgnore
         @JoinColumn(name = "cliente_id")
         private Cliente cliente;
 
@@ -78,9 +77,13 @@ public class Animale {
         private Trattamento trattamento;
 
         @ManyToOne
-        @JsonIgnore
         @JoinColumn(name = "veterinario_id")
         private Veterinario veterinario;
+
+
+        @ManyToOne
+        @JoinColumn(name = "reparto_id")
+        private Reparto reparto;
 
 
 

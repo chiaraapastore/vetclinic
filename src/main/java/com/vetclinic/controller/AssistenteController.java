@@ -6,9 +6,15 @@ import com.vetclinic.service.AdminService;
 import com.vetclinic.service.AssistenteService;
 import com.vetclinic.service.OrdineService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -29,16 +35,33 @@ public class AssistenteController {
         this.adminService = adminService;
     }
 
-
     @PostMapping("/create-appointment")
     public ResponseEntity<Appuntamento> createAppointment(
             @RequestParam Long animalId,
             @RequestParam Long veterinarianId,
-            @RequestParam Date appointmentDate,
+            @RequestParam String appointmentDate,
             @RequestParam String reason) {
-        Appuntamento appointment = assistenteService.createAppointment(animalId, veterinarianId, appointmentDate, reason);
-        return ResponseEntity.ok(appointment);
+
+        try {
+            // Usa java.time per il parsing della stringa in formato ISO
+            LocalDateTime localDateTime = LocalDateTime.parse(appointmentDate, DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+            Date date = Date.from(localDateTime.atZone(ZoneId.systemDefault()).toInstant());
+
+            Appuntamento appointment = assistenteService.createAppointment(animalId, veterinarianId, date, reason);
+            return ResponseEntity.ok(appointment);
+        } catch (DateTimeParseException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Formato data non valido: " + appointmentDate);
+        }
     }
+
+
+    @GetMapping("/my-appointments")
+    public ResponseEntity<List<Appuntamento>> getMyAppointments() {
+        List<Appuntamento> appointments = assistenteService.getAppointmentsForRepartoOfAssistant();
+        return ResponseEntity.ok(appointments);
+    }
+
+
     @GetMapping("/list-order")
     public ResponseEntity<List<Ordine>> getOrdini() {
         return ResponseEntity.ok(adminService.getOrdini());
@@ -63,10 +86,14 @@ public class AssistenteController {
     }
 
     @PostMapping("/remind-appointment/{appointmentId}")
-    public ResponseEntity<String> remindAppointment(@PathVariable Long appointmentId) {
-        assistenteService.remindAppointment(appointmentId);
-        return ResponseEntity.ok("Reminder successfully sent.");
+    public ResponseEntity<String> remindAppointment(
+            @PathVariable Long appointmentId,
+            @RequestParam String newDate) {
+        assistenteService.remindAppointment(appointmentId, newDate);
+        return ResponseEntity.ok("Rimandato correttamente");
     }
+
+
 
 
     @PostMapping("/check-medicine-expiration")

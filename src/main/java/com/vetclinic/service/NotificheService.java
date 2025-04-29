@@ -6,12 +6,15 @@ import com.vetclinic.models.*;
 import com.vetclinic.repository.NotificheRepository;
 import com.vetclinic.repository.UtenteRepository;
 import org.springframework.http.HttpStatus;
+import org.springframework.scheduling.TaskScheduler;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
 
@@ -21,11 +24,13 @@ public class NotificheService {
     private final UtenteRepository utenteRepository;
     private final AuthenticationService authenticationService;
     private final NotificheRepository notificheRepository;
+    private final TaskScheduler taskScheduler;
 
-    public NotificheService(UtenteRepository utenteRepository, NotificheRepository notificheRepository, AuthenticationService authenticationService) {
+    public NotificheService(UtenteRepository utenteRepository, TaskScheduler taskScheduler,NotificheRepository notificheRepository, AuthenticationService authenticationService) {
         this.utenteRepository = utenteRepository;
         this.notificheRepository = notificheRepository;
         this.authenticationService = authenticationService;
+        this.taskScheduler = taskScheduler;
     }
 
     @Transactional
@@ -106,6 +111,37 @@ public class NotificheService {
         }
         sendNotificationFromAssistantToClient(owner, message, Notifiche.NotificationType.GENERAL_ALERT);
     }
+
+
+    @Transactional
+    public void sendAppointmentReminderToVeterinarian(Veterinario veterinarian, Cliente owner, Date appointmentDate) {
+        String message = "Promemoria: Hai un appuntamento con il paziente di " + owner.getFirstName() + " " + owner.getLastName() + " fissato per " + appointmentDate;
+        Utente assistant = utenteRepository.findByUsername(authenticationService.getUsername());
+        if (assistant == null) {
+            throw new IllegalArgumentException("Assistente non trovato");
+        }
+        sendNotificationFromAssistantToVeterinarian(veterinarian, message, Notifiche.NotificationType.GENERAL_ALERT);
+    }
+
+    private void sendNotificationFromAssistantToVeterinarian(Veterinario veterinarian, String message, Notifiche.NotificationType notificationType) {
+        Notifiche notification = new Notifiche();
+        notification.setMessage(message);
+        notification.setRead(false);
+        notification.setNotificationDate(new Date());
+        notification.setType(notificationType);
+
+        Utente assistant = utenteRepository.findByUsername(authenticationService.getUsername());
+        if (assistant == null) {
+            throw new IllegalArgumentException("Assistente non trovato");
+        }
+
+        notification.setSentBy(assistant);
+        notification.setSentTo(veterinarian);
+
+        notificheRepository.save(notification);
+    }
+
+
 
     @Transactional
     public void sendEmergencyNotificationToHeadOfDepartment(Veterinario veterinarian, Utente headOfDepartment, String description, Medicine medicine) {
@@ -250,4 +286,10 @@ public class NotificheService {
     }
 
 
+    @Async
+    public void sendAppointmentReminderAtScheduledTime(Cliente cliente, Veterinario veterinario, LocalDateTime reminderTime) {
+        taskScheduler.schedule(() -> {
+            sendAppointmentReminder(cliente, new Date());
+        }, java.util.Date.from(reminderTime.atZone(java.time.ZoneId.systemDefault()).toInstant()));
+    }
 }

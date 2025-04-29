@@ -1,12 +1,14 @@
 package com.vetclinic.models;
 
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
 import java.util.Date;
 
 @Data
@@ -30,13 +32,13 @@ public class Appuntamento {
     private Veterinario veterinarian;
 
     private Date appointmentDate;
-
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
+    private LocalDateTime date;
     private String reason;
 
     private String status;
 
     @ManyToOne
-    @JsonIgnore
     @JoinColumn(name = "cliente_id")
     private Cliente cliente;
 }

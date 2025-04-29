@@ -1,11 +1,25 @@
 package com.vetclinic.controller;
 
+import com.vetclinic.config.AuthenticationService;
 import com.vetclinic.models.Appuntamento;
+import com.vetclinic.models.Utente;
+import com.vetclinic.repository.AppuntamentoRepository;
+import com.vetclinic.repository.UtenteRepository;
 import com.vetclinic.service.AppuntamentoService;
+import com.vetclinic.service.AssistenteService;
+import com.vetclinic.service.UtenteService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -16,17 +30,40 @@ import java.util.Optional;
 public class AppuntamentoController {
 
     private final AppuntamentoService appuntamentoService;
+    private final AssistenteService assistenteService;
+    private final UtenteRepository utenteRepository;
+    private final AppuntamentoRepository appuntamentoRepository;
+    private final AuthenticationService authenticationService;
 
     @Autowired
-    public AppuntamentoController(AppuntamentoService appuntamentoService) {
+    public AppuntamentoController(AppuntamentoService appuntamentoService, AssistenteService assistenteService,UtenteRepository utenteRepository, AppuntamentoRepository appuntamentoRepository, AuthenticationService authenticationService) {
         this.appuntamentoService = appuntamentoService;
+        this.utenteRepository = utenteRepository;
+        this.appuntamentoRepository = appuntamentoRepository;
+        this.authenticationService = authenticationService;
+        this.assistenteService = assistenteService;
     }
 
     @PostMapping("/create-appointment")
-    public ResponseEntity<Appuntamento> createAppointment(@RequestBody Appuntamento appointment) {
-        Appuntamento createdAppointment = appuntamentoService.createAppointment(appointment);
-        return ResponseEntity.ok(createdAppointment);
+    public ResponseEntity<Appuntamento> createAppointment(
+            @RequestParam Long animalId,
+            @RequestParam Long veterinarianId,
+            @RequestParam String appointmentDate,
+            @RequestParam String reason) {
+
+        try {
+            // Usa java.time per il parsing della stringa in formato ISO
+            LocalDateTime localDateTime = LocalDateTime.parse(appointmentDate, DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+            Date date = Date.from(localDateTime.atZone(ZoneId.systemDefault()).toInstant());
+
+            Appuntamento appointment = assistenteService.createAppointment(animalId, veterinarianId, date, reason);
+            return ResponseEntity.ok(appointment);
+        } catch (DateTimeParseException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Formato data non valido: " + appointmentDate);
+        }
     }
+
+
 
     @GetMapping("/list-appointment/{id}")
     public ResponseEntity<Appuntamento> getAppointment(@PathVariable Long id) {
@@ -40,6 +77,9 @@ public class AppuntamentoController {
         List<Appuntamento> appointments = appuntamentoService.getAppointmentsByAnimal(animalId);
         return ResponseEntity.ok(appointments);
     }
+
+
+
 
     @GetMapping("/veterinario/{veterinarioId}")
     public ResponseEntity<List<Appuntamento>> getAppointmentsByVeterinarian(@PathVariable Long veterinarianId) {

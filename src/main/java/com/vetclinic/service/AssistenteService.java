@@ -9,6 +9,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -46,24 +48,38 @@ public class AssistenteService {
 
     @Transactional
     public Appuntamento createAppointment(Long animalId, Long veterinarianId, Date appointmentDate, String reason) {
-        Utente assistant = utenteRepository.findByUsername(authenticationService.getUsername());
-        if (assistant == null) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Assistente non trovato");
-        }
+
         Animale animal = pazienteRepository.findById(animalId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Animale non trovato"));
 
         Utente veterinarian = utenteRepository.findByVeterinarianId(veterinarianId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Veterinario non trovato"));
 
+        Cliente cliente = animal.getCliente();
+
         Appuntamento appointment = new Appuntamento();
         appointment.setAnimal(animal);
         appointment.setVeterinarian((Veterinario) veterinarian);
         appointment.setAppointmentDate(appointmentDate);
         appointment.setReason(reason);
+        appointment.setCliente(cliente);
 
-        return appuntamentoRepository.save(appointment);
+        Appuntamento savedAppointment = appuntamentoRepository.save(appointment);
+
+        LocalDateTime reminderTime = appointmentDate.toInstant()
+                .atZone(java.time.ZoneId.systemDefault())
+                .toLocalDateTime()
+                .minusDays(1);
+
+        notificheService.sendAppointmentReminderAtScheduledTime(
+                animal.getCliente(),
+                (Veterinario) veterinarian,
+                reminderTime
+        );
+
+        return savedAppointment;
     }
+
 
     @Transactional
     public void deleteAppointment(Long appointmentId) {
@@ -77,16 +93,17 @@ public class AssistenteService {
         notificheService.sendAppointmentCanceledNotification(appointment.getAnimal().getCliente());
     }
 
-    @Transactional
-    public void remindAppointment(Long appointmentId) {
-        Utente assistant = utenteRepository.findByUsername(authenticationService.getUsername());
-        if (assistant == null) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Assistente non trovato");
-        }
-        Appuntamento appointment = appuntamentoRepository.findById(appointmentId)
+    public void remindAppointment(Long appointmentId, String newDate) {
+        Appuntamento appuntamento = appuntamentoRepository.findById(appointmentId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Appuntamento non trovato"));
-        notificheService.sendAppointmentReminder(appointment.getAnimal().getCliente(), appointment.getAppointmentDate());
+
+        LocalDateTime dateTime = LocalDateTime.parse(newDate, DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+        Date date = Date.from(dateTime.atZone(ZoneId.systemDefault()).toInstant());
+
+        appuntamento.setAppointmentDate(date);
+        appuntamentoRepository.save(appuntamento);
     }
+
 
     @Transactional
     public void checkMedicineExpiration(Long departmentHeadId, Long medicineId) {
@@ -242,4 +259,22 @@ public class AssistenteService {
 
         return "Pagamento effettuato con successo!";
     }
+
+
+    @Transactional
+    public List<Appuntamento> getAppointmentsForRepartoOfAssistant() {
+        Utente assistente = utenteRepository.findByKeycloakId(authenticationService.getUserId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Assistente non trovato"));
+
+        if (assistente.getReparto() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Assistente senza reparto assegnato");
+        }
+
+        Long repartoId = assistente.getReparto().getId();
+
+        List<Appuntamento> appuntamenti = appuntamentoRepository.findByAnimalRepartoId(repartoId);
+
+        return appuntamenti;
+    }
+
 }
