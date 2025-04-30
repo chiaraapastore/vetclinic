@@ -64,7 +64,7 @@ public class NotificheService {
         List<Notifiche> unreadNotifications = notificheRepository.findBySentToIdAndIsReadFalse(user.getId());
 
         if (!unreadNotifications.isEmpty()) {
-            unreadNotifications.forEach(notification -> notification.setLetta(true));
+            unreadNotifications.forEach(notification -> notification.setRead(true));
             notificheRepository.saveAll(unreadNotifications);
             user.setCountNotification(0);
             utenteRepository.save(user);
@@ -210,14 +210,14 @@ public class NotificheService {
     @Transactional
     public void sendPaymentNotificationToClient(Cliente client, Pagamento payment) {
         String message = "Il pagamento di €" + payment.getAmount() + " per il servizio richiesto è stato completato con successo. Data del pagamento: " + payment.getPaymentDate();
-        createAndSendNotificationPayment(client, message, "payment_confirmation");
+        createAndSendNotificationPayment(client, message, "PAYMENT_CONFIRMATION");
     }
 
 
     @Transactional
     public void sendPaymentNotificationToVeterinarian(Veterinario veterinarian, Pagamento payment) {
         String message = "Il pagamento di €" + payment.getAmount() + " per l'appuntamento con il cliente " + veterinarian.getFirstName() + veterinarian.getLastName() + " è stato completato con successo.";
-        createAndSendNotificationPayment(veterinarian, message, "payment_confirmation");
+        createAndSendNotificationPayment(veterinarian, message, "PAYMENT_CONFIRMATION");
     }
 
     private void createAndSendNotificationPayment(Utente receiver, String message, String type) {
@@ -233,7 +233,10 @@ public class NotificheService {
 
         notificheRepository.save(notification);
 
-        receiver.setCountNotification(receiver.getCountNotification() + 1);
+        receiver.setCountNotification(
+                (receiver.getCountNotification() != null ? receiver.getCountNotification() : 0) + 1
+        );
+
         utenteRepository.save(receiver);
     }
 

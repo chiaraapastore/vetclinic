@@ -19,16 +19,23 @@ public class PagamentoController {
     }
 
     @PostMapping("/process/{appointmentId}")
-    public ResponseEntity<Pagamento> processPayment(@PathVariable Long appointmentId, @RequestParam double amount) {
+    public ResponseEntity<Pagamento> processPayment(
+            @PathVariable Long appointmentId,
+            @RequestParam double amount,
+            @RequestParam Long clienteId
+    ) {
+
         try {
-            Pagamento payment = pagamentoService.processPayment(appointmentId, amount);
+            Pagamento payment = pagamentoService.processPayment(appointmentId, amount, clienteId);
             return ResponseEntity.ok(payment);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(null);
         } catch (Exception e) {
+            e.printStackTrace();
             return ResponseEntity.status(500).body(null);
         }
     }
+
 
     @PutMapping("/update-status/{paymentId}")
     public ResponseEntity<Pagamento> updatePaymentStatus(@PathVariable Long paymentId, @RequestParam String status) {
@@ -39,4 +46,5 @@ public class PagamentoController {
             return ResponseEntity.status(500).body(null);
         }
     }
+
 }

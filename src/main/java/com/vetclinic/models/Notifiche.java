@@ -26,12 +26,10 @@ public class Notifiche {
     private Date notificationDate;
 
     @ManyToOne
-    @JsonIgnore
     @JoinColumn(name = "animale_id")
     private Animale animal;
 
     @ManyToOne
-    @JsonIgnore
     @JoinColumn(name = "cliente_id")
     private Cliente client;
 
@@ -39,18 +37,13 @@ public class Notifiche {
     private NotificationType type;
 
     @ManyToOne
-    @JsonIgnore
     @JoinColumn(name = "sent_by_id")
     private Utente sentBy;
 
     @ManyToOne
-    @JsonIgnore
     @JoinColumn(name = "sent_to_id")
     private Utente sentTo;
 
-    public void setLetta(boolean b) {
-
-    }
 
     public enum NotificationType {
         EXPIRING_MEDICINE,
@@ -66,8 +59,4 @@ public class Notifiche {
         PAYMENT_CONFIRMATION
     }
 
-
-    public boolean isExpired() {
-        return notificationDate.before(new Date());
-    }
 }

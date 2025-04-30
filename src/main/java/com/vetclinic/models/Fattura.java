@@ -31,13 +31,8 @@ public class Fattura {
 
     private String status;
 
-    @ManyToOne
-    @JsonIgnore
-    @JoinColumn(name = "payment_method_id")
-    private Pagamento paymentMethod;
 
     @ManyToOne
-    @JsonIgnore
     @JoinColumn(name = "appuntamento_id")
     private Appuntamento appuntamento;
 

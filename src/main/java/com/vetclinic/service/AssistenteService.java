@@ -249,7 +249,7 @@ public class AssistenteService {
         fatturaRepository.save(fattura);
 
         Pagamento pagamento = new Pagamento();
-        pagamento.setFatturaId(fattura.getId());
+        pagamento.setFattura(fattura);
         pagamento.setAmount(amount);
         pagamento.setPaymentMethod(paymentMethod);
         pagamento.setPaymentDate(new Date());
@@ -259,6 +259,7 @@ public class AssistenteService {
 
         fattura.setStatus("PAID");
         fatturaRepository.save(fattura);
+
 
         notificheService.sendAppointmentReminder(cliente, fattura.getIssueDate());
 

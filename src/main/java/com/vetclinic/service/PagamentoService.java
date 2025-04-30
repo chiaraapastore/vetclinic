@@ -3,6 +3,7 @@ package com.vetclinic.service;
 import com.vetclinic.config.AuthenticationService;
 import com.vetclinic.models.*;
 import com.vetclinic.repository.*;
+import java.util.Date;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,45 +34,6 @@ public class PagamentoService {
         this.clienteRepository = clienteRepository;
     }
 
-    @Transactional
-    public Pagamento processPayment(Long appointmentId, double amount) {
-
-        Utente client = utenteRepository.findByUsername(authenticationService.getUsername());
-        if (client == null) {
-            throw new IllegalArgumentException("Cliente non trovato");
-        }
-
-        Appuntamento appointment = appuntamentoRepository.findById(appointmentId)
-                .orElseThrow(() -> new RuntimeException("Appuntamento non trovato"));
-
-        if (!appointment.getCliente().equals(client)) {
-            throw new IllegalArgumentException("L'appuntamento non appartiene al cliente");
-        }
-
-        Fattura invoice = new Fattura();
-        invoice.setCliente((Cliente) client);
-        invoice.setIssueDate(new java.util.Date());
-        invoice.setAmount(amount);
-        invoice.setStatus("PENDING");
-
-        fatturaRepository.save(invoice);
-
-        Pagamento payment = new Pagamento();
-        payment.setFatturaId(invoice.getId());
-        payment.setAmount(amount);
-        payment.setPaymentDate(new java.util.Date());
-        payment.setStatus("COMPLETED");
-
-        pagamentoRepository.save(payment);
-
-        appointment.setStatus("PAID");
-        appuntamentoRepository.save(appointment);
-
-        notificheService.sendPaymentNotificationToClient((Cliente) client, payment);
-        notificheService.sendPaymentNotificationToVeterinarian(appointment.getVeterinarian(), payment);
-
-        return payment;
-    }
 
 
 
@@ -86,6 +48,55 @@ public class PagamentoService {
                 .orElseThrow(() -> new IllegalArgumentException("Pagamento non trovato"));
         payment.setStatus(status);
         pagamentoRepository.save(payment);
+        return payment;
+    }
+
+    @Transactional
+    public Pagamento processPayment(Long appointmentId, double amount, Long clienteId) {
+
+
+        Cliente client = (Cliente) utenteRepository.findById(clienteId)
+                .orElseThrow(() -> new IllegalArgumentException("Cliente non trovato"));
+
+        Appuntamento appointment = appuntamentoRepository.findByIdWithCliente(appointmentId)
+                .orElseThrow(() -> new RuntimeException("Appuntamento non trovato"));
+
+
+        if (appointment.getCliente() == null || appointment.getCliente().getId() == null) {
+            throw new IllegalArgumentException("Cliente mancante nell'appuntamento");
+        }
+
+        if (!appointment.getCliente().getId().equals(clienteId)) {
+            throw new IllegalArgumentException("L'appuntamento non appartiene al cliente");
+        }
+
+
+        Fattura invoice = new Fattura();
+        invoice.setCliente(client);
+        invoice.setIssueDate(new Date());
+        invoice.setAmount(amount);
+        invoice.setStatus("PENDING");
+        fatturaRepository.save(invoice);
+        fatturaRepository.flush();
+
+        Pagamento payment = new Pagamento();
+        payment.setAmount(amount);
+        payment.setFattura(invoice);
+        payment.setPaymentDate(new Date());
+        payment.setStatus("COMPLETED");
+        pagamentoRepository.save(payment);
+
+
+
+
+
+        appointment.setStatus("PAID");
+        appuntamentoRepository.save(appointment);
+
+        notificheService.sendPaymentNotificationToClient(client, payment);
+        notificheService.sendPaymentNotificationToVeterinarian(appointment.getVeterinarian(), payment);
+
+
         return payment;
     }
 

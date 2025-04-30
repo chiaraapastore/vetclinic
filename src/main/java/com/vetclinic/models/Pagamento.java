@@ -19,7 +19,9 @@ public class Pagamento {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private Long fatturaId;
+    @ManyToOne
+    @JoinColumn(name = "payment_method_id")
+    private Fattura fattura;
 
     private double amount;
 
