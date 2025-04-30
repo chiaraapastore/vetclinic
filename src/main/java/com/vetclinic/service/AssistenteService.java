@@ -64,6 +64,11 @@ public class AssistenteService {
         appointment.setReason(reason);
         appointment.setCliente(cliente);
 
+        if (animal.getReparto() == null && veterinarian.getReparto() != null) {
+            animal.setReparto(veterinarian.getReparto());
+            animaleRepository.save(animal);
+        }
+
         Appuntamento savedAppointment = appuntamentoRepository.save(appointment);
 
         LocalDateTime reminderTime = appointmentDate.toInstant()
@@ -263,7 +268,7 @@ public class AssistenteService {
 
     @Transactional
     public List<Appuntamento> getAppointmentsForRepartoOfAssistant() {
-        Utente assistente = utenteRepository.findByKeycloakId(authenticationService.getUserId())
+        Assistente assistente = utenteRepository.findAssistenteByUsername(authenticationService.getUsername())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Assistente non trovato"));
 
         if (assistente.getReparto() == null) {
@@ -271,7 +276,6 @@ public class AssistenteService {
         }
 
         Long repartoId = assistente.getReparto().getId();
-
         List<Appuntamento> appuntamenti = appuntamentoRepository.findByAnimalRepartoId(repartoId);
 
         return appuntamenti;

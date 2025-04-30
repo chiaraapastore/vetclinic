@@ -58,8 +58,10 @@ public class AssistenteController {
     @GetMapping("/my-appointments")
     public ResponseEntity<List<Appuntamento>> getMyAppointments() {
         List<Appuntamento> appointments = assistenteService.getAppointmentsForRepartoOfAssistant();
+        System.out.println("Appuntamenti trovati: " + appointments.size());
         return ResponseEntity.ok(appointments);
     }
+
 
 
     @GetMapping("/list-order")

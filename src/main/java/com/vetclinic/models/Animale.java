@@ -51,28 +51,23 @@ public class Animale {
         private Cliente cliente;
 
         @ManyToOne
-        @JsonIgnore
         @JoinColumn(name = "vaccino")
         private Vaccino vaccini;
 
         @ManyToOne
-        @JsonIgnore
         @JoinColumn(name = "medicine")
         private Medicine medicine;
 
 
         @ManyToOne
-        @JsonIgnore
         @JoinColumn(name = "operazione")
         private Operazione operazione;
 
         @ManyToOne
-        @JsonIgnore
         @JoinColumn(name = "esame")
         private Esame esame;
 
         @ManyToOne
-        @JsonIgnore
         @JoinColumn(name = "trattamento")
         private Trattamento trattamento;
 

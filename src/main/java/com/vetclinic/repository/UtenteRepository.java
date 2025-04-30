@@ -1,4 +1,5 @@
 package com.vetclinic.repository;
+import com.vetclinic.models.Assistente;
 import com.vetclinic.models.Reparto;
 import com.vetclinic.models.Utente;
 
@@ -17,6 +18,8 @@ public interface UtenteRepository extends JpaRepository<Utente, Long> {
 
     Utente findByUsername(String username);
     Optional<Utente> findUtenteById(Long id);
+    @Query("SELECT u FROM Utente u WHERE LOWER(u.username) = LOWER(:username)")
+    Optional<Assistente> findAssistenteByUsername(@Param("username") String username);
     Optional<Utente> findByKeycloakId(String keycloakId);
     @Query("SELECT u FROM Utente u WHERE TYPE(u) = Veterinario AND u.id = :veterinarianId")
     Optional<Utente> findByVeterinarianId(Long veterinarianId);
