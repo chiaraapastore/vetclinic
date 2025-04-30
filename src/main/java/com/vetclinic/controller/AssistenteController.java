@@ -43,7 +43,6 @@ public class AssistenteController {
             @RequestParam String reason) {
 
         try {
-            // Usa java.time per il parsing della stringa in formato ISO
             LocalDateTime localDateTime = LocalDateTime.parse(appointmentDate, DateTimeFormatter.ISO_LOCAL_DATE_TIME);
             Date date = Date.from(localDateTime.atZone(ZoneId.systemDefault()).toInstant());
 
