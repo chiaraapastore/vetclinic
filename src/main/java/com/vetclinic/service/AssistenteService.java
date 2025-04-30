@@ -236,35 +236,6 @@ public class AssistenteService {
         return "Farmaco somministrato con successo!";
     }
 
-    @Transactional
-    public String managePayment(Long clienteId, double amount, String paymentMethod, String cardType) {
-        Cliente cliente = (Cliente) utenteRepository.findById(clienteId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Cliente non trovato"));
-
-        Fattura fattura = new Fattura();
-        fattura.setCliente(cliente);
-        fattura.setIssueDate(new Date());
-        fattura.setAmount(amount);
-        fattura.setStatus("PENDING");
-        fatturaRepository.save(fattura);
-
-        Pagamento pagamento = new Pagamento();
-        pagamento.setFattura(fattura);
-        pagamento.setAmount(amount);
-        pagamento.setPaymentMethod(paymentMethod);
-        pagamento.setPaymentDate(new Date());
-        pagamento.setCardType(cardType);
-        pagamento.setStatus("SUCCESS");
-        pagamentoRepository.save(pagamento);
-
-        fattura.setStatus("PAID");
-        fatturaRepository.save(fattura);
-
-
-        notificheService.sendAppointmentReminder(cliente, fattura.getIssueDate());
-
-        return "Pagamento effettuato con successo!";
-    }
 
 
     @Transactional

@@ -169,12 +169,4 @@ public class AssistenteController {
         return ResponseEntity.ok(Map.of("message", result));
     }
 
-    @PostMapping("/gestisci-pagamento")
-    public ResponseEntity<Map<String, String>> managePayment(@RequestParam Long clienteId,
-                                                                 @RequestParam double amount,
-                                                                 @RequestParam String paymentMethod,
-                                                                 @RequestParam String cardType) {
-        String result = assistenteService.managePayment(clienteId, amount, paymentMethod, cardType);
-        return ResponseEntity.ok(Map.of("message", result));
-    }
 }
