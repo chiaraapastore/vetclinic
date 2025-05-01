@@ -1,6 +1,7 @@
 package com.vetclinic.models;
 
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -32,7 +33,8 @@ public class Fattura {
     private String status;
 
 
-    @ManyToOne
+    @OneToOne
+    @JsonBackReference
     @JoinColumn(name = "appuntamento_id")
     private Appuntamento appuntamento;
 

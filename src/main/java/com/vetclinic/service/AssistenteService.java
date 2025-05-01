@@ -76,11 +76,13 @@ public class AssistenteService {
                 .toLocalDateTime()
                 .minusDays(1);
 
+
         notificheService.sendAppointmentReminderAtScheduledTime(
                 animal.getCliente(),
                 (Veterinario) veterinarian,
                 reminderTime
         );
+
 
         return savedAppointment;
     }

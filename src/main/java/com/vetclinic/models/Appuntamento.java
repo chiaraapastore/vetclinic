@@ -3,6 +3,7 @@ package com.vetclinic.models;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -41,5 +42,11 @@ public class Appuntamento {
     @ManyToOne
     @JoinColumn(name = "cliente_id")
     private Cliente cliente;
+
+    @OneToOne(mappedBy = "appuntamento", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
+    private Fattura fattura;
+
+
 }
 
