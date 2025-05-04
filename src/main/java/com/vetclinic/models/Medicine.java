@@ -32,6 +32,8 @@ public class Medicine {
 
     private int quantity;
 
+    private String category;
+
     private int currentStock;
 
     private int pendingOrders;

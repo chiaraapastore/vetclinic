@@ -1,10 +1,7 @@
 package com.vetclinic.repository;
-import com.vetclinic.models.Assistente;
-import com.vetclinic.models.Reparto;
-import com.vetclinic.models.Utente;
+import com.vetclinic.models.*;
 
 
-import com.vetclinic.models.Veterinario;
 import feign.Param;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -36,5 +33,7 @@ public interface UtenteRepository extends JpaRepository<Utente, Long> {
     Optional<Assistente> findAssistenteByUsername(@Param("username") String username);
 
     Optional<Veterinario> findVeterinarioById(Long veterinarianId);
+
+    Optional<CapoReparto> findCapoRepartoById(Long capoRepartoId);
 }
 

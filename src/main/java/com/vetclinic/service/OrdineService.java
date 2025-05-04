@@ -4,8 +4,10 @@ package com.vetclinic.service;
 import com.vetclinic.models.Fornitore;
 import com.vetclinic.models.Ordine;
 import com.vetclinic.repository.OrdineRepository;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -52,4 +54,14 @@ public class OrdineService {
         ordine.setStatus(nuovoStato);
         return ordineRepository.save(ordine);
     }
+
+    @Transactional
+    public Ordine aggiornaStatoOrdine(Long ordineId, Ordine.OrderStatus nuovoStato) {
+        Ordine ordine = ordineRepository.findById(ordineId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Ordine non trovato con ID: " + ordineId));
+
+        ordine.setStatus(nuovoStato);
+        return ordineRepository.save(ordine);
+    }
+
 }

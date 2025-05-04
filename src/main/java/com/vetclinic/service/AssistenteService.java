@@ -4,6 +4,7 @@ import com.vetclinic.config.AuthenticationService;
 import com.vetclinic.models.*;
 import com.vetclinic.repository.*;
 import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Repository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
@@ -13,6 +14,8 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -25,16 +28,16 @@ public class AssistenteService {
     private final UtenteRepository utenteRepository;
     private final AuthenticationService authenticationService;
     private final AssistenteRepository assistenteRepository;
+    private final RepartoRepository repartoRepository;
     private final AnimaleRepository animaleRepository;
-    private final FatturaRepository fatturaRepository;
-    private final PagamentoRepository pagamentoRepository;
+    private final MagazzinoRepository magazzinoRepository;
     private final SomministrazioneRepository somministrazioneRepository;
     private final SomministrazioneService somministrazioneService;
 
 
     public AssistenteService(AppuntamentoRepository appuntamentoRepository, MedicineRepository medicineRepository,
                              AnimaleRepository pazienteRepository, NotificheService notificheService, AssistenteRepository assistenteRepository,
-                             UtenteRepository utenteRepository, AuthenticationService authenticationService, AnimaleRepository animaleRepository, FatturaRepository fatturaRepository, PagamentoRepository pagamentoRepository, SomministrazioneRepository somministrazioneRepository, SomministrazioneService somministrazioneService) {
+                             UtenteRepository utenteRepository, RepartoRepository repartoRepository, AuthenticationService authenticationService, AnimaleRepository animaleRepository, MagazzinoRepository magazzinoRepository, SomministrazioneRepository somministrazioneRepository, SomministrazioneService somministrazioneService) {
         this.appuntamentoRepository = appuntamentoRepository;
         this.medicineRepository = medicineRepository;
         this.pazienteRepository = pazienteRepository;
@@ -43,10 +46,10 @@ public class AssistenteService {
         this.authenticationService = authenticationService;
         this.assistenteRepository = assistenteRepository;
         this.animaleRepository = animaleRepository;
-        this.fatturaRepository = fatturaRepository;
-        this.pagamentoRepository = pagamentoRepository;
+        this.magazzinoRepository = magazzinoRepository;
         this.somministrazioneRepository = somministrazioneRepository;
         this.somministrazioneService = somministrazioneService;
+        this.repartoRepository = repartoRepository;
     }
 
     @Transactional
@@ -256,6 +259,11 @@ public class AssistenteService {
     }
 
 
+    @Transactional(readOnly = true)
+    public List<Medicine> getEmergenze() {
+        return medicineRepository.findMedicinesInEmergenza();
+    }
+
 
 
     @Transactional
@@ -273,4 +281,56 @@ public class AssistenteService {
         return appuntamenti;
     }
 
+    @Transactional
+    public String aggiungiFarmaco(Map<String, Object> payload) {
+        String nome = (String) payload.get("nome");
+        Integer quantita = (Integer) payload.get("quantita");
+        Integer availableQuantity = (Integer) payload.get("availableQuantity");
+        String scadenza = (String) payload.get("scadenza");
+        String categoria = (String) payload.get("categoria");
+        String descrizione = (String) payload.get("descrizione");
+        Long departmentId = payload.get("departmentId") != null ? Long.valueOf(payload.get("departmentId").toString()) : null;
+        Long magazineId = payload.get("magazineId") != null ? Long.valueOf(payload.get("magazineId").toString()) : null;
+
+        if (nome == null || nome.isEmpty() || quantita == null || quantita <= 0) {
+            throw new IllegalArgumentException("Nome del farmaco e quantità devono essere validi.");
+        }
+
+        Medicine nuovoFarmaco = new Medicine();
+        nuovoFarmaco.setName(nome);
+        nuovoFarmaco.setQuantity(quantita);
+        nuovoFarmaco.setAvailableQuantity(availableQuantity);
+        nuovoFarmaco.setExpirationDate(scadenza);
+        nuovoFarmaco.setCategory(categoria);
+        nuovoFarmaco.setDescription(descrizione);
+
+        if (departmentId != null) {
+            Reparto department = repartoRepository.findById(departmentId)
+                    .orElseThrow(() -> new IllegalArgumentException("Dipartimento non trovato"));
+            nuovoFarmaco.setDepartment(department);
+        }
+
+        if (magazineId != null) {
+            Magazzino magazine = magazzinoRepository.findById(magazineId)
+                    .orElseThrow(() -> new IllegalArgumentException("Magazzino non trovato"));
+            nuovoFarmaco.setMagazzino(magazine);
+        }
+
+        medicineRepository.save(nuovoFarmaco);
+        return "Farmaco aggiunto con successo!";
+    }
+
+    @Transactional
+    public void scadenzaFarmaco(Long capoRepartoId, Long medicinaleId) {
+        Assistente assistente = utenteRepository.findAssistenteByUsername(authenticationService.getUsername())
+                .orElseThrow(() -> new IllegalArgumentException("Utente non autenticato"));
+
+        CapoReparto capoReparto = utenteRepository.findCapoRepartoById(capoRepartoId)
+                .orElseThrow(() -> new IllegalArgumentException("Capo Reparto non trovato"));
+
+        Medicine medicinale = medicineRepository.findById(medicinaleId)
+                .orElseThrow(() -> new IllegalArgumentException("Medicinale non trovato"));
+
+        notificheService.sendAssistantNotificationToCapoReparto(assistente, capoReparto, medicinale.getName());
+    }
 }

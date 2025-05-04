@@ -53,13 +53,17 @@ public class AssistenteController {
         }
     }
 
+    @PostMapping("/aggiungi-farmaco")
+    public ResponseEntity<Map<String, String>> aggiungiFarmaco(@RequestBody Map<String, Object> payload) {
+        String result = assistenteService.aggiungiFarmaco(payload);
+        return ResponseEntity.ok(Map.of("message", result));
+    }
 
     @GetMapping("/my-appointments")
     public ResponseEntity<List<Appuntamento>> getMyAppointments() {
         List<Appuntamento> appointments = assistenteService.getAppointmentsForRepartoOfAssistant();
         return ResponseEntity.ok(appointments);
     }
-
 
 
     @GetMapping("/list-order")
@@ -92,8 +96,6 @@ public class AssistenteController {
         assistenteService.remindAppointment(appointmentId, newDate);
         return ResponseEntity.ok("Rimandato correttamente");
     }
-
-
 
 
     @PostMapping("/check-medicine-expiration")
@@ -159,6 +161,11 @@ public class AssistenteController {
         return ResponseEntity.ok(assistente);
     }
 
+    @GetMapping("/emergenze")
+    public ResponseEntity<List<Medicine>> getEmergenze() {
+        return ResponseEntity.ok(assistenteService.getEmergenze());
+    }
+
 
     @PostMapping("/somministra-farmaco")
     public ResponseEntity<Map<String, String>> administerMedicine(
@@ -170,6 +177,30 @@ public class AssistenteController {
         String result = assistenteService.administerMedicine(animaleId, medicineId, quantita, veterinarianId);
         return ResponseEntity.ok(Map.of("message", result));
     }
+
+    @PutMapping("/ordini/{ordineId}/stato")
+    public ResponseEntity<Ordine> aggiornaStatoOrdine(
+            @PathVariable Long ordineId,
+            @RequestBody Map<String, String> body) {
+
+        try {
+            String statoStr = body.get("stato");
+            Ordine.OrderStatus nuovoStato = Ordine.OrderStatus.valueOf(statoStr.toUpperCase());
+
+            Ordine aggiornato = ordineService.aggiornaStatoOrdine(ordineId, nuovoStato);
+            return ResponseEntity.ok(aggiornato);
+
+        } catch (IllegalArgumentException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Stato non valido: deve essere PENDING, COMPLETED o CANCELED");
+        }
+    }
+
+    @PostMapping("/scadenza")
+    public ResponseEntity<?> scadenzaFarmaco( @PathVariable Long capoRepartoId, @PathVariable Long idMedicinale) {
+        assistenteService.scadenzaFarmaco(capoRepartoId, idMedicinale);
+        return ResponseEntity.ok("notifica_inviata");
+    }
+
 
 
 }

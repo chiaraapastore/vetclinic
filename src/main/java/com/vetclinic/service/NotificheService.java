@@ -17,6 +17,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class NotificheService {
@@ -288,5 +289,11 @@ public class NotificheService {
         taskScheduler.schedule(() -> {
             sendAppointmentReminder(cliente, new Date());
         }, java.util.Date.from(reminderTime.atZone(java.time.ZoneId.systemDefault()).toInstant()));
+    }
+
+    public void sendAssistantNotificationToCapoReparto(Assistente assistente, CapoReparto capoReparto, String name) {
+        String message = "Notifica: Il farmaco " +name + " sta per scadere. Notifica inviata da "
+                + assistente.getUsername() + " al Capo Reparto " + capoReparto.getUsername();
+        createAndSendNotification(assistente, capoReparto, message, "farmaco_scaduto");
     }
 }

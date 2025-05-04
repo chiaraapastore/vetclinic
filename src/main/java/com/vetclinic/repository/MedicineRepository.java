@@ -26,4 +26,7 @@ public interface MedicineRepository extends JpaRepository<Medicine, Long> {
     @Transactional
     @Query("UPDATE Medicine m SET m.availableQuantity = m.availableQuantity - :quantity WHERE m.id = :medicineId")
     int updateAvailableQuantity(Long medicineId, int quantity);
+
+    @Query("SELECT m FROM Medicine m WHERE m.availableQuantity = 0")
+    List<Medicine> findMedicinesInEmergenza();
 }
