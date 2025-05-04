@@ -29,10 +29,12 @@ public class AssistenteService {
     private final FatturaRepository fatturaRepository;
     private final PagamentoRepository pagamentoRepository;
     private final SomministrazioneRepository somministrazioneRepository;
+    private final DocumentoClinicoService documentoClinicoService;
+
 
     public AssistenteService(AppuntamentoRepository appuntamentoRepository, MedicineRepository medicineRepository,
                              AnimaleRepository pazienteRepository, NotificheService notificheService, AssistenteRepository assistenteRepository,
-                             UtenteRepository utenteRepository, AuthenticationService authenticationService, AnimaleRepository animaleRepository, FatturaRepository fatturaRepository, PagamentoRepository pagamentoRepository, SomministrazioneRepository somministrazioneRepository) {
+                             UtenteRepository utenteRepository, DocumentoClinicoService documentoClinicoService,AuthenticationService authenticationService, AnimaleRepository animaleRepository, FatturaRepository fatturaRepository, PagamentoRepository pagamentoRepository, SomministrazioneRepository somministrazioneRepository) {
         this.appuntamentoRepository = appuntamentoRepository;
         this.medicineRepository = medicineRepository;
         this.pazienteRepository = pazienteRepository;
@@ -43,6 +45,7 @@ public class AssistenteService {
         this.animaleRepository = animaleRepository;
         this.fatturaRepository = fatturaRepository;
         this.pagamentoRepository = pagamentoRepository;
+        this.documentoClinicoService = documentoClinicoService;
         this.somministrazioneRepository = somministrazioneRepository;
     }
 
@@ -212,8 +215,15 @@ public class AssistenteService {
 
     @Transactional
     public String administerMedicine(Long animaleId, Long medicineId, int quantita, Long veterinarianId) {
+        Assistente assistant = utenteRepository.findAssistenteByUsername(authenticationService.getUsername())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Utente non è un assistente"));
+
+        Veterinario veterinarian = utenteRepository.findVeterinarioById(veterinarianId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Veterinario non trovato"));
+
         Animale animale = animaleRepository.findById(animaleId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Animale non trovato"));
+
         Medicine medicine = medicineRepository.findById(medicineId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Medicinale non trovato"));
 
@@ -224,8 +234,6 @@ public class AssistenteService {
         medicine.setAvailableQuantity(medicine.getAvailableQuantity() - quantita);
         medicineRepository.save(medicine);
 
-        Utente veterinarian = utenteRepository.findById(veterinarianId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Veterinario non trovato"));
         notificheService.sendNotificationSomministration(veterinarian, veterinarian, medicine.getName());
 
         Somministrazione somministrazione = new Somministrazione();
@@ -235,8 +243,18 @@ public class AssistenteService {
         somministrazione.setDate(LocalDateTime.now());
         somministrazioneRepository.save(somministrazione);
 
+        documentoClinicoService.addDocumentToAnimal(
+                animaleId,
+                veterinarianId,
+                assistant.getId(),
+                "SOMMINISTRAZIONE",
+                "Somministrazione farmaco: " + medicine.getName(),
+                null
+        );
+
         return "Farmaco somministrato con successo!";
     }
+
 
 
 

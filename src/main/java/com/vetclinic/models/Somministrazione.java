@@ -19,14 +19,16 @@ public class Somministrazione {
     private Long id;
 
     @ManyToOne
-    @JsonIgnore
     @JoinColumn(name = "medicine_id", nullable = false)
     private Medicine medicine;
 
     @ManyToOne
-    @JsonIgnore
     @JoinColumn(name = "veterinario_id")
     private Veterinario veterinario;
+
+    @ManyToOne
+    @JoinColumn(name = "assistente_id")
+    private Veterinario assistente;
 
     @ManyToOne
     @JsonIgnore

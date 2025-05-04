@@ -161,12 +161,15 @@ public class AssistenteController {
 
 
     @PostMapping("/somministra-farmaco")
-    public ResponseEntity<Map<String, String>> administerMedicine(@RequestParam Long animaleId,
-                                                                  @RequestParam Long medicineId,
-                                                                  @RequestParam int quantita,
-                                                                  @RequestParam Long veterinarianId) {
+    public ResponseEntity<Map<String, String>> administerMedicine(
+            @RequestParam Long animaleId,
+            @RequestParam Long medicineId,
+            @RequestParam int quantita,
+            @RequestParam Long veterinarianId
+    ) {
         String result = assistenteService.administerMedicine(animaleId, medicineId, quantita, veterinarianId);
         return ResponseEntity.ok(Map.of("message", result));
     }
+
 
 }
