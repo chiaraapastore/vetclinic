@@ -64,9 +64,6 @@ public class Animale {
         @JoinColumn(name = "operazione")
         private Operazione operazione;
 
-        @ManyToOne
-        @JoinColumn(name = "esame")
-        private Esame esame;
 
         @ManyToOne
         @JoinColumn(name = "trattamento")

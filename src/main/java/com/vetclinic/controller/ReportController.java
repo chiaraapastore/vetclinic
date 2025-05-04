@@ -20,11 +20,6 @@ public class ReportController {
         this.reportService = reportService;
     }
 
-    @GetMapping("/emergencies")
-    public ResponseEntity<List<Map<String, Object>>> getEmergencyReports() {
-        List<Map<String, Object>> emergencyReports = reportService.getEmergencyReport();
-        return ResponseEntity.ok(emergencyReports);
-    }
 
     @GetMapping("/consumption")
     public ResponseEntity<List<Map<String, Object>>> getConsumptionReports() {

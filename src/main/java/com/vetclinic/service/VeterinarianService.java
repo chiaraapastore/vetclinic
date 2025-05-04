@@ -20,19 +20,17 @@ public class VeterinarianService {
     private final AnimaleRepository animaleRepository;
     private final AuthenticationService authenticationService;
     private final UtenteRepository utenteRepository;
-    private final EmergenzaRepository emergenzaRepository;
     private final SomministrazioneRepository somministrazioneRepository;
     private final NotificheService notificheService;
     private final OperazioneRepository operazioneRepository;
 
 
-    public VeterinarianService(RepartoRepository repartoRepository, OperazioneRepository operazioneRepository, MedicineRepository medicineRepository, AnimaleRepository animaleRepository, AuthenticationService authenticationService, UtenteRepository utenteRepository, EmergenzaRepository emergenzaRepository, SomministrazioneRepository  somministrazioneRepository, NotificheService notificheService) {
+    public VeterinarianService(RepartoRepository repartoRepository, OperazioneRepository operazioneRepository, MedicineRepository medicineRepository, AnimaleRepository animaleRepository, AuthenticationService authenticationService, UtenteRepository utenteRepository, SomministrazioneRepository  somministrazioneRepository, NotificheService notificheService) {
         this.repartoRepository = repartoRepository;
         this.medicineRepository = medicineRepository;
         this.animaleRepository = animaleRepository;
         this.authenticationService = authenticationService;
         this.utenteRepository = utenteRepository;
-        this.emergenzaRepository = emergenzaRepository;
         this.somministrazioneRepository = somministrazioneRepository;
         this.notificheService = notificheService;
         this.operazioneRepository = operazioneRepository;
@@ -125,49 +123,6 @@ public class VeterinarianService {
     }
 
 
-    @Transactional
-    public String reportEmergency(Long animaleId, Long veterinarianId, Long medicineId, String description, String dosage) {
-        Optional<Utente> utenteOpt = utenteRepository.findById(veterinarianId);
-        if (utenteOpt.isEmpty()) {
-            return "Veterinario non trovato.";
-        }
-
-        Veterinario veterinarian = (Veterinario) utenteOpt.get();
-        Medicine medicine = medicineRepository.findById(medicineId)
-                .orElseThrow(() -> new RuntimeException("Medicinale non trovato"));
-
-        if (medicine.getAvailableQuantity() <= 0) {
-            return "Il farmaco richiesto non è disponibile.";
-        }
-
-        Animale animale = animaleRepository.findById(animaleId)
-                .orElseThrow(() -> new RuntimeException("Animale non trovato"));
-
-        Emergenza emergenza = new Emergenza();
-        emergenza.setAnimal(animale);
-        emergenza.setVeterinarian(veterinarian);
-        emergenza.setEmergencyDate(new Date());
-        emergenza.setDescription(description);
-        emergenza.setMedicine(medicine);
-        emergenza.setDosage(dosage);
-
-        emergenzaRepository.save(emergenza);
-
-        Utente capoReparto = utenteRepository.findByReparto_IdAndRole(veterinarian.getReparto().getId(), "capo_reparto").orElseThrow(()-> new IllegalArgumentException("Capo reparto non trovato"));
-
-        notificheService.sendEmergencyNotificationToHeadOfDepartment(veterinarian, capoReparto, description, medicine);
-
-
-        Utente assistant = utenteRepository.findByUsername(authenticationService.getUsername());
-        if (assistant == null) {
-            throw new IllegalArgumentException("Assistente non trovato");
-        }
-
-        notificheService.sendEmergencyNotificationToAssistant(veterinarian, assistant, description, medicine);
-
-
-        return "Emergenza segnalata con successo.";
-    }
 
 
     @Transactional

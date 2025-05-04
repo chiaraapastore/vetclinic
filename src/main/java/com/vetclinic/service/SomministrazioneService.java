@@ -1,9 +1,7 @@
 package com.vetclinic.service;
 
 import com.vetclinic.config.AuthenticationService;
-import com.vetclinic.models.Animale;
-import com.vetclinic.models.Somministrazione;
-import com.vetclinic.models.Utente;
+import com.vetclinic.models.*;
 import com.vetclinic.repository.AnimaleRepository;
 import com.vetclinic.repository.SomministrazioneRepository;
 import com.vetclinic.repository.UtenteRepository;
@@ -13,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @Service
@@ -76,5 +75,23 @@ public class SomministrazioneService {
     }
 
 
+    @Transactional
+    public void addDocumentToAnimal(Long animaleId, Long veterinarianId, Long assistantId, String tipo, String contenuto, Object ignored) {
+        Animale animale = animaleRepository.findById(animaleId)
+                .orElseThrow(() -> new IllegalArgumentException("Animale non trovato"));
 
+        Veterinario veterinario = (Veterinario) utenteRepository.findById(veterinarianId)
+                .orElseThrow(() -> new IllegalArgumentException("Veterinario non trovato"));
+
+        Assistente assistente = (Assistente) utenteRepository.findById(assistantId)
+                .orElseThrow(() -> new IllegalArgumentException("Assistente non trovato"));
+
+        String nuovaNota = "[" + tipo.toUpperCase() + "] " + contenuto + " - " +
+                LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
+
+        String notePrecedenti = animale.getVeterinaryNotes() != null ? animale.getVeterinaryNotes() + "\n" : "";
+        animale.setVeterinaryNotes(notePrecedenti + nuovaNota);
+
+        animaleRepository.save(animale);
+    }
 }

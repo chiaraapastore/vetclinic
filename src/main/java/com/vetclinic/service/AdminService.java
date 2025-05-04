@@ -18,7 +18,6 @@ public class AdminService {
 
     private final UtenteRepository utenteRepository;
     private final RepartoRepository repartoRepository;
-    public final EmergenzaRepository emergenzaRepository;
     private final FerieRepository ferieRepository;
     private final AnimaleRepository animaleRepository;
     private final MedicineRepository medicineRepository;
@@ -30,7 +29,7 @@ public class AdminService {
     private final ClienteRepository clienteRepository;
     private final KeycloakService keycloakService;
 
-    public AdminService(UtenteRepository utenteRepository, KeycloakService keycloakService,RepartoRepository repartoRepository, FerieRepository ferieRepository, AuthenticationService authenticationService, AnimaleRepository animaleRepository, AssistenteRepository assistenteRepository, MedicineRepository medicineRepository, OrdineRepository ordineRepository, MagazzinoRepository magazzinoRepository, NotificheService notificheService, ClienteRepository clienteRepository,EmergenzaRepository emergenzaRepository) {
+    public AdminService(UtenteRepository utenteRepository, KeycloakService keycloakService,RepartoRepository repartoRepository, FerieRepository ferieRepository, AuthenticationService authenticationService, AnimaleRepository animaleRepository, AssistenteRepository assistenteRepository, MedicineRepository medicineRepository, OrdineRepository ordineRepository, MagazzinoRepository magazzinoRepository, NotificheService notificheService, ClienteRepository clienteRepository) {
         this.repartoRepository = repartoRepository;
         this.authenticationService = authenticationService;
         this.utenteRepository = utenteRepository;
@@ -40,7 +39,6 @@ public class AdminService {
         this.magazineRepository = magazzinoRepository;
         this.ordineRepository = ordineRepository;
         this.notificationService = notificheService;
-        this.emergenzaRepository = emergenzaRepository;
         this.ferieRepository = ferieRepository;
         this.clienteRepository = clienteRepository;
         this.keycloakService = keycloakService;
@@ -166,33 +164,6 @@ public class AdminService {
     }
 
 
-    @Transactional
-    public void checkAndCreateEmergencyForOutOfStockMedicine(Long medicineId, Long animalId, Long veterinarianId) {
-
-        Medicine medicine = medicineRepository.findById(medicineId)
-                .orElseThrow(() -> new IllegalArgumentException("Medicinale non trovato"));
-
-        Animale animal = animaleRepository.findById(animalId)
-                .orElseThrow(() -> new IllegalArgumentException("Animale non trovato"));
-
-
-        Veterinario veterinarian = utenteRepository.findById(veterinarianId)
-                .map(utente -> (Veterinario) utente)
-                .orElseThrow(() -> new IllegalArgumentException("Veterinario non trovato"));
-
-
-        if (medicine.getAvailableQuantity() <= 0) {
-            Emergenza emergenza = new Emergenza();
-            emergenza.setAnimal(animal);
-            emergenza.setVeterinarian(veterinarian);
-            emergenza.setEmergencyDate(new Date());
-            emergenza.setDescription("Emergenza: Il farmaco " + medicine.getName() + " è esaurito.");
-            emergenza.setMedicine(medicine);
-            emergenza.setDosage(medicine.getDosage());
-
-            emergenzaRepository.save(emergenza);
-        }
-    }
 
 
     @Transactional
@@ -241,23 +212,6 @@ public class AdminService {
         return ordineRepository.findAll();
     }
 
-
-    @Transactional
-    public List<Map<String, Object>> getEmergencyReport() {
-        return emergenzaRepository.findAll().stream()
-                .map(emergenza -> {
-                    Map<String, Object> reportMap = new HashMap<>();
-                    reportMap.put("emergencyId", emergenza.getId());
-                    reportMap.put("animalName", emergenza.getAnimal().getName());
-                    reportMap.put("veterinarianName", emergenza.getVeterinarian().getFirstName() + " " + emergenza.getVeterinarian().getLastName());
-                    reportMap.put("emergencyDate", emergenza.getEmergencyDate());
-                    reportMap.put("medicine", emergenza.getMedicine().getName());
-                    reportMap.put("dosage", emergenza.getDosage());
-                    reportMap.put("description", emergenza.getDescription());
-                    return reportMap;
-                })
-                .collect(Collectors.toList());
-    }
 
 
 

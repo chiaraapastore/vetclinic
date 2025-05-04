@@ -66,15 +66,6 @@ public class VeterinarianController {
     }
 
 
-    @PostMapping("/reportEmergency")
-    public ResponseEntity<Map<String, String>> reportEmergency(@RequestParam Long animalId,
-                                                                @RequestParam Long veterinarianId,
-                                                                @RequestParam Long medicineId,
-                                                                @RequestParam String description,
-                                                                @RequestParam String dosage) {
-        String result = veterinarianService.reportEmergency(animalId, veterinarianId, medicineId, description, dosage);
-        return ResponseEntity.ok(Map.of("message", result));
-    }
 
 
     @PostMapping("/expiration")

@@ -26,18 +26,16 @@ public class AnimaleService {
     private final FatturaRepository fatturaRepository;
     private final AuthenticationService authenticationService;
     private final TrattamentoRepository trattamentoRepository;
-    private final EsameRepository esameRepository;
     private final OperazioneRepository operazioneRepository;
     private final SomministrazioneRepository somministrazioneRepository;
 
-    public AnimaleService(AdminService adminService,TrattamentoRepository trattamentoRepository, SomministrazioneRepository somministrazioneRepository,EsameRepository esameRepository, OperazioneRepository operazioneRepository,AnimaleRepository animaleRepository, ClienteRepository clienteRepository, FatturaRepository fatturaRepository,AuthenticationService authenticationService) {
+    public AnimaleService(AdminService adminService,TrattamentoRepository trattamentoRepository, SomministrazioneRepository somministrazioneRepository, OperazioneRepository operazioneRepository,AnimaleRepository animaleRepository, ClienteRepository clienteRepository, FatturaRepository fatturaRepository,AuthenticationService authenticationService) {
         this.animaleRepository = animaleRepository;
         this.clienteRepository = clienteRepository;
         this.authenticationService = authenticationService;
         this.fatturaRepository = fatturaRepository;
         this.adminService = adminService;
         this.trattamentoRepository = trattamentoRepository;
-        this.esameRepository = esameRepository;
         this.operazioneRepository = operazioneRepository;
         this.somministrazioneRepository = somministrazioneRepository;
     }
@@ -261,12 +259,6 @@ public class AnimaleService {
         document.add(new Paragraph("\n"));
 
 
-        Font footerFont = new Font(Font.FontFamily.HELVETICA, 9, Font.ITALIC, BaseColor.GRAY);
-        Paragraph footer = new Paragraph("Telefono: +39 012 345 6789 | Email: support@vetenterprise.com", footerFont);
-        footer.setAlignment(Element.ALIGN_CENTER);
-        footer.setSpacingBefore(20f);
-        document.add(footer);
-
 
         Paragraph somministrazioniTitle = new Paragraph("Somministrazioni", sectionTitleFont);
         somministrazioniTitle.setSpacingBefore(20f);
@@ -317,6 +309,12 @@ public class AnimaleService {
 
             document.add(somministrazioniTable);
         }
+
+        Font footerFont = new Font(Font.FontFamily.HELVETICA, 9, Font.ITALIC, BaseColor.GRAY);
+        Paragraph footer = new Paragraph("Telefono: +39 012 345 6789 | Email: support@vetenterprise.com", footerFont);
+        footer.setAlignment(Element.ALIGN_CENTER);
+        footer.setSpacingBefore(20f);
+        document.add(footer);
 
         document.close();
         return baos.toByteArray();

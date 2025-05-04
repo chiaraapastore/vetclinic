@@ -29,12 +29,12 @@ public class AssistenteService {
     private final FatturaRepository fatturaRepository;
     private final PagamentoRepository pagamentoRepository;
     private final SomministrazioneRepository somministrazioneRepository;
-    private final DocumentoClinicoService documentoClinicoService;
+    private final SomministrazioneService somministrazioneService;
 
 
     public AssistenteService(AppuntamentoRepository appuntamentoRepository, MedicineRepository medicineRepository,
                              AnimaleRepository pazienteRepository, NotificheService notificheService, AssistenteRepository assistenteRepository,
-                             UtenteRepository utenteRepository, DocumentoClinicoService documentoClinicoService,AuthenticationService authenticationService, AnimaleRepository animaleRepository, FatturaRepository fatturaRepository, PagamentoRepository pagamentoRepository, SomministrazioneRepository somministrazioneRepository) {
+                             UtenteRepository utenteRepository, AuthenticationService authenticationService, AnimaleRepository animaleRepository, FatturaRepository fatturaRepository, PagamentoRepository pagamentoRepository, SomministrazioneRepository somministrazioneRepository, SomministrazioneService somministrazioneService) {
         this.appuntamentoRepository = appuntamentoRepository;
         this.medicineRepository = medicineRepository;
         this.pazienteRepository = pazienteRepository;
@@ -45,8 +45,8 @@ public class AssistenteService {
         this.animaleRepository = animaleRepository;
         this.fatturaRepository = fatturaRepository;
         this.pagamentoRepository = pagamentoRepository;
-        this.documentoClinicoService = documentoClinicoService;
         this.somministrazioneRepository = somministrazioneRepository;
+        this.somministrazioneService = somministrazioneService;
     }
 
     @Transactional
@@ -243,7 +243,7 @@ public class AssistenteService {
         somministrazione.setDate(LocalDateTime.now());
         somministrazioneRepository.save(somministrazione);
 
-        documentoClinicoService.addDocumentToAnimal(
+        somministrazioneService.addDocumentToAnimal(
                 animaleId,
                 veterinarianId,
                 assistant.getId(),

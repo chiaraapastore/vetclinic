@@ -2,12 +2,10 @@ package com.vetclinic.service;
 
 import com.vetclinic.models.Animale;
 import com.vetclinic.models.Cliente;
-import com.vetclinic.models.DocumentoClinico;
 import com.vetclinic.models.Fattura;
 import com.vetclinic.repository.AnimaleRepository;
 import com.vetclinic.repository.ClienteRepository;
 import com.vetclinic.config.AuthenticationService;
-import com.vetclinic.repository.DocumentoClinicoRepository;
 import com.vetclinic.repository.FatturaRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,14 +20,12 @@ public class ClienteService {
     private final ClienteRepository clienteRepository;
     private final AuthenticationService authenticationService;
     private final FatturaRepository fatturaRepository;
-    private final DocumentoClinicoRepository documentoClinicoRepository;
     private final AnimaleRepository animaleRepository;
 
-    public ClienteService(ClienteRepository clienteRepository, AnimaleRepository animaleRepository,AuthenticationService authenticationService, FatturaRepository flatturaRepository, DocumentoClinicoRepository documentoClinicoRepository) {
+    public ClienteService(ClienteRepository clienteRepository, AnimaleRepository animaleRepository,AuthenticationService authenticationService, FatturaRepository flatturaRepository) {
         this.clienteRepository = clienteRepository;
         this.authenticationService = authenticationService;
         this.fatturaRepository = flatturaRepository;
-        this.documentoClinicoRepository = documentoClinicoRepository;
         this.animaleRepository = animaleRepository;
     }
 
@@ -73,21 +69,6 @@ public class ClienteService {
     }
 
 
-    @Transactional
-    public List<DocumentoClinico> getDocumentsOfClientAnimal(Long animaleId) {
-        String username = authenticationService.getUsername();
-        Cliente cliente = clienteRepository.findByUsername(username)
-                .orElseThrow(() -> new IllegalArgumentException("Cliente non trovato"));
-
-        Animale animale = animaleRepository.findById(animaleId)
-                .orElseThrow(() -> new IllegalArgumentException("Animale non trovato"));
-
-        if (!animale.getCliente().getId().equals(cliente.getId())) {
-            throw new IllegalArgumentException("L'animale non appartiene al cliente");
-        }
-
-        return documentoClinicoRepository.findByAnimaleId(animale.getId());
-    }
 
 
     @Transactional

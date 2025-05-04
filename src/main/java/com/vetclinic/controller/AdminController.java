@@ -23,17 +23,15 @@ public class AdminController {
     private final UtenteRepository utenteRepository;
     private final KeycloakService keycloakService;
     private final MagazzinoRepository magazzinoRepository;
-    private final EmergenzaRepository emergenzaRepository;
     private final OrdineService ordineService;
     private final AnimaleService animaleService;
     private final ClienteRepository clienteRepository;
 
-    public AdminController(AdminService adminService, ClienteRepository   clienteRepository,RepartoRepository repartoRepository, UtenteRepository utenteRepository, EmergenzaRepository emergenzaRepository, KeycloakService keycloakService , OrdineService ordineService, MagazzinoRepository magazzinoRepository, AnimaleService animaleService) {
+    public AdminController(AdminService adminService, ClienteRepository   clienteRepository,RepartoRepository repartoRepository, UtenteRepository utenteRepository, KeycloakService keycloakService , OrdineService ordineService, MagazzinoRepository magazzinoRepository, AnimaleService animaleService) {
         this.adminService = adminService;
         this.repartoRepository = repartoRepository;
         this.utenteRepository = utenteRepository;
         this.keycloakService = keycloakService;
-        this.emergenzaRepository = emergenzaRepository;
         this.magazzinoRepository = magazzinoRepository;
         this.ordineService = ordineService;
         this.animaleService = animaleService;
@@ -170,17 +168,6 @@ public class AdminController {
         return ResponseEntity.ok(magazzini);
     }
 
-    @GetMapping("/emergency")
-    public ResponseEntity<List<Emergenza>> getEmergency(
-            @RequestParam Long medicineId,
-            @RequestParam Long animalId,
-            @RequestParam Long veterinarianId) {
-
-        adminService.checkAndCreateEmergencyForOutOfStockMedicine(medicineId, animalId, veterinarianId);
-
-        List<Emergenza> emergenze = emergenzaRepository.findAll();
-        return ResponseEntity.ok(emergenze);
-    }
 
 
     @PostMapping("/create-assistant")
@@ -206,12 +193,6 @@ public class AdminController {
     @GetMapping("/report-consumi")
     public ResponseEntity<List<Map<String, Object>>> getReportConsumi() {
         return ResponseEntity.ok(adminService.getReportConsumi());
-    }
-
-    @GetMapping("/emergencies/report")
-    public ResponseEntity<List<Map<String, Object>>> getEmergencyReport() {
-        List<Map<String, Object>> report = adminService.getEmergencyReport();
-        return ResponseEntity.ok(report);
     }
 
 

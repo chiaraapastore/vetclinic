@@ -16,45 +16,18 @@ public class ReportService {
     private final ReportRepository reportRepository;
     private final AuthenticationService authenticationService;
     private final UtenteRepository utenteRepository;
-    private final EmergenzaRepository emergenzaRepository;
     private final MedicineRepository medicineRepository;
     private final NotificheService notificheService;
 
-    public ReportService(ReportRepository reportRepository, AuthenticationService authenticationService, UtenteRepository utenteRepository, EmergenzaRepository emergenzaRepository, MedicineRepository medicineRepository, NotificheService notificheService) {
+    public ReportService(ReportRepository reportRepository, AuthenticationService authenticationService, UtenteRepository utenteRepository, MedicineRepository medicineRepository, NotificheService notificheService) {
         this.reportRepository = reportRepository;
         this.authenticationService = authenticationService;
         this.utenteRepository = utenteRepository;
-        this.emergenzaRepository = emergenzaRepository;
         this.medicineRepository = medicineRepository;
         this.notificheService = notificheService;
     }
 
-    @Transactional
-    public List<Map<String, Object>> getEmergencyReport() {
 
-           Utente utente = utenteRepository.findByUsername(authenticationService.getUsername());
-            if (utente == null || !utente.getRole().equals("admin")) {
-                throw new IllegalArgumentException("Utente non autenticato o non autorizzato");
-            }
-
-            List<Map<String, Object>> emergencyReports = emergenzaRepository.findAll().stream()
-                    .map(emergency -> {
-                        Map<String, Object> reportMap = new HashMap<>();
-                        reportMap.put("emergencyId", emergency.getId());
-                        reportMap.put("animalName", emergency.getAnimal().getName());
-                        reportMap.put("veterinarianName", emergency.getVeterinarian().getFirstName() + " " + emergency.getVeterinarian().getLastName());
-                        reportMap.put("emergencyDate", emergency.getEmergencyDate());
-                        reportMap.put("medicine", emergency.getMedicine().getName());
-                        reportMap.put("dosage", emergency.getDosage());
-                        reportMap.put("description", emergency.getDescription());
-                        return reportMap;
-                    })
-                    .collect(Collectors.toList());
-
-            notificheService.createAndSendNotification(utente, utente, "Nuovo report di emergenza generato", "emergency_report");
-
-            return emergencyReports;
-    }
 
     @Transactional
     public List<Map<String, Object>> getReportConsumi() {
