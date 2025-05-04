@@ -13,6 +13,7 @@ import com.itextpdf.text.pdf.PdfWriter;
 import com.itextpdf.text.*;
 import java.io.ByteArrayOutputStream;
 import java.text.SimpleDateFormat;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 
@@ -27,8 +28,9 @@ public class AnimaleService {
     private final TrattamentoRepository trattamentoRepository;
     private final EsameRepository esameRepository;
     private final OperazioneRepository operazioneRepository;
+    private final SomministrazioneRepository somministrazioneRepository;
 
-    public AnimaleService(AdminService adminService,TrattamentoRepository trattamentoRepository, EsameRepository esameRepository, OperazioneRepository operazioneRepository,AnimaleRepository animaleRepository, ClienteRepository clienteRepository, FatturaRepository fatturaRepository,AuthenticationService authenticationService) {
+    public AnimaleService(AdminService adminService,TrattamentoRepository trattamentoRepository, SomministrazioneRepository somministrazioneRepository,EsameRepository esameRepository, OperazioneRepository operazioneRepository,AnimaleRepository animaleRepository, ClienteRepository clienteRepository, FatturaRepository fatturaRepository,AuthenticationService authenticationService) {
         this.animaleRepository = animaleRepository;
         this.clienteRepository = clienteRepository;
         this.authenticationService = authenticationService;
@@ -37,6 +39,7 @@ public class AnimaleService {
         this.trattamentoRepository = trattamentoRepository;
         this.esameRepository = esameRepository;
         this.operazioneRepository = operazioneRepository;
+        this.somministrazioneRepository = somministrazioneRepository;
     }
 
     @Transactional
@@ -95,6 +98,8 @@ public class AnimaleService {
         Document document = new Document(PageSize.A4, 50, 50, 50, 100);
         PdfWriter writer = PdfWriter.getInstance(document, baos);
         document.open();
+        Font textFont = FontFactory.getFont(FontFactory.HELVETICA, 11, BaseColor.BLACK);
+
 
         try {
             Image logo = Image.getInstance("https://i.pinimg.com/736x/f4/03/61/f40361e106a2512fa85f6fb59ba3f960.jpg");
@@ -115,7 +120,6 @@ public class AnimaleService {
         table.setWidthPercentage(100);
         table.setSpacingBefore(10f);
         Font headerFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12, new BaseColor(0, 121, 107));
-        Font textFont = FontFactory.getFont(FontFactory.HELVETICA, 12);
         addTableRow(table, "Nome Cliente:", cliente.getFirstName(), headerFont, textFont);
         addTableRow(table, "Cognome Cliente:", cliente.getLastName(), headerFont, textFont);
         addTableRow(table, "Email Cliente:", cliente.getEmail(), headerFont, textFont);
@@ -154,6 +158,8 @@ public class AnimaleService {
             }
             document.add(operationsTable);
         }
+
+
 
         document.close();
         return baos.toByteArray();
@@ -260,6 +266,57 @@ public class AnimaleService {
         footer.setAlignment(Element.ALIGN_CENTER);
         footer.setSpacingBefore(20f);
         document.add(footer);
+
+
+        Paragraph somministrazioniTitle = new Paragraph("Somministrazioni", sectionTitleFont);
+        somministrazioniTitle.setSpacingBefore(20f);
+        somministrazioniTitle.setSpacingAfter(10f);
+        document.add(somministrazioniTitle);
+
+        List<Somministrazione> somministrazioni = somministrazioneRepository.findByAnimal(animale);
+
+        if (somministrazioni.isEmpty()) {
+            document.add(new Paragraph("Nessuna somministrazione registrata.", textFont));
+        } else {
+            PdfPTable somministrazioniTable = new PdfPTable(3);
+            somministrazioniTable.setWidthPercentage(100);
+            somministrazioniTable.setSpacingBefore(10f);
+
+            PdfPCell header1 = new PdfPCell(new Phrase("Data", new Font(Font.FontFamily.HELVETICA, 12, Font.BOLD, BaseColor.WHITE)));
+            PdfPCell header2 = new PdfPCell(new Phrase("Farmaco", new Font(Font.FontFamily.HELVETICA, 12, Font.BOLD, BaseColor.WHITE)));
+            PdfPCell header3 = new PdfPCell(new Phrase("Dosaggio", new Font(Font.FontFamily.HELVETICA, 12, Font.BOLD, BaseColor.WHITE)));
+
+            BaseColor headerColor = new BaseColor(0, 121, 107);
+            header1.setBackgroundColor(headerColor);
+            header2.setBackgroundColor(headerColor);
+            header3.setBackgroundColor(headerColor);
+
+            header1.setHorizontalAlignment(Element.ALIGN_CENTER);
+            header2.setHorizontalAlignment(Element.ALIGN_CENTER);
+            header3.setHorizontalAlignment(Element.ALIGN_CENTER);
+
+            somministrazioniTable.addCell(header1);
+            somministrazioniTable.addCell(header2);
+            somministrazioniTable.addCell(header3);
+
+            for (Somministrazione s : somministrazioni) {
+                String formattedDate = s.getDate().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
+
+                PdfPCell dateCell = new PdfPCell(new Phrase(formattedDate, textFont));
+                PdfPCell medCell = new PdfPCell(new Phrase(s.getMedicine().getName(), textFont));
+                PdfPCell doseCell = new PdfPCell(new Phrase(s.getDosage() + " unità", textFont));
+
+                dateCell.setHorizontalAlignment(Element.ALIGN_CENTER);
+                medCell.setHorizontalAlignment(Element.ALIGN_CENTER);
+                doseCell.setHorizontalAlignment(Element.ALIGN_CENTER);
+
+                somministrazioniTable.addCell(dateCell);
+                somministrazioniTable.addCell(medCell);
+                somministrazioniTable.addCell(doseCell);
+            }
+
+            document.add(somministrazioniTable);
+        }
 
         document.close();
         return baos.toByteArray();

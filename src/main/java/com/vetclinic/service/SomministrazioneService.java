@@ -7,8 +7,10 @@ import com.vetclinic.models.Utente;
 import com.vetclinic.repository.AnimaleRepository;
 import com.vetclinic.repository.SomministrazioneRepository;
 import com.vetclinic.repository.UtenteRepository;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -72,4 +74,7 @@ public class SomministrazioneService {
                 .orElseThrow(() -> new RuntimeException("Paziente non trovato"));
         return somministrazioneRepository.findByAnimal(animale);
     }
+
+
+
 }

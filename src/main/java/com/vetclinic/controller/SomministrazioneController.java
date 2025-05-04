@@ -36,4 +36,5 @@ public class SomministrazioneController {
         return ResponseEntity.ok(somministrazioni);
     }
 
+
 }
