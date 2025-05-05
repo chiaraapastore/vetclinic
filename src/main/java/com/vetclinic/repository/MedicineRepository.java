@@ -1,6 +1,7 @@
 package com.vetclinic.repository;
 
 import com.vetclinic.models.Medicine;
+import feign.Param;
 import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -24,8 +25,9 @@ public interface MedicineRepository extends JpaRepository<Medicine, Long> {
     Collection<Object> findByAvailableQuantityLessThanEqual(int i);
     @Modifying
     @Transactional
-    @Query("UPDATE Medicine m SET m.availableQuantity = m.availableQuantity - :quantity WHERE m.id = :medicineId")
-    int updateAvailableQuantity(Long medicineId, int quantity);
+    @Query("UPDATE Medicine m SET m.availableQuantity = :newAvailableQuantity WHERE m.id = :medicinaleId")
+    int updateAvailableQuantity(@Param("medicinaleId") Long medicinaleId, @Param("newAvailableQuantity") int newAvailableQuantity);
+
 
     @Query("SELECT m FROM Medicine m WHERE m.availableQuantity = 0")
     List<Medicine> findMedicinesInEmergenza();

@@ -4,7 +4,6 @@ import com.vetclinic.config.AuthenticationService;
 import com.vetclinic.models.*;
 import com.vetclinic.repository.*;
 import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Repository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
@@ -15,7 +14,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -286,7 +284,8 @@ public class AssistenteService {
         String nome = (String) payload.get("nome");
         Integer quantita = (Integer) payload.get("quantita");
         Integer availableQuantity = (Integer) payload.get("availableQuantity");
-        String scadenza = (String) payload.get("scadenza");
+        String dosage = (String) payload.get("dosage");
+        String expirationDate = (String) payload.get("expirationDate");
         String categoria = (String) payload.get("categoria");
         String descrizione = (String) payload.get("descrizione");
         Long departmentId = payload.get("departmentId") != null ? Long.valueOf(payload.get("departmentId").toString()) : null;
@@ -299,8 +298,9 @@ public class AssistenteService {
         Medicine nuovoFarmaco = new Medicine();
         nuovoFarmaco.setName(nome);
         nuovoFarmaco.setQuantity(quantita);
+        nuovoFarmaco.setDosage(dosage);
         nuovoFarmaco.setAvailableQuantity(availableQuantity);
-        nuovoFarmaco.setExpirationDate(scadenza);
+        nuovoFarmaco.setExpirationDate(expirationDate);
         nuovoFarmaco.setCategory(categoria);
         nuovoFarmaco.setDescription(descrizione);
 
@@ -314,6 +314,10 @@ public class AssistenteService {
             Magazzino magazine = magazzinoRepository.findById(magazineId)
                     .orElseThrow(() -> new IllegalArgumentException("Magazzino non trovato"));
             nuovoFarmaco.setMagazzino(magazine);
+        }
+
+        if (availableQuantity == null || availableQuantity < 0) {
+            throw new IllegalArgumentException("La quantità disponibile deve essere specificata e non negativa.");
         }
 
         medicineRepository.save(nuovoFarmaco);

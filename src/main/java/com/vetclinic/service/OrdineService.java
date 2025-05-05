@@ -9,6 +9,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.List;
 
 @Service
@@ -21,12 +23,14 @@ public class OrdineService {
     }
 
     @Transactional
-    public Ordine createOrder(Fornitore fornitore, int quantity) {
+    public Ordine createOrder(String supplierName, int quantity) {
         Ordine ordine = new Ordine();
-        ordine.setSupplier(fornitore);
+
+        ordine.setSupplierName(supplierName);
         ordine.setQuantity(quantity);
-        ordine.setOrderDate(new java.util.Date());
+        ordine.setOrderDate(new Date());
         ordine.setStatus(Ordine.OrderStatus.PENDING);
+
         return ordineRepository.save(ordine);
     }
 
@@ -63,5 +67,6 @@ public class OrdineService {
         ordine.setStatus(nuovoStato);
         return ordineRepository.save(ordine);
     }
+
 
 }

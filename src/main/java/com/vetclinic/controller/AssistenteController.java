@@ -72,10 +72,14 @@ public class AssistenteController {
     }
 
     @PostMapping("/create-order")
-    public ResponseEntity<Ordine> createOrder(@RequestBody Ordine ordine) {
-        Ordine nuovoOrdine = ordineService.createOrder(ordine.getSupplier(), ordine.getQuantity());
+    public ResponseEntity<Ordine> createOrder(@RequestBody Map<String, Object> ordineData) {
+        String supplierName = (String) ordineData.get("supplier");
+        int quantity = (Integer) ordineData.get("quantity");
+
+        Ordine nuovoOrdine = ordineService.createOrder(supplierName, quantity);
         return ResponseEntity.ok(nuovoOrdine);
     }
+
 
     @GetMapping("/order-history")
     public List<Ordine> getOrderHistory() {
@@ -195,11 +199,13 @@ public class AssistenteController {
         }
     }
 
+
     @PostMapping("/scadenza")
     public ResponseEntity<?> scadenzaFarmaco( @PathVariable Long capoRepartoId, @PathVariable Long idMedicinale) {
         assistenteService.scadenzaFarmaco(capoRepartoId, idMedicinale);
         return ResponseEntity.ok("notifica_inviata");
     }
+
 
 
 

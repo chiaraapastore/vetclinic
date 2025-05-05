@@ -31,8 +31,9 @@ import java.util.Date;
 
         private Date deliveryDate;
 
+        private String supplierName;
+
         @ManyToOne
-        @JsonIgnore
         @JoinColumn(name = "fornitore_id")
         private Fornitore supplier;
 

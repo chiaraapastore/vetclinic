@@ -43,22 +43,21 @@ public class MedicineService {
     }
 
     @Transactional
-    public void updateMedicineAvailableQuantity(Long medicineId, int newAvailableQuantity) {
-        int updatedRows = medicineRepository.updateAvailableQuantity(medicineId, newAvailableQuantity);
+    public void updateMedicinaleAvailableQuantity(Long medicinaleId, int newAvailableQuantity) {
+        int updatedRows = medicineRepository.updateAvailableQuantity(medicinaleId, newAvailableQuantity);
         if (updatedRows == 0) {
-            throw new RuntimeException("No rows updated! Check if the ID exists.");
+            throw new RuntimeException("Nessuna riga aggiornata! Controlla se l'ID esiste.");
         }
-        System.out.println("available_quantity updated directly in the DB!");
     }
 
     @Transactional
-    public void deleteMedicine(Long id) {
-        Utente utente = utenteRepository.findByUsername(authenticationService.getUsername());
-        if (utente == null) {
-            throw new IllegalArgumentException("User not found");
+    public void deleteMedicinale(Long id) {
+        if (!medicineRepository.existsById(id)) {
+            throw new IllegalArgumentException("Farmaco non trovato con ID: " + id);
         }
         medicineRepository.deleteById(id);
     }
+
 
     @Transactional
     public List<Medicine> getAvailableMedicines() {

@@ -35,7 +35,7 @@ public class OrdineController {
             return ResponseEntity.badRequest().body(null);
         }
         Fornitore fornitore = fornitoreOpt.get();
-        Ordine nuovoOrdine = ordineService.createOrder(fornitore, quantity);
+        Ordine nuovoOrdine = ordineService.createOrder(fornitore.getFirstName(), quantity);
 
         return ResponseEntity.ok(nuovoOrdine);
     }

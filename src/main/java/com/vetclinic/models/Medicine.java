@@ -40,6 +40,7 @@ public class Medicine {
 
     private int unitsToReceive;
 
+
     @Column(name = "available_quantity")
     private int availableQuantity;
 

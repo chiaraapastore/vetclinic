@@ -198,7 +198,7 @@ public class AdminController {
 
     @PostMapping("/create-order")
     public ResponseEntity<Ordine> createOrder(@RequestBody Ordine ordine) {
-        Ordine nuovoOrdine = ordineService.createOrder(ordine.getSupplier(), ordine.getQuantity());
+        Ordine nuovoOrdine = ordineService.createOrder(ordine.getSupplierName(), ordine.getQuantity());
         return ResponseEntity.ok(nuovoOrdine);
     }
 

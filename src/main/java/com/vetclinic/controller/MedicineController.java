@@ -1,5 +1,6 @@
 package com.vetclinic.controller;
 
+import com.vetclinic.repository.MedicineRepository;
 import com.vetclinic.service.MedicineService;
 import com.vetclinic.models.Medicine;
 import org.springframework.http.ResponseEntity;
@@ -15,9 +16,11 @@ import java.util.Optional;
 public class MedicineController {
 
     private final MedicineService medicineService;
+    private final MedicineRepository medicineRepository;
 
-    public MedicineController(MedicineService medicineService) {
+    public MedicineController(MedicineService medicineService, MedicineRepository medicineRepository) {
         this.medicineService = medicineService;
+        this.medicineRepository = medicineRepository;
     }
 
     @GetMapping("/search/{id}")
@@ -33,18 +36,21 @@ public class MedicineController {
     }
 
     @PutMapping("/{id}/update-available-quantity")
-    public ResponseEntity<Medicine> updateMedicineAvailableQuantity(
+    public ResponseEntity<Medicine> updateMedicinaleAvailableQuantity(
             @PathVariable Long id,
             @RequestBody Map<String, Integer> request) {
 
         int availableQuantity = request.get("availableQuantity");
 
-        medicineService.updateMedicineAvailableQuantity(id, availableQuantity);
+        medicineService.updateMedicinaleAvailableQuantity(id, availableQuantity);
 
-        Medicine updated = medicineService.getMedicineById(id).orElseThrow(() -> new RuntimeException("Medicine not found after update!"));
+        Medicine updated = medicineRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Medicinale non trovato dopo l'aggiornamento!"));
+
 
         return ResponseEntity.ok(updated);
     }
+
 
     @PutMapping("/{id}")
     public ResponseEntity<Medicine> updateMedicine(@PathVariable Long id, @RequestBody Medicine medicine) {
@@ -61,8 +67,8 @@ public class MedicineController {
     }
 
     @DeleteMapping("/delete/{id}")
-    public ResponseEntity<Void> deleteMedicine(@PathVariable Long id) {
-        medicineService.deleteMedicine(id);
+    public ResponseEntity<Void> deleteMedicinale(@PathVariable Long id) {
+        medicineService.deleteMedicinale(id);
         return ResponseEntity.noContent().build();
     }
 
