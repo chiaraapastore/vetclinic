@@ -58,7 +58,9 @@ public class NotificheService {
 
     @Transactional
     public List<Notifiche> markAllNotificationsAsRead() {
-        Utente user = utenteRepository.findByUsername(authenticationService.getUsername());
+        Utente user = utenteRepository.findByKeycloakId(authenticationService.getUserId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Utente non trovato"));
+
         if (user == null) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Utente non trovato");
         }
@@ -265,16 +267,17 @@ public class NotificheService {
     }
 
     public List<Notifiche> getAllNotificationsForCurrentUser() {
-        Utente user = utenteRepository.findByUsername(authenticationService.getUsername());
-        if (user == null) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Utente non trovato");
-        }
+        Utente user = utenteRepository.findByKeycloakId(authenticationService.getUserId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Utente non trovato"));
         return notificheRepository.findBySentToId(user.getId());
     }
 
+
     @Transactional
     public void deleteAllNotificationsForCurrentUser() {
-        Utente user = utenteRepository.findByUsername(authenticationService.getUsername());
+        Utente user = utenteRepository.findByKeycloakId(authenticationService.getUserId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Utente non trovato"));
+
         if (user == null) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Utente non trovato");
         }
