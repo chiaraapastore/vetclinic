@@ -3,8 +3,10 @@ package com.vetclinic.service;
 import com.vetclinic.config.AuthenticationService;
 import com.vetclinic.models.*;
 import com.vetclinic.repository.*;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.Date;
@@ -123,19 +125,19 @@ public class VeterinarianService {
     }
 
 
-
-
     @Transactional
     public List<Animale> getAnimalsOfVeterinarian() {
-        String username = authenticationService.getUsername();
-        Utente veterinarian = utenteRepository.findByUsername(username);
-        if (veterinarian == null) {
-            throw new IllegalArgumentException("Dottore non trovato");
-        }
+        Utente veterinario = utenteRepository.findByKeycloakId(authenticationService.getUserId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Veterinario non trovato"));
 
-        List<Animale> animali = animaleRepository.findByVeterinario(veterinarian);
-        System.out.println("Pazienti del dottore " + username + ": " + animali);
-        return animali;
+        Long repartoId = veterinario.getReparto().getId();
+
+
+        List<Utente> veterinariNelReparto = utenteRepository.findByDepartmentId(repartoId).stream()
+                .filter(u -> "veterinario".equalsIgnoreCase(u.getRole()))
+                .toList();
+
+        return animaleRepository.findByVeterinarioIn(veterinariNelReparto);
     }
 
     @Transactional

@@ -74,11 +74,14 @@ public class VeterinarianController {
         return ResponseEntity.ok("notifica_inviata");
     }
 
+
     @GetMapping("/animals")
-    public ResponseEntity<List<Animale>> getAnimals() {
-        List<Animale> animali = veterinarianService.getAnimalsOfVeterinarian();
-        return ResponseEntity.ok(animali);
+    public ResponseEntity<List<Animale>> getVeterinarianPatients() {
+        List<Animale> patients = veterinarianService.getAnimalsOfVeterinarian();
+        return ResponseEntity.ok(patients);
     }
+
+
 
     @GetMapping("/department/{departmentId}")
     public ResponseEntity<List<Veterinario>> getVeterinariesByDepartment(@PathVariable Long departmentId) {
