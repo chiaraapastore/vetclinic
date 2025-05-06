@@ -2,6 +2,8 @@ package com.vetclinic.controller;
 
 import com.vetclinic.config.AuthenticationService;
 import com.vetclinic.models.Appuntamento;
+import com.vetclinic.models.Utente;
+import com.vetclinic.models.Veterinario;
 import com.vetclinic.repository.AppuntamentoRepository;
 import com.vetclinic.repository.UtenteRepository;
 import com.vetclinic.service.AppuntamentoService;
@@ -32,7 +34,6 @@ public class AppuntamentoController {
     private final AppuntamentoRepository appuntamentoRepository;
     private final AuthenticationService authenticationService;
 
-    @Autowired
     public AppuntamentoController(AppuntamentoService appuntamentoService, AssistenteService assistenteService,UtenteRepository utenteRepository, AppuntamentoRepository appuntamentoRepository, AuthenticationService authenticationService) {
         this.appuntamentoService = appuntamentoService;
         this.utenteRepository = utenteRepository;
@@ -40,6 +41,27 @@ public class AppuntamentoController {
         this.authenticationService = authenticationService;
         this.assistenteService = assistenteService;
     }
+
+    @GetMapping("/my")
+    public ResponseEntity<List<Appuntamento>> getMyAppointments() {
+        Utente veterinario = utenteRepository.findByKeycloakId(authenticationService.getUserId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Veterinario non trovato"));
+        List<Appuntamento> appointments = appuntamentoRepository.findByVeterinarianId(veterinario.getId());
+        return ResponseEntity.ok(appointments);
+    }
+
+
+
+    @GetMapping("/veterinario/assistente-appuntamenti")
+    public ResponseEntity<List<Appuntamento>> getAppointmentsCreatedByAssistantForVeterinarian() {
+        Utente veterinario = utenteRepository.findByKeycloakId(authenticationService.getUserId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Veterinario non trovato"));
+
+        List<Appuntamento> appointments = appuntamentoRepository.findByVeterinarianId(veterinario.getId());
+        return ResponseEntity.ok(appointments);
+    }
+
+
 
     @PostMapping("/create-appointment")
     public ResponseEntity<Appuntamento> createAppointment(
