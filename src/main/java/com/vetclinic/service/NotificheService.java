@@ -79,10 +79,25 @@ public class NotificheService {
     }
 
     @Transactional
-    public void sendNotificationTurni(Utente veterinarian, Utente headOfDepartment, LocalDate startDate, LocalDate endDate) {
-        String message = "Il sottoscritto "+veterinarian.getFirstName()+veterinarian.getLastName()+" dovrà coprire i turni dal giorno "+startDate+" al giorno "+endDate;
-        createAndSendNotification(veterinarian,headOfDepartment, message, "turni");
+    public void sendNotificationTurni(Utente destinatario, Utente autore, LocalDate inizio, LocalDate fine) {
+        if (inizio.equals(fine)) {
+            throw new IllegalArgumentException("La data di inizio e di fine non possono essere uguali.");
+        }
+
+        String messaggio = String.format(
+                "Il sottoscritto %s %s dovrà coprire i turni dal giorno %s al giorno %s",
+                destinatario.getFirstName(), destinatario.getLastName(), inizio, fine
+        );
+
+        Notifiche notifica = new Notifiche();
+        notifica.setMessage(messaggio);
+        notifica.setSentTo(destinatario);
+        notifica.setSentBy(autore);
+        notifica.setNotificationDate(new Date());
+        notificheRepository.save(notifica);
     }
+
+
 
     @Transactional
     public void sendVeterinarianNotificationToHeadOfDepartment(Utente veterinarian, Utente headOfDepartment, String nameOfMedicine) {
@@ -314,6 +329,20 @@ public class NotificheService {
 
         notificheRepository.save(notifica);
     }
+
+
+    public void notifyFerieAssegnate(Utente destinatario, LocalDate startDate, LocalDate endDate, Utente capoReparto) {
+        Notifiche notifica = new Notifiche();
+        notifica.setSentTo(destinatario);
+        notifica.setSentBy(capoReparto);
+        notifica.setMessage("Ti sono state assegnate le ferie dal giorno: " + startDate + " al giorno: " + endDate);
+        notifica.setNotificationDate(new Date());
+        notifica.setRead(false);
+        notifica.setType(Notifiche.NotificationType.TURNI);
+
+        notificheRepository.save(notifica);
+    }
+
 
 
 }

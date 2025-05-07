@@ -337,4 +337,8 @@ public class AssistenteService {
 
         notificheService.sendAssistantNotificationToCapoReparto(assistente, capoReparto, medicinale.getName());
     }
+
+    public List<Assistente> findByRepartoId(Long repartoId) {
+        return assistenteRepository.findByRepartoId(repartoId);
+    }
 }

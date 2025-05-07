@@ -1,5 +1,6 @@
 package com.vetclinic.controller;
 
+import com.vetclinic.config.AuthenticationService;
 import com.vetclinic.models.Turni;
 import com.vetclinic.service.TurniService;
 import org.springframework.http.ResponseEntity;
@@ -14,9 +15,11 @@ import java.util.List;
 public class TurniController {
 
     private final TurniService turniService;
+    private final AuthenticationService authenticationService;
 
-    public TurniController(TurniService turniService) {
+    public TurniController(TurniService turniService, AuthenticationService authenticationService) {
         this.turniService = turniService;
+        this.authenticationService = authenticationService;
     }
 
     @PostMapping("/assign/{dottoreId}")
@@ -63,5 +66,15 @@ public class TurniController {
     public ResponseEntity<String> refuseShift(@PathVariable Long turnoId) {
         String response = turniService.refuseShift(turnoId);
         return ResponseEntity.ok(response);
+    }
+
+
+
+
+    @GetMapping("/miei-turni")
+    public ResponseEntity<List<Turni>> getMieiTurni(@RequestHeader("Authorization") String authHeader) {
+        Long utenteId = turniService.getUserIdByKeycloak();
+        List<Turni> turni = turniService.getShiftsForUser(utenteId);
+        return ResponseEntity.ok(turni);
     }
 }

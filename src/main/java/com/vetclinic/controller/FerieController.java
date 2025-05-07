@@ -1,5 +1,6 @@
 package com.vetclinic.controller;
 
+import com.vetclinic.config.AuthenticationService;
 import com.vetclinic.models.Ferie;
 import com.vetclinic.service.FerieService;
 import org.springframework.http.ResponseEntity;
@@ -15,9 +16,11 @@ import java.util.Map;
 public class FerieController {
 
     private final FerieService ferieService;
+    private final AuthenticationService authenticationService;
 
-    public FerieController(FerieService ferieService) {
+    public FerieController(FerieService ferieService, AuthenticationService authenticationService) {
         this.ferieService = ferieService;
+        this.authenticationService = authenticationService;
     }
 
     @GetMapping("/utente/{utenteId}")
@@ -49,4 +52,15 @@ public class FerieController {
         String response = ferieService.refuseHolidays(ferieId);
         return ResponseEntity.ok(response);
     }
+
+
+    @GetMapping("/mie-ferie")
+    public ResponseEntity<List<Ferie>> getMieFerie(@RequestParam LocalDate startDate,
+                                                   @RequestParam LocalDate endDate) {
+        Long utenteId = ferieService.getUserIdByKeycloak();
+        List<Ferie> ferie = ferieService.getHolidaysForUserInRange(utenteId, startDate, endDate);
+        return ResponseEntity.ok(ferie);
+    }
+
+
 }

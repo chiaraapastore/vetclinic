@@ -24,9 +24,10 @@ public class VeterinarianService {
     private final UtenteRepository utenteRepository;
     private final SomministrazioneRepository somministrazioneRepository;
     private final NotificheService notificheService;
+    private final VeterinarioRepository veterinarioRepository;
 
 
-    public VeterinarianService(RepartoRepository repartoRepository,MedicineRepository medicineRepository, AnimaleRepository animaleRepository, AuthenticationService authenticationService, UtenteRepository utenteRepository, SomministrazioneRepository  somministrazioneRepository, NotificheService notificheService) {
+    public VeterinarianService(RepartoRepository repartoRepository,VeterinarioRepository veterinarioRepository,MedicineRepository medicineRepository, AnimaleRepository animaleRepository, AuthenticationService authenticationService, UtenteRepository utenteRepository, SomministrazioneRepository  somministrazioneRepository, NotificheService notificheService) {
         this.repartoRepository = repartoRepository;
         this.medicineRepository = medicineRepository;
         this.animaleRepository = animaleRepository;
@@ -34,6 +35,7 @@ public class VeterinarianService {
         this.utenteRepository = utenteRepository;
         this.somministrazioneRepository = somministrazioneRepository;
         this.notificheService = notificheService;
+        this.veterinarioRepository = veterinarioRepository;
 
     }
 
@@ -172,4 +174,7 @@ public class VeterinarianService {
 
     }
 
+    public List<Veterinario> findByRepartoId(Long repartoId) {
+        return veterinarioRepository.findByRepartoId(repartoId);
+    }
 }

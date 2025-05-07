@@ -6,7 +6,9 @@ import com.vetclinic.models.Utente;
 import com.vetclinic.repository.TurniRepository;
 import com.vetclinic.repository.UtenteRepository;
 import jakarta.transaction.Transactional;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -29,7 +31,15 @@ public class TurniService {
 
     @Transactional
     public Turni assignTurno(Long dottoreId, LocalDate inizioTurno, LocalDate fineTurno) {
-        Utente loggedUser = utenteRepository.findByUsername(authenticationService.getUsername());
+
+        if (inizioTurno.equals(fineTurno)) {
+            throw new IllegalArgumentException("Il turno deve durare almeno un giorno.");
+        }
+
+
+        Utente loggedUser = utenteRepository.findByKeycloakId(authenticationService.getUserId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Utente non trovato"));
+
         if (loggedUser == null) {
             throw new IllegalArgumentException("Utente non autenticato");
         }
@@ -39,11 +49,13 @@ public class TurniService {
         }
 
         Utente dottore = utenteRepository.findById(dottoreId).orElseThrow(() -> new IllegalArgumentException("Dottore non trovato"));
-        if (loggedUser.getRole().equals("capo-reparto") && !dottore.getRole().equals("veterinario")) {
-            throw new IllegalArgumentException("Un capo reparto può assegnare turni solo ai veterinari.");
+        if (loggedUser.getRole().equals("capo-reparto") &&
+                !(dottore.getRole().equals("veterinario") || dottore.getRole().equals("assistente"))) {
+            throw new IllegalArgumentException("Un capo reparto può assegnare turni solo a veterinari o assistenti.");
         }
 
-        Turni turno = new Turni(inizioTurno, fineTurno, loggedUser);
+
+        Turni turno = new Turni(inizioTurno, fineTurno, dottore);
         notificheService.sendNotificationTurni(dottore, loggedUser, inizioTurno, fineTurno);
         return turniRepository.save(turno);
     }
@@ -115,4 +127,11 @@ public class TurniService {
 
         return "Turno rifiutato e cancellato.";
     }
+
+    public Long getUserIdByKeycloak() {
+        Utente utente = utenteRepository.findByKeycloakId(authenticationService.getUserId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Utente non trovato"));
+        return utente.getId();
+    }
+
 }

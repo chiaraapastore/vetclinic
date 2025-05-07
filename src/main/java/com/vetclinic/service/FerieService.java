@@ -6,7 +6,9 @@ import com.vetclinic.models.Utente;
 import com.vetclinic.repository.FerieRepository;
 import com.vetclinic.repository.UtenteRepository;
 import jakarta.transaction.Transactional;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -47,9 +49,10 @@ public class FerieService {
             throw new IllegalArgumentException("Utente non autenticato");
         }
 
-        if (!user.getRole().equals("VETERINARIO") && !user.getRole().equals("ASSISTENTE")) {
-            throw new IllegalArgumentException("Non hai il permesso di richiedere ferie.");
+        if (!(user.getRole().equalsIgnoreCase("veterinario") || user.getRole().equalsIgnoreCase("assistente") || user.getRole().equalsIgnoreCase("capo-reparto"))) {
+            throw new IllegalArgumentException("Ruolo non autorizzato per richiedere ferie.");
         }
+
 
         Optional<Utente> utenteOpt = utenteRepository.findById(utenteId);
         if (utenteOpt.isEmpty()) {
@@ -111,4 +114,18 @@ public class FerieService {
 
         return "Ferie rifiutate e cancellate.";
     }
+
+
+    public Long getUserIdByKeycloak() {
+        Utente utente = utenteRepository.findByKeycloakId(authenticationService.getUserId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Utente non trovato"));
+        return utente.getId();
+    }
+
+    @Transactional
+    public List<Ferie> getHolidaysForUserInRange(Long utenteId, LocalDate start, LocalDate end) {
+        return ferieRepository.findByUtenteIdAndStartDateGreaterThanEqualAndEndDateLessThanEqual(utenteId, start, end);
+    }
+
+
 }

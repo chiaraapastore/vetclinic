@@ -3,8 +3,10 @@ package com.vetclinic.service;
 import com.vetclinic.config.AuthenticationService;
 import com.vetclinic.models.*;
 import com.vetclinic.repository.*;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -53,12 +55,17 @@ public class CapoRepartoService {
 
     @Transactional
     public List<Reparto> getDepartments() {
-        Utente user = utenteRepository.findByUsername(authenticationService.getUsername());
+        Utente user = utenteRepository.findByKeycloakId(authenticationService.getUserId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Utente non trovato"));
+
         if (user == null) {
-            throw new IllegalArgumentException("Utente non autenticato");
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Utente non trovato");
         }
         return repartoRepository.findAll();
     }
+
+
+
 
 
 
@@ -88,7 +95,8 @@ public class CapoRepartoService {
         }
         Utente utente = utenteOpt.get();
 
-        Utente capoReparto  = utenteRepository.findByUsername(authenticationService.getUsername());
+        Utente capoReparto  = utenteRepository.findByKeycloakId(authenticationService.getUserId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Capo reparto non trovato"));
         if (capoReparto  == null) {
             throw new IllegalArgumentException("Utente non autenticato");
         }
@@ -172,4 +180,30 @@ public class CapoRepartoService {
             System.err.println(" Errore: Utente admin non trovato! Notifica non inviata.");
         }
     }
+
+    @Transactional
+    public void assegnaFerie(Long utenteId, LocalDate startDate, LocalDate endDate) {
+        if (startDate.equals(endDate)) {
+            throw new IllegalArgumentException("Le ferie devono coprire almeno due giorni.");
+        }
+
+        Utente utente = utenteRepository.findById(utenteId)
+                .orElseThrow(() -> new IllegalArgumentException("Utente non trovato"));
+
+        Utente capoReparto = utenteRepository.findByUsername(authenticationService.getUsername());
+        if (capoReparto == null) {
+            throw new IllegalArgumentException("Capo reparto non autenticato");
+        }
+
+        Ferie ferie = new Ferie();
+        ferie.setUtente(utente);
+        ferie.setStartDate(startDate);
+        ferie.setEndDate(endDate);
+        ferie.setApproved(true);
+
+        ferieRepository.save(ferie);
+        notificheService.notifyFerieAssegnate(utente, startDate, endDate, capoReparto);
+    }
+
+
 }

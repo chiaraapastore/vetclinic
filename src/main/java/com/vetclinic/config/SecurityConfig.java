@@ -38,6 +38,8 @@ public class SecurityConfig {
                                 .requestMatchers("/api/assistente/**").authenticated()
                                 .requestMatchers("/api/appuntamenti/my").hasRole("veterinario")
                                 .requestMatchers("/api/notifications/**").authenticated()
+                                .requestMatchers("/api/ferie/**").authenticated()
+                                .requestMatchers("/api/turni/**").authenticated()
                                 .requestMatchers("/api/**").authenticated()
                 .anyRequest().permitAll()
                 )
