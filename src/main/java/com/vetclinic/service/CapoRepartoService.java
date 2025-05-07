@@ -1,14 +1,8 @@
 package com.vetclinic.service;
 
 import com.vetclinic.config.AuthenticationService;
-import com.vetclinic.models.Ferie;
-import com.vetclinic.models.Medicine;
-import com.vetclinic.models.Reparto;
-import com.vetclinic.models.Utente;
-import com.vetclinic.repository.FerieRepository;
-import com.vetclinic.repository.MedicineRepository;
-import com.vetclinic.repository.RepartoRepository;
-import com.vetclinic.repository.UtenteRepository;
+import com.vetclinic.models.*;
+import com.vetclinic.repository.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,14 +21,18 @@ public class CapoRepartoService {
     private final NotificheService notificheService;
     private final RepartoRepository repartoRepository;
     private final FerieRepository ferieRepository;
+    private final AnimaleRepository animaleRepository;
+    private final ReportRepository reportRepository;
 
-    public CapoRepartoService(MedicineRepository medicineRepository, UtenteRepository utenteRepository, FerieRepository ferieRepository,AuthenticationService authenticationService, RepartoRepository repartoRepository, NotificheService notificheService) {
+    public CapoRepartoService(MedicineRepository medicineRepository, ReportRepository reportRepository,AnimaleRepository animaleRepository,UtenteRepository utenteRepository, FerieRepository ferieRepository,AuthenticationService authenticationService, RepartoRepository repartoRepository, NotificheService notificheService) {
         this.medicineRepository = medicineRepository;
         this.authenticationService = authenticationService;
         this.utenteRepository = utenteRepository;
         this.repartoRepository = repartoRepository;
         this.notificheService = notificheService;
         this.ferieRepository = ferieRepository;
+        this.animaleRepository = animaleRepository;
+        this.reportRepository = reportRepository;
     }
 
 
@@ -142,4 +140,36 @@ public class CapoRepartoService {
         return ferieRepository.findByUtenteRepartoIdAndApprovedFalse(repartoId);
     }
 
+    @Transactional
+    public void generateStockReport(Magazzino magazine) {
+        Utente utente = utenteRepository.findByUsername(authenticationService.getUsername());
+        if (utente == null) {
+            throw new IllegalArgumentException("Errore: Utente non trovato!");
+        }
+
+        Animale animale = animaleRepository.findFirstByOrderByIdAsc();
+        if (animale == null) {
+            System.err.println("Errore: Nessun paziente animale trovato nel sistema! Il report non verrà salvato.");
+            return;
+        }
+
+        String reportMessage = "Report Magazzino\n" +
+                "Stock Disponibile: " + magazine.getCurrentStock() + "\n" +
+                "Capienza Massima: " + magazine.getMaximumCapacity();
+
+        Report report = new Report();
+        report.setStartDate(LocalDate.now());
+        report.setEndDate(LocalDate.now().plusDays(7));
+        report.setContent(reportMessage);
+
+        reportRepository.save(report);
+
+        Utente adminUser = utenteRepository.findByUsername("admin");
+        if (adminUser != null) {
+            notificheService.notifyAdmin(adminUser, reportMessage);
+            System.out.println("Report inviato all'admin:\n" + reportMessage);
+        } else {
+            System.err.println(" Errore: Utente admin non trovato! Notifica non inviata.");
+        }
+    }
 }

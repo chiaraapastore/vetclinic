@@ -22,5 +22,7 @@ public interface AnimaleRepository extends JpaRepository<Animale, Long> {
     List<Animale> findByVeterinarioIn(List<Utente> veterinariNelReparto);
 
     List<Animale> findByClienteId(Long id);
+
+    Animale findFirstByOrderByIdAsc();
 }
 

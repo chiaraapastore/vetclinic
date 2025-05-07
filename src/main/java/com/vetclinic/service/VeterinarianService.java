@@ -24,10 +24,9 @@ public class VeterinarianService {
     private final UtenteRepository utenteRepository;
     private final SomministrazioneRepository somministrazioneRepository;
     private final NotificheService notificheService;
-    private final OperazioneRepository operazioneRepository;
 
 
-    public VeterinarianService(RepartoRepository repartoRepository, OperazioneRepository operazioneRepository, MedicineRepository medicineRepository, AnimaleRepository animaleRepository, AuthenticationService authenticationService, UtenteRepository utenteRepository, SomministrazioneRepository  somministrazioneRepository, NotificheService notificheService) {
+    public VeterinarianService(RepartoRepository repartoRepository,MedicineRepository medicineRepository, AnimaleRepository animaleRepository, AuthenticationService authenticationService, UtenteRepository utenteRepository, SomministrazioneRepository  somministrazioneRepository, NotificheService notificheService) {
         this.repartoRepository = repartoRepository;
         this.medicineRepository = medicineRepository;
         this.animaleRepository = animaleRepository;
@@ -35,7 +34,6 @@ public class VeterinarianService {
         this.utenteRepository = utenteRepository;
         this.somministrazioneRepository = somministrazioneRepository;
         this.notificheService = notificheService;
-        this.operazioneRepository = operazioneRepository;
 
     }
 
@@ -52,15 +50,6 @@ public class VeterinarianService {
 
             Veterinario veterinario = (Veterinario) utente;
 
-            Operazione operazione = new Operazione();
-            operazione.setVeterinario(veterinario);
-            operazione.setTipoOperazione(tipoOperazione);
-            operazione.setDescrizione(descrizioneOperazione);
-            operazione.setDataOra(LocalDateTime.now());
-
-            operazione.setAnimaleId(animale.getId());
-
-            operazioneRepository.save(operazione);
 
             animale.setState("Operato");
             animaleRepository.save(animale);

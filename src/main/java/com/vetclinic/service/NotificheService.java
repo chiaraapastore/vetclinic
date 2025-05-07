@@ -19,6 +19,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
+import static com.fasterxml.jackson.databind.type.LogicalType.DateTime;
+
 @Service
 public class NotificheService {
 
@@ -299,4 +301,19 @@ public class NotificheService {
                 + assistente.getUsername() + " al Capo Reparto " + capoReparto.getUsername();
         createAndSendNotification(assistente, capoReparto, message, "farmaco_scaduto");
     }
+
+
+    public void notifyAdmin(Utente admin, String messaggio) {
+        Notifiche notifica = new Notifiche();
+        notifica.setMessage(messaggio);
+        notifica.setRead(false);
+        notifica.setNotificationDate(new Date());
+
+        notifica.setSentTo(admin);
+        notifica.setType(Notifiche.NotificationType.GENERAL_ALERT);
+
+        notificheRepository.save(notifica);
+    }
+
+
 }

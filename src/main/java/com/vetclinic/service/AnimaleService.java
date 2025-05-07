@@ -26,17 +26,15 @@ public class AnimaleService {
     private final FatturaRepository fatturaRepository;
     private final AuthenticationService authenticationService;
     private final TrattamentoRepository trattamentoRepository;
-    private final OperazioneRepository operazioneRepository;
     private final SomministrazioneRepository somministrazioneRepository;
 
-    public AnimaleService(AdminService adminService,TrattamentoRepository trattamentoRepository, SomministrazioneRepository somministrazioneRepository, OperazioneRepository operazioneRepository,AnimaleRepository animaleRepository, ClienteRepository clienteRepository, FatturaRepository fatturaRepository,AuthenticationService authenticationService) {
+    public AnimaleService(AdminService adminService,TrattamentoRepository trattamentoRepository, SomministrazioneRepository somministrazioneRepository, AnimaleRepository animaleRepository, ClienteRepository clienteRepository, FatturaRepository fatturaRepository,AuthenticationService authenticationService) {
         this.animaleRepository = animaleRepository;
         this.clienteRepository = clienteRepository;
         this.authenticationService = authenticationService;
         this.fatturaRepository = fatturaRepository;
         this.adminService = adminService;
         this.trattamentoRepository = trattamentoRepository;
-        this.operazioneRepository = operazioneRepository;
         this.somministrazioneRepository = somministrazioneRepository;
     }
 
@@ -137,26 +135,6 @@ public class AnimaleService {
         addTableRow(animalTable, "Peso:", String.valueOf(animale.getWeight()), headerFont, textFont);
         addTableRow(animalTable, "Diagnosi:", animale.getState(), headerFont, textFont);
         document.add(animalTable);
-
-        Paragraph operationsTitle = new Paragraph("Operazioni Eseguite", FontFactory.getFont(FontFactory.HELVETICA_BOLD, 14, new BaseColor(0, 121, 107)));
-        operationsTitle.setAlignment(Element.ALIGN_LEFT);
-        document.add(operationsTitle);
-
-
-        List<Operazione> operations = operazioneRepository.findByAnimaleId(animaleId);
-        if (operations.isEmpty()) {
-            document.add(new Paragraph("Nessuna operazione eseguita", textFont));
-        } else {
-            PdfPTable operationsTable = new PdfPTable(2);
-            operationsTable.setWidthPercentage(100);
-            addTableHeader(operationsTable, "Tipo di Operazione", "Data", headerFont);
-
-            for (Operazione operation : operations) {
-                addTableRow(operationsTable, operation.getTipoOperazione(), operation.getDataOra().toString(), textFont, textFont);
-            }
-            document.add(operationsTable);
-        }
-
 
 
         document.close();

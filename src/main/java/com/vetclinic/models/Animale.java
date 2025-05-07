@@ -60,10 +60,6 @@ public class Animale {
         private Medicine medicine;
 
 
-        @ManyToOne
-        @JoinColumn(name = "operazione")
-        private Operazione operazione;
-
 
         @ManyToOne
         @JoinColumn(name = "trattamento")

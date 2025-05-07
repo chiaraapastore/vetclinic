@@ -1,5 +1,6 @@
 package com.vetclinic.controller;
 
+import com.vetclinic.models.Magazzino;
 import com.vetclinic.models.Medicine;
 import com.vetclinic.models.Reparto;
 import com.vetclinic.service.CapoRepartoService;
@@ -27,6 +28,16 @@ public class CapoRepartoController {
         List<Reparto> reparti = capoRepartoService.getDepartments();
         return ResponseEntity.ok(reparti);
     }
+
+    @PutMapping("/magazine/update-stock-and-report")
+    public ResponseEntity<Map<String, String>> updateStockAndSendReport(@RequestBody List<Magazzino> magazines) {
+        for (Magazzino magazine : magazines) {
+            capoRepartoService.generateStockReport(magazine);
+        }
+        return ResponseEntity.ok(Map.of("message", "Stock aggiornato e report inviato all'amministratore."));
+    }
+
+
 
 
     @PostMapping("/aggiungi-medicinale")

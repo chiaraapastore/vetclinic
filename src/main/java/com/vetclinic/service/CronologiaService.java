@@ -16,19 +16,16 @@ public class CronologiaService {
     private final UtenteRepository utenteRepository;
     private final AuthenticationService authenticationService;
     private final VaccinoRepository vaccinoRepository;
-    private final OperazioneRepository operazioneRepository;
     private final TrattamentoRepository trattamentoRepository;
     private final ClienteRepository clienteRepository;
 
     public CronologiaService(CronologiaRepository cronologiaRepository, AnimaleRepository animaleRepository, UtenteRepository utenteRepository, AuthenticationService authenticationService, VaccinoRepository vaccinoRepository,
-                             OperazioneRepository operazioneRepository,
                              TrattamentoRepository trattamentoRepository, ClienteRepository clienteRepository) {
         this.cronologiaRepository = cronologiaRepository;
         this.animaleRepository = animaleRepository;
         this.utenteRepository = utenteRepository;
         this.authenticationService = authenticationService;
         this.vaccinoRepository = vaccinoRepository;
-        this.operazioneRepository = operazioneRepository;
         this.trattamentoRepository = trattamentoRepository;
         this.clienteRepository = clienteRepository;
     }
@@ -66,15 +63,11 @@ public class CronologiaService {
 
         List<CronologiaAnimale> history = cronologiaRepository.findByAnimaleId(animaleId);
 
-        List<Operazione> operations = operazioneRepository.findByAnimaleId(animaleId);
         List<Trattamento> treatments = trattamentoRepository.findByAnimalId(animaleId);
         List<Vaccino> vaccinations = vaccinoRepository.findByAnimaleId(animaleId);
 
         CronologiaAnimale cronologia = history.isEmpty() ? null : history.get(0);
 
-        if (!operations.isEmpty()) {
-            cronologia.setOperazioneId(operations.get(0).getId());
-        }
 
         cronologia.setSymptoms(animale.getSymptoms());
         cronologia.setNoteVet(animale.getVeterinaryNotes());

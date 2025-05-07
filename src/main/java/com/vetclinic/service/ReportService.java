@@ -18,13 +18,15 @@ public class ReportService {
     private final UtenteRepository utenteRepository;
     private final MedicineRepository medicineRepository;
     private final NotificheService notificheService;
+    private final AnimaleRepository animaleRepository;
 
-    public ReportService(ReportRepository reportRepository, AuthenticationService authenticationService, UtenteRepository utenteRepository, MedicineRepository medicineRepository, NotificheService notificheService) {
+    public ReportService(ReportRepository reportRepository, AnimaleRepository animaleRepository,AuthenticationService authenticationService, UtenteRepository utenteRepository, MedicineRepository medicineRepository, NotificheService notificheService) {
         this.reportRepository = reportRepository;
         this.authenticationService = authenticationService;
         this.utenteRepository = utenteRepository;
         this.medicineRepository = medicineRepository;
         this.notificheService = notificheService;
+        this.animaleRepository = animaleRepository;
     }
 
 
@@ -96,4 +98,39 @@ public class ReportService {
             return savedReport;
         }).orElseThrow(() -> new RuntimeException("Report non trovato"));
     }
+
+
+    @Transactional
+    public void generateStockReport(Magazzino magazine) {
+        Utente utente = utenteRepository.findByUsername(authenticationService.getUsername());
+        if (utente == null) {
+            throw new IllegalArgumentException("Errore: Utente non trovato!");
+        }
+
+        Animale animale = animaleRepository.findFirstByOrderByIdAsc();
+        if (animale == null) {
+            System.err.println("Errore: Nessun paziente animale trovato nel sistema! Il report non verrà salvato.");
+            return;
+        }
+
+        String reportMessage = "Report Magazzino\n" +
+                "Stock Disponibile: " + magazine.getCurrentStock() + "\n" +
+                "Capienza Massima: " + magazine.getMaximumCapacity();
+
+        Report report = new Report();
+        report.setStartDate(LocalDate.now());
+        report.setEndDate(LocalDate.now().plusDays(7));
+        report.setContent(reportMessage);
+
+        reportRepository.save(report);
+
+        Utente adminUser = utenteRepository.findByUsername("admin");
+        if (adminUser != null) {
+             notificheService.notifyAdmin(adminUser, reportMessage);
+            System.out.println("Report inviato all'admin:\n" + reportMessage);
+        } else {
+            System.err.println(" Errore: Utente admin non trovato! Notifica non inviata.");
+        }
+    }
+
 }

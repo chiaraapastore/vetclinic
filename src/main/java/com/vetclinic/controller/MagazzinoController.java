@@ -2,6 +2,7 @@ package com.vetclinic.controller;
 
 import com.vetclinic.models.Magazzino;
 import com.vetclinic.service.MagazzinoService;
+import com.vetclinic.service.ReportService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -11,9 +12,12 @@ import org.springframework.web.bind.annotation.*;
 public class MagazzinoController {
 
     private final MagazzinoService magazzinoService;
+    private final ReportService reportService;
 
-    public MagazzinoController(MagazzinoService magazzinoService) {
+
+    public MagazzinoController(MagazzinoService magazzinoService, ReportService reportService) {
         this.magazzinoService = magazzinoService;
+        this.reportService = reportService;
     }
 
     @PostMapping("/create")
@@ -30,14 +34,22 @@ public class MagazzinoController {
         }
     }
 
-    @PutMapping("/update-stock")
-    public ResponseEntity<Void> updateStock(@RequestBody Magazzino magazzino) {
-        try {
-            magazzinoService.updateStock(magazzino);
-            return ResponseEntity.ok().build();
-        } catch (IllegalArgumentException e) {
+    @PutMapping("/update-stock-and-report")
+    public ResponseEntity<Void> updateStockAndSendReport(@RequestBody Magazzino magazine) {
+        System.out.println("Dati ricevuti dal frontend: " + magazine);
+
+        if (magazine == null || magazine.getId() == null) {
+            System.err.println("Errore: Magazine nullo o senza ID!");
             return ResponseEntity.badRequest().build();
+        }
+
+        try {
+            magazzinoService.updateStock(magazine);
+            reportService.generateStockReport(magazine);
+            System.out.println("Stock aggiornato e report inviato!");
+            return ResponseEntity.ok().build();
         } catch (Exception e) {
+            System.err.println("Errore nel backend: " + e.getMessage());
             e.printStackTrace();
             return ResponseEntity.internalServerError().build();
         }
