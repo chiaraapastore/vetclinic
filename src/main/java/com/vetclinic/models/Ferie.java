@@ -21,8 +21,14 @@ public class Ferie {
     private String reason;
     private boolean approved;
 
+
+    private Boolean approvata = false;
+
+    private Boolean rifiutata = false;
+
+
+
     @ManyToOne
-    @JsonIgnore
     @JoinColumn(name = "utente_id")
     private Utente utente;
 

@@ -344,5 +344,44 @@ public class NotificheService {
     }
 
 
+    @Transactional
+    public void sendNotification(String message) {
+        Utente sender =utenteRepository.findByKeycloakId(authenticationService.getUserId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Utente non trovato"));
+
+        if (sender == null) {
+            throw new IllegalArgumentException("Utente autenticato non trovato");
+        }
+
+        Utente receiver = sender;
+
+        Notifiche notifica = new Notifiche();
+        notifica.setMessage(message);
+        notifica.setSentBy(sender);
+        notifica.setSentTo(receiver);
+        notifica.setNotificationDate(new Date());
+        notifica.setType(Notifiche.NotificationType.GENERAL_ALERT);
+        notifica.setRead(false);
+
+        notificheRepository.save(notifica);
+
+        receiver.setCountNotification(
+                (receiver.getCountNotification() != null ? receiver.getCountNotification() : 0) + 1
+        );
+        utenteRepository.save(receiver);
+    }
+
+
+    @Transactional
+    public void sendNotificationToSpecificUser(Long userId, String message) {
+        Utente sender = utenteRepository.findByKeycloakId(authenticationService.getUserId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Utente autenticato non trovato"));
+
+        Utente receiver = utenteRepository.findById(userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Destinatario non trovato"));
+
+        createAndSendNotification(sender, receiver, message, "GENERAL_ALERT");
+    }
+
 
 }

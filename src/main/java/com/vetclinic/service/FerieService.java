@@ -128,4 +128,9 @@ public class FerieService {
     }
 
 
+    public List<Ferie> getNonApprovateByReparto(Long repartoId) {
+        return ferieRepository.findByUtenteRepartoIdAndApprovedFalse(repartoId);
+    }
+
+
 }

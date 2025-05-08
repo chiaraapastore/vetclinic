@@ -3,6 +3,7 @@ package com.vetclinic.controller;
 import com.vetclinic.config.AuthenticationService;
 import com.vetclinic.models.*;
 import com.vetclinic.repository.AnimaleRepository;
+import com.vetclinic.repository.FerieRepository;
 import com.vetclinic.repository.UtenteRepository;
 import com.vetclinic.service.*;
 import org.springframework.http.HttpStatus;
@@ -13,6 +14,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @CrossOrigin(origins = "http://localhost:4200")
@@ -26,8 +28,12 @@ public class CapoRepartoController {
     private final UtenteRepository utenteRepository;
     private final AnimaleRepository animaleRepository;
     private final TurniService turniService;
+    private final FerieRepository ferieRepository;
+    private final FerieService ferieService;
 
-    public CapoRepartoController(CapoRepartoService capoRepartoService, TurniService turniService ,AnimaleRepository animaleRepository,UtenteRepository utenteRepository ,AuthenticationService authenticationService,AssistenteService assistenteService, VeterinarianService veterinarianService) {
+
+
+    public CapoRepartoController(CapoRepartoService capoRepartoService, FerieService ferieService,FerieRepository ferieRepository,TurniService turniService ,AnimaleRepository animaleRepository,UtenteRepository utenteRepository ,AuthenticationService authenticationService,AssistenteService assistenteService, VeterinarianService veterinarianService) {
         this.capoRepartoService = capoRepartoService;
         this.assistenteService = assistenteService;
         this.veterinarianService = veterinarianService;
@@ -35,6 +41,8 @@ public class CapoRepartoController {
         this.utenteRepository = utenteRepository;
         this.animaleRepository = animaleRepository;
         this.turniService = turniService;
+        this.ferieRepository = ferieRepository;
+        this.ferieService = ferieService;
     }
 
 
@@ -108,6 +116,15 @@ public class CapoRepartoController {
         return ResponseEntity.ok(Map.of("ferie", capoRepartoService.getUnapprovedHolidaysForReparto(repartoId)));
     }
 
+    @GetMapping("/ferie-non-approvate-capo")
+    public ResponseEntity<?> getFerieNonApprovate(@RequestParam Long repartoId) {
+        List<Ferie> ferie = ferieService.getNonApprovateByReparto(repartoId);
+        ferie.forEach(f -> System.out.println(f.getUtente().getFirstName()));
+        return ResponseEntity.ok(Map.of("ferie", ferie.stream().map(FerieDTO::new).toList()));
+    }
+
+
+
 
     @GetMapping("/personale-reparto/{repartoId}")
     public ResponseEntity<Map<String, Object>> getPersonaleReparto(@PathVariable Long repartoId) {
@@ -143,6 +160,19 @@ public class CapoRepartoController {
         Turni turno = turniService.assignTurno(dottoreId, startDate, endDate);
         return ResponseEntity.ok(turno);
     }
+
+    @DeleteMapping("/rifiuta-ferie/{ferieId}")
+    public ResponseEntity<Map<String, String>> rejectHolidays(@PathVariable Long ferieId) {
+        Optional<Ferie> ferieOpt = ferieRepository.findById(ferieId);
+        if (ferieOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", "Richiesta ferie non trovata."));
+        }
+
+        ferieRepository.deleteById(ferieId);
+        return ResponseEntity.ok(Map.of("message", "Richiesta ferie rifiutata."));
+    }
+
 
 
 

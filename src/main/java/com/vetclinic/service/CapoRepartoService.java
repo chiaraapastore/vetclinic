@@ -89,19 +89,21 @@ public class CapoRepartoService {
 
     @Transactional
     public String addHolidaysForReparto(Long utenteId, LocalDate startDate, LocalDate endDate) {
-        Optional<Utente> utenteOpt = utenteRepository.findById(utenteId);
-        if (utenteOpt.isEmpty()) {
+
+        Optional<Utente> optionalUtente = utenteRepository.findById(utenteId);
+
+        if (optionalUtente.isEmpty()) {
             return "Utente non trovato.";
         }
-        Utente utente = utenteOpt.get();
 
-        Utente capoReparto  = utenteRepository.findByKeycloakId(authenticationService.getUserId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Capo reparto non trovato"));
-        if (capoReparto  == null) {
-            throw new IllegalArgumentException("Utente non autenticato");
+        Utente utente = optionalUtente.get();
+
+        if (utente.getReparto() == null) {
+           return "L'utente non è assegnato a nessun reparto.";
         }
-        if (!utente.getReparto().equals(capoReparto.getReparto())) {
-            return "L'utente non appartiene al reparto del capo reparto.";
+
+        if (startDate.isAfter(endDate) || startDate.isEqual(endDate)) {
+            return "La data di inizio deve essere precedente alla data di fine.";
         }
 
         Ferie ferie = new Ferie();
@@ -111,8 +113,12 @@ public class CapoRepartoService {
         ferie.setApproved(false);
 
         ferieRepository.save(ferie);
-        return "Ferie richieste con successo.";
+
+        return "Richiesta ferie salvata correttamente.";
     }
+
+
+
 
     @Transactional
     public String approveHolidaysForReparto(Long ferieId) {
@@ -124,19 +130,28 @@ public class CapoRepartoService {
         Ferie ferie = ferieOpt.get();
 
 
-        Utente capoReparto  = utenteRepository.findByUsername(authenticationService.getUsername());
-        if (capoReparto  == null) {
+        Utente capoReparto = utenteRepository.findByKeycloakId(authenticationService.getUserId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Capo reparto non trovato"));
+
+        if (capoReparto == null) {
             throw new IllegalArgumentException("Utente non autenticato");
         }
+
         if (!ferie.getUtente().getReparto().equals(capoReparto.getReparto())) {
             return "Non puoi approvare le ferie per un utente di un altro reparto.";
         }
 
-        ferie.setApproved(true);
+        ferie.setApproved(false);
+
         ferieRepository.save(ferie);
+
+        notificheService.notifyFerieAssegnate(
+                ferie.getUtente(), ferie.getStartDate(), ferie.getEndDate(), capoReparto
+        );
 
         return "Ferie approvate con successo.";
     }
+
 
     @Transactional
     public List<Ferie> getHolidaysForReparto(Long repartoId) {
@@ -199,7 +214,8 @@ public class CapoRepartoService {
         ferie.setUtente(utente);
         ferie.setStartDate(startDate);
         ferie.setEndDate(endDate);
-        ferie.setApproved(true);
+        ferie.setApproved(false);
+
 
         ferieRepository.save(ferie);
         notificheService.notifyFerieAssegnate(utente, startDate, endDate, capoReparto);

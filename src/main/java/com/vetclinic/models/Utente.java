@@ -37,7 +37,6 @@ public class Utente {
     private String keycloakId;
 
     @ManyToOne
-    @JsonIgnore
     @JoinColumn(name = "reparto_id", referencedColumnName = "id")
     private Reparto reparto;
 
