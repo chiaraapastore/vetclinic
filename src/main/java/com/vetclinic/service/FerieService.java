@@ -10,6 +10,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+
+
+
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -131,6 +134,16 @@ public class FerieService {
     public List<Ferie> getNonApprovateByReparto(Long repartoId) {
         return ferieRepository.findByUtenteRepartoIdAndApprovedFalse(repartoId);
     }
+
+
+    @Transactional
+    public List<Ferie> getFerieApprovatePerUtente(LocalDate start, LocalDate end) {
+        Utente utente = utenteRepository.findByKeycloakId(authenticationService.getUserId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Utente non trovato"));
+
+        return ferieRepository.findByUtenteIdAndApprovedTrueAndStartDateBetween(utente.getId(), start, end);
+    }
+
 
 
 }

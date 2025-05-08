@@ -140,14 +140,20 @@ public class CapoRepartoService {
         if (!ferie.getUtente().getReparto().equals(capoReparto.getReparto())) {
             return "Non puoi approvare le ferie per un utente di un altro reparto.";
         }
-
-        ferie.setApproved(false);
+        ferie.setApproved(true);
 
         ferieRepository.save(ferie);
 
         notificheService.notifyFerieAssegnate(
                 ferie.getUtente(), ferie.getStartDate(), ferie.getEndDate(), capoReparto
         );
+
+        notificheService.notifyAdmin(
+                capoReparto,
+                "Hai approvato le ferie di " + ferie.getUtente().getFirstName() + " " + ferie.getUtente().getLastName() +
+                        " dal " + ferie.getStartDate() + " al " + ferie.getEndDate() + "."
+        );
+
 
         return "Ferie approvate con successo.";
     }

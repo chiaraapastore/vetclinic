@@ -62,5 +62,17 @@ public class FerieController {
         return ResponseEntity.ok(ferie);
     }
 
+    @GetMapping("/ferie-approvate-dettagliate")
+    public ResponseEntity<List<Ferie>> getFerieApprovateDettagliate(
+            @RequestParam String startDate,
+            @RequestParam String endDate) {
+
+        LocalDate start = LocalDate.parse(startDate);
+        LocalDate end = LocalDate.parse(endDate);
+
+        List<Ferie> ferie = ferieService.getFerieApprovatePerUtente(start, end);
+        return ResponseEntity.ok(ferie);
+    }
+
 
 }

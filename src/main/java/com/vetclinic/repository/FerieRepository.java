@@ -23,4 +23,6 @@ public interface FerieRepository extends JpaRepository<Ferie, Long> {
     List<Ferie> findByUtenteIdAndStartDateGreaterThanEqualAndEndDateLessThanEqual(Long utenteId, LocalDate start, LocalDate end);
 
     List<Ferie> findByApprovataFalseAndUtente_Reparto_Id(Long repartoId);
+
+    List<Ferie> findByUtenteIdAndApprovedTrueAndStartDateBetween(Long id, LocalDate start, LocalDate end);
 }
