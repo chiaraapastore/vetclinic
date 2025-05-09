@@ -100,4 +100,46 @@ public class PagamentoService {
         return payment;
     }
 
+    @Transactional
+    public Pagamento processPayment(Long appointmentId) {
+        Cliente client = (Cliente) utenteRepository.findByKeycloakId(authenticationService.getUserId())
+                .orElseThrow(() -> new IllegalArgumentException("Cliente non trovato"));
+
+        Appuntamento appointment = appuntamentoRepository.findByIdWithCliente(appointmentId)
+                .orElseThrow(() -> new RuntimeException("Appuntamento non trovato"));
+
+        if (!appointment.getCliente().getId().equals(client.getId())) {
+            throw new IllegalArgumentException("L'appuntamento non appartiene al cliente");
+        }
+
+        Double amount = appointment.getAmount();
+        if (amount == null) {
+            throw new IllegalArgumentException("L'importo non è stato impostato per l'appuntamento");
+        }
+
+        Fattura invoice = new Fattura();
+        invoice.setCliente(client);
+        invoice.setIssueDate(new Date());
+        invoice.setAmount(amount);
+        invoice.setStatus("PAID");
+        fatturaRepository.save(invoice);
+
+        Pagamento payment = new Pagamento();
+        payment.setAmount(amount);
+        payment.setFattura(invoice);
+        payment.setPaymentDate(new Date());
+        payment.setStatus("COMPLETED");
+        pagamentoRepository.save(payment);
+
+        appointment.setStatus("PAID");
+        appuntamentoRepository.save(appointment);
+
+        notificheService.sendPaymentNotificationToClient(client, payment);
+        notificheService.sendPaymentNotificationToVeterinarian(appointment.getVeterinarian(), payment);
+
+        return payment;
+    }
+
+
+
 }

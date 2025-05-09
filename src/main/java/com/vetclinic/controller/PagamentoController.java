@@ -19,22 +19,12 @@ public class PagamentoController {
     }
 
     @PostMapping("/process/{appointmentId}")
-    public ResponseEntity<Pagamento> processPayment(
-            @PathVariable Long appointmentId,
-            @RequestParam double amount,
-            @RequestParam Long clienteId
-    ) {
-
-        try {
-            Pagamento payment = pagamentoService.processPayment(appointmentId, amount, clienteId);
-            return ResponseEntity.ok(payment);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(null);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(500).body(null);
-        }
+    public ResponseEntity<?> process(@PathVariable Long appointmentId) {
+        Pagamento pagamento = pagamentoService.processPayment(appointmentId);
+        return ResponseEntity.ok(pagamento);
     }
+
+
 
 
     @PutMapping("/update-status/{paymentId}")

@@ -2,7 +2,9 @@ package com.vetclinic.controller;
 
 
 import com.vetclinic.models.*;
+import com.vetclinic.repository.AppuntamentoRepository;
 import com.vetclinic.service.AdminService;
+import com.vetclinic.service.AppuntamentoService;
 import com.vetclinic.service.AssistenteService;
 import com.vetclinic.service.OrdineService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,12 +29,14 @@ public class AssistenteController {
     private final AssistenteService assistenteService;
     private final AdminService adminService;
     private final OrdineService ordineService;
+    private final AppuntamentoRepository appuntamentoRepository;
 
     @Autowired
-    public AssistenteController(AssistenteService assistenteService, OrdineService ordineService, AdminService adminService) {
+    public AssistenteController(AssistenteService assistenteService, AppuntamentoRepository appuntamentoRepository,OrdineService ordineService, AdminService adminService) {
         this.assistenteService = assistenteService;
         this.ordineService = ordineService;
         this.adminService = adminService;
+        this.appuntamentoRepository = appuntamentoRepository;
     }
 
     @PostMapping("/create-appointment")
@@ -40,13 +44,14 @@ public class AssistenteController {
             @RequestParam Long animalId,
             @RequestParam Long veterinarianId,
             @RequestParam String appointmentDate,
-            @RequestParam String reason) {
+            @RequestParam String reason,
+            @RequestParam Double amount) {
 
         try {
             LocalDateTime localDateTime = LocalDateTime.parse(appointmentDate, DateTimeFormatter.ISO_LOCAL_DATE_TIME);
             Date date = Date.from(localDateTime.atZone(ZoneId.systemDefault()).toInstant());
 
-            Appuntamento appointment = assistenteService.createAppointment(animalId, veterinarianId, date, reason);
+            Appuntamento appointment = assistenteService.createAppointment(animalId, veterinarianId, date, reason, amount);
             return ResponseEntity.ok(appointment);
         } catch (DateTimeParseException e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Formato data non valido: " + appointmentDate);
@@ -205,6 +210,27 @@ public class AssistenteController {
         assistenteService.scadenzaFarmaco(capoRepartoId, idMedicinale);
         return ResponseEntity.ok("notifica_inviata");
     }
+
+    @PutMapping("/update-amount/{id}")
+    public ResponseEntity<Map<String, String>> updateAppointmentAmount(
+            @PathVariable Long id,
+            @RequestParam Double amount) {
+        try {
+            Appuntamento appointment = appuntamentoRepository.findById(id)
+                    .orElseThrow(() -> new RuntimeException("Appuntamento non trovato"));
+            appointment.setAmount(amount);
+            appuntamentoRepository.save(appointment);
+
+            return ResponseEntity.ok(Map.of("message", "Importo aggiornato con successo"));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Errore aggiornando importo"));
+        }
+    }
+
+
+
+
 
 
 

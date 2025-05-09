@@ -51,7 +51,7 @@ public class AssistenteService {
     }
 
     @Transactional
-    public Appuntamento createAppointment(Long animalId, Long veterinarianId, Date appointmentDate, String reason) {
+    public Appuntamento createAppointment(Long animalId, Long veterinarianId, Date appointmentDate, String reason, Double amount) {
 
         Animale animal = pazienteRepository.findById(animalId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Animale non trovato"));
@@ -59,14 +59,15 @@ public class AssistenteService {
         Utente veterinarian = utenteRepository.findByVeterinarianId(veterinarianId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Veterinario non trovato"));
 
-        Cliente cliente = animal.getCliente();
 
         Appuntamento appointment = new Appuntamento();
         appointment.setAnimal(animal);
         appointment.setVeterinarian((Veterinario) veterinarian);
         appointment.setAppointmentDate(appointmentDate);
         appointment.setReason(reason);
-        appointment.setCliente(cliente);
+        appointment.setCliente(animal.getCliente());
+        appointment.setStatus("DA PAGARE");
+        appointment.setAmount(amount);
 
         if (animal.getReparto() == null && veterinarian.getReparto() != null) {
             animal.setReparto(veterinarian.getReparto());
@@ -341,4 +342,13 @@ public class AssistenteService {
     public List<Assistente> findByRepartoId(Long repartoId) {
         return assistenteRepository.findByRepartoId(repartoId);
     }
+
+    @Transactional
+    public void updateAmount(Long appointmentId, Double amount) {
+        Appuntamento appuntamento = appuntamentoRepository.findById(appointmentId)
+                .orElseThrow(() -> new IllegalArgumentException("Appuntamento non trovato"));
+        appuntamento.setAmount(amount);
+        appuntamentoRepository.save(appuntamento);
+    }
+
 }

@@ -227,32 +227,34 @@ public class NotificheService {
     @Transactional
     public void sendPaymentNotificationToClient(Cliente client, Pagamento payment) {
         String message = "Il pagamento di €" + payment.getAmount() + " per il servizio richiesto è stato completato con successo. Data del pagamento: " + payment.getPaymentDate();
-        createAndSendNotificationPayment(client, message, "payment_confirmation");
+        createAndSendNotificationPayment(client, message, Notifiche.NotificationType.PAYMENT_CONFIRMATION);
     }
 
 
     @Transactional
     public void sendPaymentNotificationToVeterinarian(Veterinario veterinarian, Pagamento payment) {
         String message = "Il pagamento di €" + payment.getAmount() + " per l'appuntamento con il cliente " + veterinarian.getFirstName() + veterinarian.getLastName() + " è stato completato con successo.";
-        createAndSendNotificationPayment(veterinarian, message, "payment_confirmation");
+        createAndSendNotificationPayment(veterinarian, message,Notifiche.NotificationType.PAYMENT_CONFIRMATION);
     }
 
-    private void createAndSendNotificationPayment(Utente receiver, String message, String type) {
-        if (receiver == null) {
-            return;
-        }
+    private void createAndSendNotificationPayment(Utente receiver, String message, Notifiche.NotificationType type) {
+        if (receiver == null) return;
+
         Notifiche notification = new Notifiche();
         notification.setMessage(message);
         notification.setSentTo(receiver);
         notification.setNotificationDate(new Date());
-        notification.setType(Notifiche.NotificationType.valueOf(type));
+        notification.setType(type);
         notification.setRead(false);
 
         notificheRepository.save(notification);
 
-        receiver.setCountNotification(receiver.getCountNotification() + 1);
+        receiver.setCountNotification(
+                (receiver.getCountNotification() != null ? receiver.getCountNotification() : 0) + 1
+        );
         utenteRepository.save(receiver);
     }
+
 
 
     @Transactional

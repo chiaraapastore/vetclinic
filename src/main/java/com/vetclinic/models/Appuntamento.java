@@ -38,6 +38,7 @@ public class Appuntamento {
     private String reason;
 
     private String status;
+    private Double amount;
 
     @ManyToOne
     @JoinColumn(name = "cliente_id")

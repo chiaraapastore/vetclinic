@@ -80,13 +80,14 @@ public class AppuntamentoController {
             @RequestParam Long animalId,
             @RequestParam Long veterinarianId,
             @RequestParam String appointmentDate,
-            @RequestParam String reason) {
+            @RequestParam String reason,
+            @RequestParam Double amount) {
 
         try {
             LocalDateTime localDateTime = LocalDateTime.parse(appointmentDate, DateTimeFormatter.ISO_LOCAL_DATE_TIME);
             Date date = Date.from(localDateTime.atZone(ZoneId.systemDefault()).toInstant());
 
-            Appuntamento appointment = assistenteService.createAppointment(animalId, veterinarianId, date, reason);
+            Appuntamento appointment = assistenteService.createAppointment(animalId, veterinarianId, date, reason, amount);
             return ResponseEntity.ok(appointment);
         } catch (DateTimeParseException e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Formato data non valido: " + appointmentDate);
