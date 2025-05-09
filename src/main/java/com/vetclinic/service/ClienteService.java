@@ -3,12 +3,15 @@ package com.vetclinic.service;
 import com.vetclinic.models.Animale;
 import com.vetclinic.models.Cliente;
 import com.vetclinic.models.Fattura;
+import com.vetclinic.models.Utente;
 import com.vetclinic.repository.AnimaleRepository;
 import com.vetclinic.repository.ClienteRepository;
 import com.vetclinic.config.AuthenticationService;
 import com.vetclinic.repository.FatturaRepository;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.Optional;
@@ -29,13 +32,13 @@ public class ClienteService {
         this.animaleRepository = animaleRepository;
     }
 
-    @Transactional
-    public Cliente getClienteByUsername() {
-        String username = authenticationService.getUsername();
-        Optional<Cliente> cliente = clienteRepository.findByUsername(username);
 
-        return cliente.orElseThrow(() -> new IllegalArgumentException("Cliente non trovato"));
+    @Transactional
+    public Cliente getClienteAutenticato() {
+        return clienteRepository.findByKeycloakId(authenticationService.getUserId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Cliente non trovato"));
     }
+
 
     @Transactional
     public Cliente getClienteById(Long id) {
@@ -62,23 +65,24 @@ public class ClienteService {
 
     @Transactional
     public List<Animale> getAnimalsOfClient() {
-        String username = authenticationService.getUsername();
-        Cliente cliente = clienteRepository.findByUsername(username)
-                .orElseThrow(() -> new IllegalArgumentException("Cliente non trovato"));
+        Cliente cliente = clienteRepository.findByKeycloakId(authenticationService.getUserId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Cliente non trovato"));
+
         return animaleRepository.findByClienteId(cliente.getId());
     }
 
 
 
 
+
     @Transactional
     public List<Fattura> getInvoicesOfClient() {
-        String username = authenticationService.getUsername();
-        Cliente cliente = clienteRepository.findByUsername(username)
-                .orElseThrow(() -> new IllegalArgumentException("Cliente non trovato"));
+        Utente cliente = clienteRepository.findByKeycloakId(authenticationService.getUserId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Cliente non trovato"));
 
         return fatturaRepository.findByCliente(cliente);
     }
+
 
     private Animale animaleSetFind(Set<Animale> animaleSet, Long animaleId) {
         return animaleSet.stream()

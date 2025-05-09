@@ -13,4 +13,5 @@ public interface ClienteRepository extends JpaRepository<Cliente, Long> {
 
     Optional<Cliente> findByUsername(String username);
 
+    Optional<Cliente> findByKeycloakId(String userId);
 }

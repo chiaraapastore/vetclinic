@@ -24,6 +24,5 @@ public interface AppuntamentoRepository extends JpaRepository<Appuntamento, Long
     Optional<Appuntamento> findByIdWithCliente(@Param("id") Long id);
 
 
-
-
+    List<Appuntamento> findByAnimal_Cliente_Id(Long clientId);
 }

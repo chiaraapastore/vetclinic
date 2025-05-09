@@ -31,7 +31,7 @@ public class ClienteController {
 
     @GetMapping("/me")
     public ResponseEntity<Cliente> getCliente() {
-        Cliente cliente = clienteService.getClienteByUsername();
+        Cliente cliente = clienteService.getClienteAutenticato();
         return ResponseEntity.ok(cliente);
     }
 

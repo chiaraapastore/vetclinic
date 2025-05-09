@@ -2,12 +2,14 @@ package com.vetclinic.controller;
 
 import com.vetclinic.config.AuthenticationService;
 import com.vetclinic.models.Appuntamento;
+import com.vetclinic.models.Cliente;
 import com.vetclinic.models.Utente;
 import com.vetclinic.models.Veterinario;
 import com.vetclinic.repository.AppuntamentoRepository;
 import com.vetclinic.repository.UtenteRepository;
 import com.vetclinic.service.AppuntamentoService;
 import com.vetclinic.service.AssistenteService;
+import com.vetclinic.service.ClienteService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -33,13 +35,15 @@ public class AppuntamentoController {
     private final UtenteRepository utenteRepository;
     private final AppuntamentoRepository appuntamentoRepository;
     private final AuthenticationService authenticationService;
+    private final ClienteService clienteService;
 
-    public AppuntamentoController(AppuntamentoService appuntamentoService, AssistenteService assistenteService,UtenteRepository utenteRepository, AppuntamentoRepository appuntamentoRepository, AuthenticationService authenticationService) {
+    public AppuntamentoController(AppuntamentoService appuntamentoService, ClienteService clienteService, AssistenteService assistenteService, UtenteRepository utenteRepository, AppuntamentoRepository appuntamentoRepository, AuthenticationService authenticationService) {
         this.appuntamentoService = appuntamentoService;
         this.utenteRepository = utenteRepository;
         this.appuntamentoRepository = appuntamentoRepository;
         this.authenticationService = authenticationService;
         this.assistenteService = assistenteService;
+        this.clienteService = clienteService;
     }
 
     @GetMapping("/my")
@@ -60,6 +64,14 @@ public class AppuntamentoController {
         List<Appuntamento> appointments = appuntamentoRepository.findByVeterinarianId(veterinario.getId());
         return ResponseEntity.ok(appointments);
     }
+
+    @GetMapping("/cliente/miei-appuntamenti")
+    public ResponseEntity<List<Appuntamento>> getAppointmentsForCliente() {
+        Cliente cliente = clienteService.getClienteAutenticato();
+        List<Appuntamento> appointments = appuntamentoService.getAppointmentsForClient(cliente.getId());
+        return ResponseEntity.ok(appointments);
+    }
+
 
 
 

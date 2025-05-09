@@ -80,4 +80,9 @@ public class AppuntamentoService {
         appuntamentoRepository.delete(appointment);
     }
 
+    @Transactional
+    public List<Appuntamento> getAppointmentsForClient(Long clientId) {
+        return appuntamentoRepository.findByAnimal_Cliente_Id(clientId);
+    }
+
 }
