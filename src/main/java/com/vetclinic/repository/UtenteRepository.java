@@ -42,5 +42,7 @@ public interface UtenteRepository extends JpaRepository<Utente, Long> {
     @Query("SELECT a FROM Assistente a WHERE a.reparto.id = :repartoId")
     List<Assistente> findAssistentiByRepartoId(@Param("repartoId") Long repartoId);
 
+    @Query("SELECT u FROM Utente u WHERE TYPE(u) = CapoReparto")
+    List<CapoReparto> findAllCapoReparto();
 }
 

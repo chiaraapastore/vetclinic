@@ -122,9 +122,10 @@ public class AdminController {
     }
 
     @GetMapping("/head-of-department")
-    public ResponseEntity<List<Veterinario>> getHeadOfDepartments() {
+    public ResponseEntity<List<CapoReparto>> getHeadOfDepartments() {
         return ResponseEntity.ok(adminService.getHeadOfDepartments());
     }
+
 
 
     @PostMapping("/create-veterinarian")
@@ -151,6 +152,11 @@ public class AdminController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "Errore interno: " + e.getMessage()));
         }
+    }
+
+    @GetMapping("/assistants")
+    public ResponseEntity<List<Assistente>> getAllAssistants() {
+        return ResponseEntity.ok(adminService.getAllAssistants());
     }
 
 

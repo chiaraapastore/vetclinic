@@ -28,8 +28,9 @@ public class AdminService {
     private final NotificheService notificationService;
     private final ClienteRepository clienteRepository;
     private final KeycloakService keycloakService;
+    private final VeterinarioRepository veterinarioRepository;
 
-    public AdminService(UtenteRepository utenteRepository, KeycloakService keycloakService,RepartoRepository repartoRepository, FerieRepository ferieRepository, AuthenticationService authenticationService, AnimaleRepository animaleRepository, AssistenteRepository assistenteRepository, MedicineRepository medicineRepository, OrdineRepository ordineRepository, MagazzinoRepository magazzinoRepository, NotificheService notificheService, ClienteRepository clienteRepository) {
+    public AdminService(UtenteRepository utenteRepository, VeterinarioRepository veterinarioRepository,KeycloakService keycloakService,RepartoRepository repartoRepository, FerieRepository ferieRepository, AuthenticationService authenticationService, AnimaleRepository animaleRepository, AssistenteRepository assistenteRepository, MedicineRepository medicineRepository, OrdineRepository ordineRepository, MagazzinoRepository magazzinoRepository, NotificheService notificheService, ClienteRepository clienteRepository) {
         this.repartoRepository = repartoRepository;
         this.authenticationService = authenticationService;
         this.utenteRepository = utenteRepository;
@@ -42,17 +43,16 @@ public class AdminService {
         this.ferieRepository = ferieRepository;
         this.clienteRepository = clienteRepository;
         this.keycloakService = keycloakService;
+        this.veterinarioRepository = veterinarioRepository;
     }
 
 
 
     @Transactional
     public List<Veterinario> getAllVeterinaries() {
-        return utenteRepository.findAll().stream()
-                .filter(utente -> "veterinario".equalsIgnoreCase(utente.getRole()))
-                .map(utente -> (Veterinario) utente)
-                .collect(Collectors.toList());
+        return veterinarioRepository.findAll();
     }
+
 
 
 
@@ -64,11 +64,8 @@ public class AdminService {
 
 
     @Transactional
-    public List<Veterinario> getHeadOfDepartments() {
-        return utenteRepository.findAll().stream()
-                .filter(utente -> "capo-reparto".equalsIgnoreCase(utente.getRole()))
-                .map(utente -> (Veterinario) utente)
-                .collect(Collectors.toList());
+    public List<CapoReparto> getHeadOfDepartments() {
+        return utenteRepository.findAllCapoReparto();
     }
 
 
@@ -172,7 +169,6 @@ public class AdminService {
         String firstName = payload.get("firstName");
         String lastName = payload.get("lastName");
         String email = payload.get("email");
-        String registrationNumber = payload.get("registrationNumber");
         String repartoName = payload.get("repartoName");
 
         if (username == null || firstName == null || lastName == null || email == null || repartoName == null ||
@@ -188,7 +184,6 @@ public class AdminService {
         assistente.setFirstName(firstName);
         assistente.setLastName(lastName);
         assistente.setEmail(email);
-        assistente.setRegistrationNumber(registrationNumber);
         assistente.setRole("assistente");
         assistente.setReparto(reparto);
 
@@ -480,6 +475,10 @@ public class AdminService {
         }
 
         return "Dottore creato con successo e assegnato al reparto " + reparto.getName();
+    }
+
+    public List<Assistente> getAllAssistants() {
+        return assistenteRepository.findAll();
     }
 
 }

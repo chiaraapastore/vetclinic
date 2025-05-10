@@ -9,10 +9,8 @@ import lombok.NoArgsConstructor;
 
 @EqualsAndHashCode(callSuper = true)
 @Data
-@AllArgsConstructor
 @NoArgsConstructor
 @Entity
 @DiscriminatorValue("admin")
 public class AdminDTO extends Utente {
-    private String email;
 }
