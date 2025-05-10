@@ -445,18 +445,22 @@ public class AssistenteService {
         RichiestaAppuntamento richiesta = richiestaAppuntamentoRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Richiesta non trovata"));
 
-        if (richiesta.getApprovato() || richiesta.getRifiutato()) {
+        if (Boolean.TRUE.equals(richiesta.getApprovato()) || Boolean.TRUE.equals(richiesta.getRifiutato())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La richiesta è già stata gestita.");
         }
 
         richiesta.setRifiutato(true);
         richiestaAppuntamentoRepository.save(richiesta);
 
+        Cliente cliente = richiesta.getCliente();
+        Date dataRichiesta = richiesta.getDataRichiesta();
+
         notificheService.sendNotificationFromAssistantToClient(
-                richiesta.getCliente(),
-                "La tua richiesta di appuntamento per il " + richiesta.getDataRichiesta() + " è stata rifiutata.",
+                cliente,
+                "La tua richiesta di appuntamento per il " + dataRichiesta + " è stata rifiutata.",
                 Notifiche.NotificationType.GENERAL_ALERT
         );
     }
+
 
 }
