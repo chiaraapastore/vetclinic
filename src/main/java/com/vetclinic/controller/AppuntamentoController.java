@@ -54,6 +54,20 @@ public class AppuntamentoController {
         return ResponseEntity.ok(appointments);
     }
 
+    @GetMapping("/assistente/miei-appuntamenti")
+    public ResponseEntity<List<Appuntamento>> getAppointmentsForAssistant() {
+        Utente assistente = utenteRepository.findByKeycloakId(authenticationService.getUserId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Assistente non trovato"));
+
+        if (assistente.getReparto() == null) {
+            return ResponseEntity.ok(List.of());
+        }
+
+        List<Appuntamento> appointments = appuntamentoRepository.findByAnimal_Reparto_Id(assistente.getReparto().getId());
+        return ResponseEntity.ok(appointments);
+    }
+
+
 
 
     @GetMapping("/veterinario/assistente-appuntamenti")

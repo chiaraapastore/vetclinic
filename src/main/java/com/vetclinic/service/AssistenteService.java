@@ -10,6 +10,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.List;
@@ -31,9 +32,10 @@ public class AssistenteService {
     private final MagazzinoRepository magazzinoRepository;
     private final SomministrazioneRepository somministrazioneRepository;
     private final SomministrazioneService somministrazioneService;
+    private final RichiestaAppuntamentoRepository richiestaAppuntamentoRepository;
 
 
-    public AssistenteService(AppuntamentoRepository appuntamentoRepository, MedicineRepository medicineRepository,
+    public AssistenteService(AppuntamentoRepository appuntamentoRepository, RichiestaAppuntamentoRepository richiestaAppuntamentoRepository,MedicineRepository medicineRepository,
                              AnimaleRepository pazienteRepository, NotificheService notificheService, AssistenteRepository assistenteRepository,
                              UtenteRepository utenteRepository, RepartoRepository repartoRepository, AuthenticationService authenticationService, AnimaleRepository animaleRepository, MagazzinoRepository magazzinoRepository, SomministrazioneRepository somministrazioneRepository, SomministrazioneService somministrazioneService) {
         this.appuntamentoRepository = appuntamentoRepository;
@@ -48,6 +50,7 @@ public class AssistenteService {
         this.somministrazioneRepository = somministrazioneRepository;
         this.somministrazioneService = somministrazioneService;
         this.repartoRepository = repartoRepository;
+        this.richiestaAppuntamentoRepository = richiestaAppuntamentoRepository;
     }
 
     @Transactional
@@ -76,18 +79,25 @@ public class AssistenteService {
 
         Appuntamento savedAppointment = appuntamentoRepository.save(appointment);
 
+        String message = "Hai un nuovo appuntamento per " + reason +
+                " il " + appointmentDate.toString() +
+                " con il dott. " + veterinarian.getFirstName() + " " + veterinarian.getLastName();
+        notificheService.sendNotificationFromAssistantToClient(
+                animal.getCliente(),
+                message,
+                Notifiche.NotificationType.GENERAL_ALERT
+        );
+
         LocalDateTime reminderTime = appointmentDate.toInstant()
                 .atZone(java.time.ZoneId.systemDefault())
                 .toLocalDateTime()
                 .minusDays(1);
-
 
         notificheService.sendAppointmentReminderAtScheduledTime(
                 animal.getCliente(),
                 (Veterinario) veterinarian,
                 reminderTime
         );
-
 
         return savedAppointment;
     }
@@ -349,6 +359,104 @@ public class AssistenteService {
                 .orElseThrow(() -> new IllegalArgumentException("Appuntamento non trovato"));
         appuntamento.setAmount(amount);
         appuntamentoRepository.save(appuntamento);
+    }
+
+    @Transactional
+    public void richiestaAppuntamentoCliente(RichiestaAppuntamentoDTO dto) {
+        Cliente cliente = utenteRepository.findClienteByKeycloakId(authenticationService.getUserId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Cliente non trovato"));
+
+        Animale animale = animaleRepository.findById(dto.animalId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Animale non trovato"));
+
+        if (dto.dataRichiesta == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Data richiesta mancante");
+        }
+
+        Date dataRichiesta = Date.from(dto.dataRichiesta.atZone(ZoneId.systemDefault()).toInstant());
+
+        RichiestaAppuntamento richiesta = new RichiestaAppuntamento();
+        richiesta.setCliente(cliente);
+        richiesta.setAnimale(animale);
+        richiesta.setMotivo(dto.motivo);
+        richiesta.setDataRichiesta(dataRichiesta);
+        richiesta.setApprovato(false);
+        richiesta.setRifiutato(false);
+
+        richiestaAppuntamentoRepository.save(richiesta);
+
+        notificheService.sendNotificationToAssistente(animale.getReparto().getId(),
+                "Il cliente " + cliente.getFirstName() + " ha richiesto un appuntamento per il " + dto.dataRichiesta);
+    }
+
+
+
+    @Transactional(readOnly = true)
+    public List<RichiestaAppuntamento> getRichiesteNonApprovate() {
+        return richiestaAppuntamentoRepository.findByApprovatoFalseAndRifiutatoFalse();
+    }
+
+
+    @Transactional
+    public Appuntamento approvaRichiestaAppuntamento(Long richiestaId) {
+        RichiestaAppuntamento richiesta = richiestaAppuntamentoRepository.findById(richiestaId)
+                .orElseThrow(() -> new IllegalArgumentException("Richiesta non trovata"));
+
+        if (Boolean.TRUE.equals(richiesta.getApprovato()) || Boolean.TRUE.equals(richiesta.getRifiutato())) {
+            throw new IllegalArgumentException("Richiesta già gestita");
+        }
+
+        richiesta.setApprovato(true);
+        richiesta.setRifiutato(false);
+
+        Animale animale = richiesta.getAnimale();
+        Veterinario veterinario = animale.getVeterinario();
+        Cliente cliente = richiesta.getCliente();
+
+        Appuntamento appuntamento = new Appuntamento();
+        appuntamento.setAnimal(animale);
+        appuntamento.setVeterinarian(veterinario);
+        appuntamento.setCliente(cliente);
+        appuntamento.setAppointmentDate(richiesta.getDataRichiesta());
+        appuntamento.setReason(richiesta.getMotivo());
+        appuntamento.setAmount(30.0);
+        appuntamento.setStatus("CREATED");
+        appuntamento.setDate(LocalDateTime.now());
+
+        richiestaAppuntamentoRepository.save(richiesta);
+        appuntamentoRepository.save(appuntamento);
+
+        notificheService.sendNotificationFromAssistantToClient(cliente,
+                "La tua richiesta per un appuntamento il " + richiesta.getDataRichiesta() + " è stata approvata.",
+                Notifiche.NotificationType.GENERAL_ALERT
+        );
+
+
+        notificheService.sendAppointmentReminderToVeterinarian(veterinario, cliente, richiesta.getDataRichiesta());
+
+        return appuntamento;
+    }
+
+
+
+
+    @Transactional
+    public void rifiutaRichiestaAppuntamento(Long id) {
+        RichiestaAppuntamento richiesta = richiestaAppuntamentoRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Richiesta non trovata"));
+
+        if (richiesta.getApprovato() || richiesta.getRifiutato()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La richiesta è già stata gestita.");
+        }
+
+        richiesta.setRifiutato(true);
+        richiestaAppuntamentoRepository.save(richiesta);
+
+        notificheService.sendNotificationFromAssistantToClient(
+                richiesta.getCliente(),
+                "La tua richiesta di appuntamento per il " + richiesta.getDataRichiesta() + " è stata rifiutata.",
+                Notifiche.NotificationType.GENERAL_ALERT
+        );
     }
 
 }

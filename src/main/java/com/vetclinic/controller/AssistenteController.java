@@ -9,6 +9,7 @@ import com.vetclinic.service.AssistenteService;
 import com.vetclinic.service.OrdineService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
@@ -206,10 +207,13 @@ public class AssistenteController {
 
 
     @PostMapping("/scadenza")
-    public ResponseEntity<?> scadenzaFarmaco( @PathVariable Long capoRepartoId, @PathVariable Long idMedicinale) {
+    public ResponseEntity<?> scadenzaFarmaco(@RequestBody Map<String, Long> body) {
+        Long capoRepartoId = body.get("capoRepartoId");
+        Long idMedicinale = body.get("medicinaleId");
         assistenteService.scadenzaFarmaco(capoRepartoId, idMedicinale);
         return ResponseEntity.ok("notifica_inviata");
     }
+
 
     @PutMapping("/update-amount/{id}")
     public ResponseEntity<Map<String, String>> updateAppointmentAmount(
@@ -227,6 +231,36 @@ public class AssistenteController {
                     .body(Map.of("error", "Errore aggiornando importo"));
         }
     }
+
+
+    @GetMapping("/richieste-appuntamenti/non-approvate")
+    public ResponseEntity<List<RichiestaAppuntamento>> getRichiesteNonApprovate() {
+        List<RichiestaAppuntamento> richieste = assistenteService.getRichiesteNonApprovate();
+        return ResponseEntity.ok(richieste);
+    }
+
+    @PostMapping("/richieste-appuntamenti/approva/{id}")
+    public ResponseEntity<Map<String, String>> approvaRichiesta(@PathVariable Long id) {
+        assistenteService.approvaRichiestaAppuntamento(id);
+        return ResponseEntity.ok(Map.of("message", "Richiesta approvata e appuntamento creato."));
+    }
+
+
+
+
+    @PostMapping("/richieste-appuntamenti/rifiuta/{id}")
+    public ResponseEntity<Map<String, String>> rifiutaRichiesta(@PathVariable Long id) {
+        assistenteService.rifiutaRichiestaAppuntamento(id);
+        return ResponseEntity.ok(Map.of("message", "Richiesta rifiutata."));
+    }
+
+
+
+
+
+
+
+
 
 
 

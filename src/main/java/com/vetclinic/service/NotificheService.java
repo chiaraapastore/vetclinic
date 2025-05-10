@@ -5,6 +5,7 @@ import com.vetclinic.config.AuthenticationService;
 import com.vetclinic.models.*;
 import com.vetclinic.repository.NotificheRepository;
 import com.vetclinic.repository.UtenteRepository;
+import jakarta.validation.constraints.NotBlank;
 import org.springframework.http.HttpStatus;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.annotation.Async;
@@ -115,7 +116,8 @@ public class NotificheService {
     @Transactional
     public void sendAppointmentCanceledNotification(Cliente owner) {
         String message = "Notifica: L'appuntamento per " + owner.getFirstName() + " " + owner.getLastName() + " è stato cancellato.";
-        Utente assistant = utenteRepository.findByUsername(authenticationService.getUsername());
+        Utente assistant = utenteRepository.findByKeycloakId(authenticationService.getUserId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Utente non trovato"));
         if (assistant == null) {
             throw new IllegalArgumentException("Assistente non trovato");
         }
@@ -133,7 +135,8 @@ public class NotificheService {
     @Transactional
     public void sendAppointmentReminderToVeterinarian(Veterinario veterinarian, Cliente owner, Date appointmentDate) {
         String message = "Promemoria: Hai un appuntamento con il paziente di " + owner.getFirstName() + " " + owner.getLastName() + " fissato per " + appointmentDate;
-        Utente assistant = utenteRepository.findByUsername(authenticationService.getUsername());
+        Utente assistant = utenteRepository.findByKeycloakId(authenticationService.getUserId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Utente non trovato"));
         if (assistant == null) {
             throw new IllegalArgumentException("Assistente non trovato");
         }
@@ -147,7 +150,8 @@ public class NotificheService {
         notification.setNotificationDate(new Date());
         notification.setType(notificationType);
 
-        Utente assistant = utenteRepository.findByUsername(authenticationService.getUsername());
+        Utente assistant = utenteRepository.findByKeycloakId(authenticationService.getUserId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Utente non trovato"));
         if (assistant == null) {
             throw new IllegalArgumentException("Assistente non trovato");
         }
@@ -201,18 +205,24 @@ public class NotificheService {
     }
 
 
-    private void sendNotificationFromAssistantToClient(Cliente client, String message, Notifiche.NotificationType type) {
+    public void sendNotificationFromAssistantToClient(Cliente client, String message, Notifiche.NotificationType type) {
         if (client == null) {
             return;
         }
+        Utente assistant = utenteRepository.findByKeycloakId(authenticationService.getUserId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Assistente non autenticato"));
+
         Notifiche notification = new Notifiche();
         notification.setMessage(message);
         notification.setClient(client);
+        notification.setSentTo(client);
+        notification.setSentBy(assistant);
         notification.setNotificationDate(new Date());
         notification.setType(type);
         notification.setRead(false);
 
         notificheRepository.save(notification);
+
     }
 
 
@@ -386,4 +396,22 @@ public class NotificheService {
     }
 
 
+    @Transactional
+    public void sendNotificationToAssistente(Long repartoId, @NotBlank(message = "Il messaggio è obbligatorio") String messaggio) {
+        List<Assistente> assistenti = utenteRepository.findAssistentiByRepartoId(repartoId);
+
+        if (assistenti.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Nessun assistente trovato nel reparto con ID: " + repartoId);
+        }
+
+        for (Assistente assistente : assistenti) {
+            Notifiche notifica = new Notifiche();
+            notifica.setSentTo(assistente);
+            notifica.setMessage(messaggio);
+            notifica.setNotificationDate(new Date());
+            notifica.setType(Notifiche.NotificationType.GENERAL_ALERT);
+            notifica.setRead(false);
+            notificheRepository.save(notifica);
+        }
+    }
 }

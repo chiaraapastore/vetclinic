@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -35,5 +36,11 @@ public interface UtenteRepository extends JpaRepository<Utente, Long> {
     Optional<Veterinario> findVeterinarioById(Long veterinarianId);
 
     Optional<CapoReparto> findCapoRepartoById(Long capoRepartoId);
+
+    Optional<Cliente> findClienteByKeycloakId(String userId);
+
+    @Query("SELECT a FROM Assistente a WHERE a.reparto.id = :repartoId")
+    List<Assistente> findAssistentiByRepartoId(@Param("repartoId") Long repartoId);
+
 }
 

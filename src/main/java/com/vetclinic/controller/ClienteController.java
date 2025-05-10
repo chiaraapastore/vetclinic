@@ -4,7 +4,9 @@ import java.util.List;
 import com.vetclinic.models.Animale;
 import com.vetclinic.models.Cliente;
 import com.vetclinic.models.Fattura;
+import com.vetclinic.models.RichiestaAppuntamentoDTO;
 import com.vetclinic.service.AnimaleService;
+import com.vetclinic.service.AssistenteService;
 import com.vetclinic.service.ClienteService;
 import com.vetclinic.service.FatturaService;
 import org.springframework.http.HttpHeaders;
@@ -22,11 +24,13 @@ public class ClienteController {
     private final ClienteService clienteService;
     private final AnimaleService animaleService;
     private final FatturaService fatturaService;
+    private final AssistenteService assistenteService;
 
-    public ClienteController(ClienteService clienteService, AnimaleService animaleService, FatturaService fatturaService) {
+    public ClienteController(ClienteService clienteService, AssistenteService assistenteService,AnimaleService animaleService, FatturaService fatturaService) {
         this.clienteService = clienteService;
         this.animaleService = animaleService;
         this.fatturaService = fatturaService;
+        this.assistenteService = assistenteService;
     }
 
     @GetMapping("/me")
@@ -56,6 +60,13 @@ public class ClienteController {
     public ResponseEntity<List<Animale>> getAnimalsOfClient() {
         List<Animale> animali = clienteService.getAnimalsOfClient();
         return ResponseEntity.ok(animali);
+    }
+
+    @PostMapping("/richiedi-appuntamento")
+    public ResponseEntity<?> richiediAppuntamento(@RequestBody RichiestaAppuntamentoDTO richiesta) {
+        assistenteService.richiestaAppuntamentoCliente(richiesta);
+        return ResponseEntity.ok(Map.of("message", "Richiesta inviata"));
+
     }
 
 
