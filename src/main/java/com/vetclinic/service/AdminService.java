@@ -55,6 +55,10 @@ public class AdminService {
 
 
 
+    private String generateRegistrationNumber(String prefix) {
+        int randomNum = new Random().nextInt(1000);
+        return prefix + String.format("%03d", randomNum);
+    }
 
 
     @Transactional
@@ -82,10 +86,15 @@ public class AdminService {
         String lastName = payload.get("lastName");
         String email = payload.get("email");
         String repartoName = payload.get("repartoNome");
+        String registrationNumber = payload.getOrDefault("registration_number", "");
 
         if (username == null || firstName == null || lastName == null || email == null || repartoName == null ||
-                username.isEmpty() || firstName.isEmpty() || lastName.isEmpty() || email.isEmpty() || repartoName.isEmpty()) {
+                registrationNumber == null ||username.isEmpty() || firstName.isEmpty() || lastName.isEmpty() || email.isEmpty() || repartoName.isEmpty() || registrationNumber.isEmpty()) {
             throw new IllegalArgumentException("Tutti i campi sono obbligatori, incluso il reparto.");
+        }
+
+        if (registrationNumber.isEmpty()) {
+            registrationNumber = generateRegistrationNumber("CAP");
         }
 
         Reparto reparto = repartoRepository.findFirstByName(repartoName)
@@ -98,6 +107,7 @@ public class AdminService {
         capoReparto.setEmail(email);
         capoReparto.setRole("capo-reparto");
         capoReparto.setReparto(reparto);
+        capoReparto.setRegistrationNumber(registrationNumber);
 
         try {
             keycloakService.createUser(capoReparto);
@@ -170,10 +180,14 @@ public class AdminService {
         String lastName = payload.get("lastName");
         String email = payload.get("email");
         String repartoName = payload.get("repartoName");
+        String registrationNumber = payload.getOrDefault("registration_number", "");
 
         if (username == null || firstName == null || lastName == null || email == null || repartoName == null ||
-                username.isEmpty() || firstName.isEmpty() || lastName.isEmpty() || email.isEmpty() || repartoName.isEmpty()) {
+                registrationNumber == null ||username.isEmpty() || firstName.isEmpty() || lastName.isEmpty() || email.isEmpty() || repartoName.isEmpty() || registrationNumber.isEmpty()) {
             throw new IllegalArgumentException("Tutti i campi sono obbligatori, incluso il reparto.");
+        }
+        if (registrationNumber.isEmpty()) {
+            registrationNumber = generateRegistrationNumber("ASS");
         }
 
         Reparto reparto = repartoRepository.findFirstByName(repartoName)
@@ -186,6 +200,7 @@ public class AdminService {
         assistente.setEmail(email);
         assistente.setRole("assistente");
         assistente.setReparto(reparto);
+        assistente.setRegistrationNumber(registrationNumber);
 
         try {
             keycloakService.createUser(assistente);
@@ -274,7 +289,6 @@ public class AdminService {
         assistente.setReparto(reparto);
         utenteRepository.saveAndFlush(assistente);
 
-        System.out.println("Assistente aggiornato al reparto: " + reparto.getName());
 
         return "Assistente assegnato al reparto " + reparto.getName();
     }
@@ -353,7 +367,6 @@ public class AdminService {
         Long utenteId = payload.get("utenteId");
         Long repartoId = payload.get("repartoId");
 
-        System.out.println("API ricevuta: Assegna capo reparto ID " + utenteId + " al reparto ID " + repartoId);
 
         if (utenteId == null || repartoId == null) {
             throw new IllegalArgumentException("Parametri mancanti.");
@@ -388,24 +401,21 @@ public class AdminService {
         utenteRepository.save(capoReparto);
         repartoRepository.save(nuovoReparto);
 
-        System.out.println("Capo reparto aggiornato con successo: " + capoReparto.getFirstName() + " → " + nuovoReparto.getName());
 
         return "Capo reparto assegnato con successo!";
     }
 
     public String assignDoctorToDepartment(Long utenteId, Long repartoId) {
-        System.out.println("Ricevuta richiesta: Cambio reparto per dottore ID " + utenteId + " → Reparto ID " + repartoId);
-        Reparto reparto = repartoRepository.findById(repartoId).orElseThrow(()-> new IllegalArgumentException("Reparto non trovato"));
+          Reparto reparto = repartoRepository.findById(repartoId).orElseThrow(()-> new IllegalArgumentException("Reparto non trovato"));
 
         Utente dottore = utenteRepository.findById(utenteId).orElseThrow(()-> new IllegalArgumentException("Utente non trovato"));
 
-        if(!dottore.getRole().equals("veterinarian")) {
+        if(!dottore.getRole().equals("veterinario")) {
             throw new IllegalArgumentException("L'utente non è un veterinarian.");
         }
         dottore.setReparto(reparto);
         utenteRepository.saveAndFlush(dottore);
 
-        System.out.println("Dottore aggiornato al reparto: " + reparto.getName());
 
         return "Dottore assegnato al reparto " + reparto.getName();
     }
@@ -445,14 +455,18 @@ public class AdminService {
     public String createVeterinarian(Map<String, String> payload) {
         String username = payload.get("username");
         String firstName = payload.get("firstName");
-        String registrationNumber = payload.get("registration_number");
+        String registrationNumber = payload.getOrDefault("registration_number", "");
         String lastName = payload.get("lastName");
         String email = payload.get("email");
         String repartoName = payload.get("repartoNome");
 
         if (firstName == null || lastName == null || email == null || repartoName == null ||
-                firstName.isEmpty() || lastName.isEmpty() || email.isEmpty() || repartoName.isEmpty()) {
+                registrationNumber == null||firstName.isEmpty() || lastName.isEmpty() || email.isEmpty() || repartoName.isEmpty()|| registrationNumber.isEmpty()) {
             throw new IllegalArgumentException("Tutti i campi sono obbligatori, incluso il reparto.");
+        }
+
+        if (registrationNumber.isEmpty()) {
+            registrationNumber = generateRegistrationNumber("VET");
         }
 
         Reparto reparto = repartoRepository.findFirstByName(repartoName)

@@ -122,7 +122,6 @@ public class KeycloakService {
                     (roleResponse != null ? roleResponse.getBody() : "Nessuna risposta dal server."));
         }
 
-        System.out.println("Ruolo '" + roleName + "' assegnato correttamente all'utente " + userId);
     }
 
 
