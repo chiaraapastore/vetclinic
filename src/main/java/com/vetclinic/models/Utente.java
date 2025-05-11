@@ -39,7 +39,4 @@ public class Utente {
     @ManyToOne
     @JoinColumn(name = "reparto_id", referencedColumnName = "id")
     private Reparto reparto;
-
-
-
 }

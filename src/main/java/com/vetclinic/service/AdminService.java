@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -30,7 +31,7 @@ public class AdminService {
     private final KeycloakService keycloakService;
     private final VeterinarioRepository veterinarioRepository;
 
-    public AdminService(UtenteRepository utenteRepository, VeterinarioRepository veterinarioRepository,KeycloakService keycloakService,RepartoRepository repartoRepository, FerieRepository ferieRepository, AuthenticationService authenticationService, AnimaleRepository animaleRepository, AssistenteRepository assistenteRepository, MedicineRepository medicineRepository, OrdineRepository ordineRepository, MagazzinoRepository magazzinoRepository, NotificheService notificheService, ClienteRepository clienteRepository) {
+    public AdminService(UtenteRepository utenteRepository,VeterinarioRepository veterinarioRepository,KeycloakService keycloakService,RepartoRepository repartoRepository, FerieRepository ferieRepository, AuthenticationService authenticationService, AnimaleRepository animaleRepository, AssistenteRepository assistenteRepository, MedicineRepository medicineRepository, OrdineRepository ordineRepository, MagazzinoRepository magazzinoRepository, NotificheService notificheService, ClienteRepository clienteRepository) {
         this.repartoRepository = repartoRepository;
         this.authenticationService = authenticationService;
         this.utenteRepository = utenteRepository;
@@ -514,6 +515,79 @@ public class AdminService {
             throw new RuntimeException("Errore durante l'eliminazione dell'utente: " + e.getMessage());
         }
     }
+
+    @Transactional
+    public String creaRepartoConPersonale(Map<String, Object> payload) {
+        String repartoNome = (String) payload.get("repartoNome");
+
+        if (repartoRepository.findFirstByName(repartoNome).isPresent()) {
+            throw new IllegalArgumentException("Reparto già esistente.");
+        }
+
+        Reparto nuovo = new Reparto();
+        nuovo.setName(repartoNome);
+        repartoRepository.save(nuovo);
+
+        Map<String, String> capoRepartoData = (Map<String, String>) payload.get("capoReparto");
+        creaOuAssegnaUtente(capoRepartoData, "capo-reparto", nuovo);
+
+        Map<String, String> assistenteData = (Map<String, String>) payload.get("assistente");
+        creaOuAssegnaUtente(assistenteData, "assistente", nuovo);
+
+        Map<String, String> veterinarioData = (Map<String, String>) payload.get("veterinario");
+        creaOuAssegnaUtente(veterinarioData, "veterinario", nuovo);
+
+
+        return "Reparto e personale creati con successo!";
+    }
+
+    private void creaOuAssegnaUtente(Map<String, String> data, String ruolo, Reparto reparto) {
+        String email = data.get("email");
+
+
+        String keycloakId = keycloakService.getUserIdByEmail(email);
+
+        Optional<Utente> esistenteOpt = utenteRepository.findByKeycloakId(keycloakId);
+
+        Utente utente;
+
+        if (esistenteOpt.isPresent()) {
+            utente = esistenteOpt.get();
+        } else {
+
+            utente = switch (ruolo) {
+                case "assistente" -> new Assistente();
+                case "veterinario" -> new Veterinario();
+                case "capo-reparto" -> new CapoReparto();
+                default -> throw new IllegalArgumentException("Ruolo non supportato: " + ruolo);
+            };
+
+            utente.setUsername(data.get("username"));
+            utente.setFirstName(data.get("nome"));
+            utente.setLastName(data.get("cognome"));
+            utente.setEmail(email);
+            utente.setRole(ruolo);
+            utente.setKeycloakId(keycloakId);
+            utente.setReparto(reparto);
+
+
+            keycloakService.createUser(utente);
+            utenteRepository.save(utente);
+
+
+            notificationService.sendWelcomeNotification(null, utente);
+        }
+
+        utente.setReparto(reparto);
+        utenteRepository.save(utente);
+
+        if ("capo-reparto".equals(ruolo)) {
+            reparto.setCapoRepartoId(utente.getId());
+            repartoRepository.save(reparto);
+        }
+    }
+
+
 
 
 
