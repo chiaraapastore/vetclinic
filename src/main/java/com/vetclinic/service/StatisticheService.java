@@ -61,7 +61,6 @@ public class StatisticheService {
     public List<Map<String, Object>> getDistribuzionePerReparto() {
         List<Map<String, Object>> risultato = medicineRepository.findConsumoPerReparto();
 
-        System.out.println("Distribuzione per reparto generata: " + risultato);
 
         return risultato;
     }
