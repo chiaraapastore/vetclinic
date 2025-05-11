@@ -305,6 +305,18 @@ public class AdminController {
     }
 
 
+    @DeleteMapping("/delete-animal/{animalId}")
+    public ResponseEntity<Map<String, String>> deleteAnimal(@PathVariable Long animalId) {
+        try {
+            animaleService.deleteAnimal(animalId);
+            return ResponseEntity.ok(Map.of("message", "Animale eliminato con successo."));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Errore durante l'eliminazione dell'animale."));
+        }
+    }
+
+
 
 
 

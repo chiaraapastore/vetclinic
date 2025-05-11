@@ -32,8 +32,11 @@ public class AnimaleService {
     private final NotificheService notificheService;
     private final RepartoRepository repartoRepository;
     private final VeterinarioRepository veterinarioRepository;
+    private final UtenteRepository utenteRepository;
+    private final CronologiaRepository cronologiaRepository;
+    private final NotificheRepository notificheRepository;
 
-    public AnimaleService(AdminService adminService, VeterinarioRepository veterinarioRepository,RepartoRepository repartoRepository,NotificheService notificheService,KeycloakService keycloakService,TrattamentoRepository trattamentoRepository, SomministrazioneRepository somministrazioneRepository, AnimaleRepository animaleRepository, ClienteRepository clienteRepository, FatturaRepository fatturaRepository,AuthenticationService authenticationService) {
+    public AnimaleService(AdminService adminService, NotificheRepository notificheRepository,CronologiaRepository cronologiaRepository,UtenteRepository utenteRepository,VeterinarioRepository veterinarioRepository,RepartoRepository repartoRepository,NotificheService notificheService,KeycloakService keycloakService,TrattamentoRepository trattamentoRepository, SomministrazioneRepository somministrazioneRepository, AnimaleRepository animaleRepository, ClienteRepository clienteRepository, FatturaRepository fatturaRepository,AuthenticationService authenticationService) {
         this.animaleRepository = animaleRepository;
         this.clienteRepository = clienteRepository;
         this.authenticationService = authenticationService;
@@ -45,6 +48,9 @@ public class AnimaleService {
         this.notificheService = notificheService;
         this.repartoRepository = repartoRepository;
         this.veterinarioRepository = veterinarioRepository;
+        this.utenteRepository = utenteRepository;
+        this.cronologiaRepository = cronologiaRepository;
+        this.notificheRepository = notificheRepository;
     }
 
     @Transactional
@@ -407,6 +413,32 @@ public class AnimaleService {
                 "È stato registrato un nuovo animale a tuo nome: " + animale.getName());
     }
 
+
+    @Transactional
+    public void deleteAnimal(Long animalId) {
+        Animale animale = animaleRepository.findById(animalId)
+                .orElseThrow(() -> new RuntimeException("Animale non trovato con ID: " + animalId));
+
+        Utente cliente = animale.getCliente();
+
+
+        cronologiaRepository.deleteByAnimaleId(animalId);
+
+
+        notificheRepository.deleteBySentTo(cliente);
+        notificheRepository.deleteBySentBy(cliente);
+
+
+        animaleRepository.delete(animale);
+
+
+        List<Animale> altriAnimali = animaleRepository.findByClienteId(cliente.getId());
+        if (altriAnimali.isEmpty()) {
+
+            keycloakService.deleteUserByUsername(cliente.getUsername());
+            utenteRepository.delete(cliente);
+        }
+    }
 
 
 

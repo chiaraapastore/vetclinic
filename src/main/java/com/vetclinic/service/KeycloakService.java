@@ -195,7 +195,7 @@ public class KeycloakService {
         try {
             ResponseEntity<List<UserRepresentation>> response = keycloakClient.searchUserByUsername(authHeader, realm, username);
             if (response.getBody() == null || response.getBody().isEmpty()) {
-                System.out.println("Utente non trovato su Keycloak con username: " + username);
+
                 return;
             }
 

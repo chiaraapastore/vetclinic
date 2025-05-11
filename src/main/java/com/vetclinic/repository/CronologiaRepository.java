@@ -12,4 +12,6 @@ public interface CronologiaRepository extends JpaRepository<CronologiaAnimale, L
 
     @Query("SELECT c FROM CronologiaAnimale c WHERE c.animaleId = :animaleId ORDER BY c.eventDate ASC")
     List<CronologiaAnimale> findByAnimaleId(Long animaleId);
+
+    void deleteByAnimaleId(Long animalId);
 }
