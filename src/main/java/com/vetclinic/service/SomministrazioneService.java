@@ -2,9 +2,7 @@ package com.vetclinic.service;
 
 import com.vetclinic.config.AuthenticationService;
 import com.vetclinic.models.*;
-import com.vetclinic.repository.AnimaleRepository;
-import com.vetclinic.repository.SomministrazioneRepository;
-import com.vetclinic.repository.UtenteRepository;
+import com.vetclinic.repository.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -12,6 +10,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Date;
 import java.util.List;
 
 @Service
@@ -24,11 +23,15 @@ public class SomministrazioneService {
     private final UtenteRepository utenteRepository;
     private final AuthenticationService authenticationService;
     private final NotificheService notificheService;
+    private final VeterinarioRepository veterinarianRepository;
+    private final CronologiaRepository cronologiaRepository;
 
     public SomministrazioneService(SomministrazioneRepository somministrazioneRepository,
+                                   VeterinarioRepository veterinarianRepository,
                                    MagazzinoService magazzinoService,
                                    AnimaleRepository animaleRepository,
                                    UtenteRepository utenteRepository,
+                                   CronologiaRepository cronologiaRepository,
                                    AuthenticationService authenticationService, NotificheService notificheService) {
         this.magazzinoService = magazzinoService;
         this.somministrazioneRepository = somministrazioneRepository;
@@ -36,6 +39,8 @@ public class SomministrazioneService {
         this.utenteRepository = utenteRepository;
         this.authenticationService = authenticationService;
         this.notificheService = notificheService;
+        this.veterinarianRepository = veterinarianRepository;
+        this.cronologiaRepository = cronologiaRepository;
     }
 
     @Transactional
@@ -94,4 +99,42 @@ public class SomministrazioneService {
 
         animaleRepository.save(animale);
     }
+
+    @Transactional
+    public void veterinarianAddDocumentToAnimal(
+            Long animaleId,
+            Long capoRepartoId,
+            Long veterinarioId,
+            String tipoDocumento,
+            String descrizione,
+            byte[] allegato) {
+
+        Animale animale = animaleRepository.findById(animaleId)
+                .orElseThrow(() -> new IllegalArgumentException("Animale non trovato"));
+
+        Utente capoReparto = utenteRepository.findById(capoRepartoId)
+                .orElseThrow(() -> new IllegalArgumentException("Capo reparto non trovato"));
+
+        Veterinario veterinario = veterinarianRepository.findById(veterinarioId)
+                .orElseThrow(() -> new IllegalArgumentException("Veterinario non trovato"));
+
+        CronologiaAnimale cronologia = new CronologiaAnimale();
+        cronologia.setAnimaleId(animale.getId());
+        cronologia.setVeterinarian(veterinario);
+        cronologia.setEventDate(new Date());
+        cronologia.setEventType(tipoDocumento);
+        cronologia.setDescription(descrizione);
+
+        cronologia.setNoteVet(animale.getVeterinaryNotes());
+        cronologia.setSymptoms(animale.getSymptoms());
+
+        cronologiaRepository.save(cronologia);
+
+        notificheService.sendNotificationToSpecificUser(
+                capoReparto.getId(),
+                "Nuova somministrazione registrata su " + animale.getName() + ": " + descrizione
+        );
+    }
+
+
 }

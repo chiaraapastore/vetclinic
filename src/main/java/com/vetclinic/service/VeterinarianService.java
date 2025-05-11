@@ -25,9 +25,10 @@ public class VeterinarianService {
     private final SomministrazioneRepository somministrazioneRepository;
     private final NotificheService notificheService;
     private final VeterinarioRepository veterinarioRepository;
+    private final SomministrazioneService somministrazioneService;
 
 
-    public VeterinarianService(RepartoRepository repartoRepository,VeterinarioRepository veterinarioRepository,MedicineRepository medicineRepository, AnimaleRepository animaleRepository, AuthenticationService authenticationService, UtenteRepository utenteRepository, SomministrazioneRepository  somministrazioneRepository, NotificheService notificheService) {
+    public VeterinarianService(RepartoRepository repartoRepository,  SomministrazioneService somministrazioneService,VeterinarioRepository veterinarioRepository,MedicineRepository medicineRepository, AnimaleRepository animaleRepository, AuthenticationService authenticationService, UtenteRepository utenteRepository, SomministrazioneRepository  somministrazioneRepository, NotificheService notificheService) {
         this.repartoRepository = repartoRepository;
         this.medicineRepository = medicineRepository;
         this.animaleRepository = animaleRepository;
@@ -36,6 +37,7 @@ public class VeterinarianService {
         this.somministrazioneRepository = somministrazioneRepository;
         this.notificheService = notificheService;
         this.veterinarioRepository = veterinarioRepository;
+        this.somministrazioneService = somministrazioneService;
 
     }
 
@@ -66,38 +68,29 @@ public class VeterinarianService {
 
 
     @Transactional
-    public Somministrazione administersMedicines(Long pazienteId, Long capoRepartoId, String nomeMedicinale, int quantita) {
+    public String  administersMedicines(Long pazienteId, Long capoRepartoId, Long medicineId, int quantita) {
         try {
-            Utente utente = utenteRepository.findByUsername(authenticationService.getUsername());
-            if (utente == null) {
-                throw new IllegalArgumentException("Utente non trovato");
-            }
+
+            Utente veterinario = utenteRepository.findByKeycloakId(authenticationService.getUserId())
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Veterinario non trovato"));
+
+            Utente capoReparto = utenteRepository.findCapoRepartoById(capoRepartoId)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Capo Reparto non trovato"));
 
             Animale animale = animaleRepository.findById(pazienteId)
-                    .orElseThrow(() -> new RuntimeException("Paziente non trovato"));
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Animale non trovato"));
 
-            Medicine medicine = medicineRepository.findByName(nomeMedicinale)
-                    .orElseThrow(() -> new RuntimeException("Medicinale non trovato"));
-
-            Utente capoReparto = utenteRepository.findById(capoRepartoId)
-                    .orElseThrow(() -> new RuntimeException("Capo Reparto non trovato"));
-
-            if (medicine.getAvailableQuantity() <= 0) {
-                throw new RuntimeException("Il medicinale non è più disponibile");
-            }
+            Medicine medicine = medicineRepository.findById(medicineId)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Medicinale non trovato"));
 
             if (medicine.getAvailableQuantity() < quantita) {
-                throw new RuntimeException("Quantità insufficiente in magazzino!");
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Quantità insufficiente del medicinale");
             }
 
             medicine.setAvailableQuantity(medicine.getAvailableQuantity() - quantita);
-            medicine.setQuantity(medicine.getQuantity() - quantita);
+            medicineRepository.save(medicine);
 
-            if (medicine.getQuantity() <= 0) {
-                medicineRepository.delete(medicine);
-            } else {
-                medicineRepository.save(medicine);
-            }
+            notificheService.sendNotificationSomministration( veterinario,capoReparto, medicine.getName());
 
             Somministrazione somministrazione = new Somministrazione();
             somministrazione.setAnimal(animale);
@@ -106,9 +99,17 @@ public class VeterinarianService {
             somministrazione.setDate(LocalDateTime.now());
             somministrazioneRepository.save(somministrazione);
 
-            notificheService.sendNotificationSomministration(utente, capoReparto, nomeMedicinale);
+            somministrazioneService.veterinarianAddDocumentToAnimal(
+                    pazienteId,
+                    capoRepartoId,
+                    veterinario.getId(),
+                    "SOMMINISTRAZIONE",
+                    "Somministrazione farmaco: " + medicine.getName(),
+                    null
+            );
 
-            return somministrazione;
+
+            return "Farmaco somministrato con successo!";
 
         } catch (Exception e) {
             throw new RuntimeException("Errore durante la somministrazione: " + e.getMessage(), e);

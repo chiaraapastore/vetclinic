@@ -246,7 +246,7 @@ public class AssistenteService {
         medicine.setAvailableQuantity(medicine.getAvailableQuantity() - quantita);
         medicineRepository.save(medicine);
 
-        notificheService.sendNotificationSomministration(veterinarian, veterinarian, medicine.getName());
+        notificheService.sendNotificationSomministration(assistant, veterinarian, medicine.getName());
 
         Somministrazione somministrazione = new Somministrazione();
         somministrazione.setAnimal(animale);

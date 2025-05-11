@@ -47,22 +47,13 @@ public class VeterinarianController {
 
 
     @PostMapping("/administers-medicines")
-    public ResponseEntity<Somministrazione> administersMedicines(@RequestBody SomministrazioneRequest request) {
-        System.out.println("Richiesta ricevuta:");
-        System.out.println("Animale ID: " + request.getAnimalId());
-        System.out.println("Capo Reparto ID: " + request.getHeadOfDepartmentId());
-        System.out.println("Nome Medicinale: " + request.getNameOfMedicine());
-        System.out.println("Quantità: " + request.getQuantity());
-
-        Somministrazione response = veterinarianService.administersMedicines(
-                request.getAnimalId(),
-                request.getHeadOfDepartmentId(),
-                request.getNameOfMedicine(),
-                request.getQuantity()
-        );
-
-        System.out.println("Somministrazione effettuata con successo!");
-        return ResponseEntity.ok(response);
+    public ResponseEntity<Map<String, String>> administersMedicines(
+            @RequestParam Long pazienteId,
+            @RequestParam Long medicineId,
+            @RequestParam int quantita,
+            @RequestParam Long capoRepartoId){
+        String result = veterinarianService.administersMedicines(pazienteId, capoRepartoId,  medicineId, quantita);
+        return ResponseEntity.ok(Map.of("message", result));
     }
 
 
