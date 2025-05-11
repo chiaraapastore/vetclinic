@@ -6,6 +6,7 @@ import com.vetclinic.models.TokenRequest;
 import com.vetclinic.models.UtenteKeycloak;
 import jakarta.validation.constraints.NotBlank;
 import org.keycloak.representations.idm.RoleRepresentation;
+import org.keycloak.representations.idm.UserRepresentation;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -55,5 +56,17 @@ public interface KeycloakClient {
             @RequestBody List<RoleRepresentation> roles);
 
 
+    @GetMapping("/admin/realms/{realm}/users")
+    ResponseEntity<List<UserRepresentation>> searchUserByUsername(
+            @RequestHeader("Authorization") String authHeader,
+            @PathVariable("realm") String realm,
+            @RequestParam("username") String username
+    );
 
+    @DeleteMapping("/admin/realms/{realm}/users/{userId}")
+    ResponseEntity<Object> deleteUser(
+            @RequestHeader("Authorization") String authHeader,
+            @PathVariable("realm") String realm,
+            @PathVariable("userId") String userId
+    );
 }

@@ -247,5 +247,19 @@ public class AdminController {
         return ResponseEntity.ok(Map.of("ferie", adminService.getUnapprovedHolidays()));
     }
 
+    @DeleteMapping("/elimina-utente/{utenteId}")
+    public ResponseEntity<Map<String, String>> eliminaUtente(@PathVariable Long utenteId) {
+        try {
+            String message = adminService.eliminaUtente(utenteId);
+            return ResponseEntity.ok(Map.of("message", message));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", e.getMessage()));
+        }
+    }
+
+
+
 }
 

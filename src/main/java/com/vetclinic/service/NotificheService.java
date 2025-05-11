@@ -414,4 +414,12 @@ public class NotificheService {
             notificheRepository.save(notifica);
         }
     }
+
+    public void eliminaNotifichePerUtente(Utente utente) {
+        notificheRepository.deleteBySentTo(utente);
+        notificheRepository.deleteBySentBy(utente);
+    }
+
+
+
 }

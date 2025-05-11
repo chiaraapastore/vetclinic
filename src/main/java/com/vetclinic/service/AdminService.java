@@ -495,4 +495,27 @@ public class AdminService {
         return assistenteRepository.findAll();
     }
 
+    @Transactional
+    public String eliminaUtente(Long utenteId) {
+        Utente utente = utenteRepository.findById(utenteId)
+                .orElseThrow(() -> new IllegalArgumentException("Utente non trovato."));
+
+        try {
+
+            notificationService.eliminaNotifichePerUtente(utente);
+
+
+            keycloakService.deleteUser(utente.getUsername());
+
+            utenteRepository.delete(utente);
+
+            return "Utente eliminato con successo.";
+        } catch (Exception e) {
+            throw new RuntimeException("Errore durante l'eliminazione dell'utente: " + e.getMessage());
+        }
+    }
+
+
+
+
 }

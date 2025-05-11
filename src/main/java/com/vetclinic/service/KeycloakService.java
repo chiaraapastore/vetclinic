@@ -7,9 +7,11 @@ import com.vetclinic.models.TokenRequest;
 import com.vetclinic.models.Utente;
 import com.vetclinic.models.UtenteKeycloak;
 import com.vetclinic.repository.UtenteRepository;
+import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
 import org.keycloak.representations.idm.CredentialRepresentation;
 import org.keycloak.representations.idm.RoleRepresentation;
+import org.keycloak.representations.idm.UserRepresentation;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -142,4 +144,28 @@ public class KeycloakService {
         keycloak.setEnabled(true);
         return keycloak;
     }
+
+    @Transactional
+    public void deleteUser(String username) {
+        String accessToken = authenticate(adminUsername, adminPassword);
+        String authHeader = "Bearer " + accessToken;
+
+        ResponseEntity<List<UserRepresentation>> response = keycloakClient.searchUserByUsername(authHeader, realm, username);
+        if (response.getBody() == null || response.getBody().isEmpty()) {
+            throw new RuntimeException("Utente non trovato su Keycloak con username: " + username);
+        }
+
+        String userId = response.getBody().get(0).getId();
+
+        ResponseEntity<Object> deleteResponse = keycloakClient.deleteUser(authHeader, realm, userId);
+        if (!deleteResponse.getStatusCode().is2xxSuccessful()) {
+            throw new RuntimeException("Errore durante l'eliminazione dell'utente da Keycloak.");
+        }
+
+        Utente utente = utenteRepository.findByUsername(username);
+        if (utente != null) {
+            utenteRepository.delete(utente);
+        }
+    }
+
 }
