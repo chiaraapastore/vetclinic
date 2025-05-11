@@ -44,5 +44,9 @@ public interface UtenteRepository extends JpaRepository<Utente, Long> {
 
     @Query("SELECT u FROM Utente u WHERE TYPE(u) = CapoReparto")
     List<CapoReparto> findAllCapoReparto();
+
+    List<Utente> findAllByReparto(Reparto reparto);
+
+    List<Utente> findByRepartoId(Long repartoId);
 }
 

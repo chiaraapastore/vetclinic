@@ -187,5 +187,37 @@ public class KeycloakService {
         return null;
     }
 
+    @Transactional
+    public void deleteUserByUsername(String username) {
+        String accessToken = authenticate(adminUsername, adminPassword);
+        String authHeader = "Bearer " + accessToken;
+
+        try {
+            ResponseEntity<List<UserRepresentation>> response = keycloakClient.searchUserByUsername(authHeader, realm, username);
+            if (response.getBody() == null || response.getBody().isEmpty()) {
+                System.out.println("Utente non trovato su Keycloak con username: " + username);
+                return;
+            }
+
+            String userId = response.getBody().get(0).getId();
+            ResponseEntity<Object> deleteResponse = keycloakClient.deleteUser(authHeader, realm, userId);
+            if (!deleteResponse.getStatusCode().is2xxSuccessful()) {
+                System.out.println("Errore durante l'eliminazione da Keycloak per utente: " + username);
+            }
+
+        } catch (Exception e) {
+            System.out.println("Eccezione durante la cancellazione dell'utente Keycloak: " + username);
+            e.printStackTrace();
+        }
+
+
+        Utente utente = utenteRepository.findByUsername(username);
+        if (utente != null) {
+            utenteRepository.delete(utente);
+        }
+    }
+
+
+
 
 }

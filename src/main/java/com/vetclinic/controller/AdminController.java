@@ -27,8 +27,9 @@ public class AdminController {
     private final OrdineService ordineService;
     private final AnimaleService animaleService;
     private final ClienteRepository clienteRepository;
+    private final RepartoService repartoService;
 
-    public AdminController(AdminService adminService, ClienteRepository   clienteRepository,RepartoRepository repartoRepository, UtenteRepository utenteRepository, KeycloakService keycloakService , OrdineService ordineService, MagazzinoRepository magazzinoRepository, AnimaleService animaleService) {
+    public AdminController(AdminService adminService, RepartoService repartoService,ClienteRepository   clienteRepository,RepartoRepository repartoRepository, UtenteRepository utenteRepository, KeycloakService keycloakService , OrdineService ordineService, MagazzinoRepository magazzinoRepository, AnimaleService animaleService) {
         this.adminService = adminService;
         this.repartoRepository = repartoRepository;
         this.utenteRepository = utenteRepository;
@@ -37,6 +38,7 @@ public class AdminController {
         this.ordineService = ordineService;
         this.animaleService = animaleService;
         this.clienteRepository = clienteRepository;
+        this.repartoService = repartoService;
     }
 
 
@@ -278,11 +280,33 @@ public class AdminController {
 
 
     @PostMapping("/create-department-with-staff")
-    public ResponseEntity<Map<String, String>> creaReparto(@RequestBody RepartoDTO repartoDTO) {
-        Map<String, String> response = new HashMap<>();
-        response.put("message", "Reparto e personale creati con successo!");
-        return ResponseEntity.ok(response);
+    public ResponseEntity<Map<String, String>> creaReparto(@RequestBody Map<String, Object> payload) {
+        try {
+            String message = adminService.creaRepartoConPersonale(payload);
+            return ResponseEntity.ok(Map.of("message", message));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Errore durante la creazione del reparto: " + e.getMessage()));
+        }
     }
+
+
+
+    @DeleteMapping("/delete-department/{id}")
+    public ResponseEntity<Map<String, String>> eliminaReparto(@PathVariable Long id) {
+        try {
+            repartoService.eliminaRepartoConUtenti(id);
+            return ResponseEntity.ok(Map.of("message", "Reparto eliminato con successo."));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Errore durante l'eliminazione del reparto."));
+        }
+    }
+
+
+
+
 
 
 

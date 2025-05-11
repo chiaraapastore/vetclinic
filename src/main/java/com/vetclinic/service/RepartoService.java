@@ -3,6 +3,7 @@ package com.vetclinic.service;
 import com.vetclinic.config.AuthenticationService;
 import com.vetclinic.models.Reparto;
 import com.vetclinic.models.Utente;
+import com.vetclinic.repository.NotificheRepository;
 import com.vetclinic.repository.RepartoRepository;
 import com.vetclinic.repository.UtenteRepository;
 import org.springframework.stereotype.Service;
@@ -16,13 +17,22 @@ public class RepartoService {
     private final RepartoRepository departmentRepository;
     private final UtenteRepository utenteRepository;
     private final AuthenticationService authenticationService;
+    private final RepartoRepository repartoRepository;
+    private final KeycloakService keycloakService;
+    private final NotificheRepository notificationRepository;
 
     public RepartoService(RepartoRepository departmentRepository,
                           UtenteRepository utenteRepository,
+                          RepartoRepository repartoRepository,
+                          KeycloakService keycloakService,
+                          NotificheRepository notificationRepository,
                           AuthenticationService authenticationService) {
         this.departmentRepository = departmentRepository;
         this.utenteRepository = utenteRepository;
         this.authenticationService = authenticationService;
+        this.repartoRepository = repartoRepository;
+        this.keycloakService = keycloakService;
+        this.notificationRepository = notificationRepository;
     }
 
     public List<Reparto> getAllDepartments() {
@@ -83,4 +93,40 @@ public class RepartoService {
 
         return department;
     }
+
+    @Transactional
+    public void eliminaRepartoConUtenti(Long repartoId) {
+        Reparto reparto = repartoRepository.findById(repartoId)
+                .orElseThrow(() -> new RuntimeException("Reparto non trovato con ID: " + repartoId));
+
+        if (reparto.getCapoRepartoId() != null) {
+            utenteRepository.findById(reparto.getCapoRepartoId()).ifPresent(capo -> {
+                try {
+                    notificationRepository.deleteBySentToId(capo.getId());
+                    notificationRepository.deleteBySentBy(capo);
+                    keycloakService.deleteUserByUsername(capo.getUsername());
+                } catch (Exception e) {
+                    System.out.println("Errore durante eliminazione da Keycloak (capo reparto): " + e.getMessage());
+                }
+            });
+        }
+
+        List<Utente> utentiDelReparto = utenteRepository.findByRepartoId(repartoId);
+        for (Utente utente : utentiDelReparto) {
+            try {
+                notificationRepository.deleteBySentTo(utente);
+                notificationRepository.deleteBySentBy(utente);
+                keycloakService.deleteUserByUsername(utente.getUsername());
+                utenteRepository.deleteById(utente.getId());
+            } catch (Exception e) {
+                System.out.println("Errore durante eliminazione da Keycloak o DB (utente): " + e.getMessage());
+                e.printStackTrace();
+            }
+
+        }
+
+        repartoRepository.delete(reparto);
+    }
+
+
 }
