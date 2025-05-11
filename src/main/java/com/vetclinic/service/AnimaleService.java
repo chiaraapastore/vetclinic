@@ -4,6 +4,7 @@ import com.itextpdf.text.pdf.draw.LineSeparator;
 import com.vetclinic.models.*;
 import com.vetclinic.repository.*;
 import com.vetclinic.config.AuthenticationService;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.itextpdf.text.DocumentException;
@@ -27,8 +28,12 @@ public class AnimaleService {
     private final AuthenticationService authenticationService;
     private final TrattamentoRepository trattamentoRepository;
     private final SomministrazioneRepository somministrazioneRepository;
+    private final KeycloakService keycloakService;
+    private final NotificheService notificheService;
+    private final RepartoRepository repartoRepository;
+    private final VeterinarioRepository veterinarioRepository;
 
-    public AnimaleService(AdminService adminService,TrattamentoRepository trattamentoRepository, SomministrazioneRepository somministrazioneRepository, AnimaleRepository animaleRepository, ClienteRepository clienteRepository, FatturaRepository fatturaRepository,AuthenticationService authenticationService) {
+    public AnimaleService(AdminService adminService, VeterinarioRepository veterinarioRepository,RepartoRepository repartoRepository,NotificheService notificheService,KeycloakService keycloakService,TrattamentoRepository trattamentoRepository, SomministrazioneRepository somministrazioneRepository, AnimaleRepository animaleRepository, ClienteRepository clienteRepository, FatturaRepository fatturaRepository,AuthenticationService authenticationService) {
         this.animaleRepository = animaleRepository;
         this.clienteRepository = clienteRepository;
         this.authenticationService = authenticationService;
@@ -36,6 +41,10 @@ public class AnimaleService {
         this.adminService = adminService;
         this.trattamentoRepository = trattamentoRepository;
         this.somministrazioneRepository = somministrazioneRepository;
+        this.keycloakService = keycloakService;
+        this.notificheService = notificheService;
+        this.repartoRepository = repartoRepository;
+        this.veterinarioRepository = veterinarioRepository;
     }
 
     @Transactional
@@ -334,5 +343,71 @@ public class AnimaleService {
     public String createAnimalForClient(Map<String, Object> payload) {
         return adminService.createAnimalForClient(payload);
     }
+
+    public List<Animale> getAll() {
+        return animaleRepository.findAll();
+    }
+
+    @Transactional
+    public void registraAnimale(NuovoAnimaleDTO dto) {
+
+        String keycloakId = keycloakService.getUserIdByEmail(dto.getClienteEmail());
+
+        Cliente cliente = clienteRepository.findByKeycloakId(keycloakId).orElse(null);
+
+
+        if (cliente == null) {
+            Utente nuovoCliente = new Utente();
+            nuovoCliente.setFirstName(dto.getClienteNome());
+            nuovoCliente.setLastName(dto.getClienteCognome());
+            nuovoCliente.setEmail(dto.getClienteEmail());
+            nuovoCliente.setUsername(dto.getClienteEmail());
+            nuovoCliente.setPassword("defaultPassword");
+            nuovoCliente.setRole("cliente");
+
+
+            ResponseEntity<Utente> response = keycloakService.createUser(nuovoCliente);
+            Utente creato = response.getBody();
+
+
+            cliente = new Cliente();
+            cliente.setFirstName(creato.getFirstName());
+            cliente.setLastName(creato.getLastName());
+            cliente.setEmail(creato.getEmail());
+            cliente.setKeycloakId(creato.getKeycloakId());
+            clienteRepository.save(cliente);
+
+
+            notificheService.sendWelcomeNotification(creato, creato);
+        }
+
+
+        Reparto reparto = repartoRepository.findById(dto.getRepartoId())
+                .orElseThrow(() -> new RuntimeException("Reparto non trovato"));
+
+        List<Veterinario> veterinari = veterinarioRepository.findByReparto(reparto);
+        if (veterinari.isEmpty()) {
+            throw new RuntimeException("Nessun veterinario disponibile nel reparto selezionato.");
+        }
+        Veterinario veterinario = veterinari.get(0);
+
+        Animale animale = new Animale();
+        animale.setName(dto.getNomeAnimale());
+        animale.setSpecies(dto.getSpecie());
+        animale.setBreed(dto.getRazza());
+        animale.setWeight(dto.getPeso());
+        animale.setCliente(cliente);
+        animale.setReparto(reparto);
+        animale.setVeterinario(veterinario);
+
+        animaleRepository.save(animale);
+
+
+        notificheService.sendNotificationToSpecificUser(cliente.getId(),
+                "È stato registrato un nuovo animale a tuo nome: " + animale.getName());
+    }
+
+
+
 
 }

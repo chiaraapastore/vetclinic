@@ -260,6 +260,22 @@ public class AdminController {
     }
 
 
+    @GetMapping("/animali")
+    public List<Animale> getAllAnimali() {
+        return animaleService.getAll();
+    }
+
+    @PostMapping("/animali")
+    public ResponseEntity<?> registraAnimale(@RequestBody NuovoAnimaleDTO dto) {
+        try {
+            animaleService.registraAnimale(dto);
+            return ResponseEntity.ok(Map.of("message", "Animale registrato con successo."));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+
 
 }
 

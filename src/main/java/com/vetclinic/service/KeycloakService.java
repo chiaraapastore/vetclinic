@@ -9,6 +9,7 @@ import com.vetclinic.models.UtenteKeycloak;
 import com.vetclinic.repository.UtenteRepository;
 import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
+import org.keycloak.admin.client.resource.UsersResource;
 import org.keycloak.representations.idm.CredentialRepresentation;
 import org.keycloak.representations.idm.RoleRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
@@ -167,5 +168,24 @@ public class KeycloakService {
             utenteRepository.delete(utente);
         }
     }
+
+    @Transactional
+    public String getUserIdByEmail(String email) {
+        String accessToken = authenticate(adminUsername, adminPassword);
+        String authHeader = "Bearer " + accessToken;
+
+        ResponseEntity<List<UserRepresentation>> response = keycloakClient.searchUserByUsername(authHeader, realm, email);
+
+        if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+            return response.getBody().stream()
+                    .filter(user -> email.equalsIgnoreCase(user.getEmail()))
+                    .map(UserRepresentation::getId)
+                    .findFirst()
+                    .orElse(null);
+        }
+
+        return null;
+    }
+
 
 }
