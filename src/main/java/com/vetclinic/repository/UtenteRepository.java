@@ -48,5 +48,7 @@ public interface UtenteRepository extends JpaRepository<Utente, Long> {
     List<Utente> findAllByReparto(Reparto reparto);
 
     List<Utente> findByRepartoId(Long repartoId);
+
+    Optional<Assistente> findAssistenteByKeycloakId(String userId);
 }
 

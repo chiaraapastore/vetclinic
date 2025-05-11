@@ -45,13 +45,11 @@ public class Medicine {
     private int availableQuantity;
 
     @ManyToOne
-    @JsonIgnore
     @JoinColumn(name = "department_id")
     private Reparto department;
 
 
     @ManyToOne
-    @JsonIgnore
     @JoinColumn(name = "magazzino_id")
     private Magazzino magazzino;
 

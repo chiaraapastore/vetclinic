@@ -24,14 +24,13 @@ public class Somministrazione {
 
     @ManyToOne
     @JoinColumn(name = "veterinario_id")
-    private Veterinario veterinario;
+    private Utente veterinario;
 
     @ManyToOne
     @JoinColumn(name = "assistente_id")
-    private Veterinario assistente;
+    private Utente assistente;
 
     @ManyToOne
-    @JsonIgnore
     @JoinColumn(name = "animal_id")
     private Animale animal;
 

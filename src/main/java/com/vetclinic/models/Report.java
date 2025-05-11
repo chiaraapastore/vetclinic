@@ -25,7 +25,6 @@ public class Report {
     private String content;
 
     @ManyToOne
-    @JsonIgnore
     @JoinColumn(name = "veterinario_id")
     private Veterinario veterinarian;
 }

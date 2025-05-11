@@ -253,6 +253,9 @@ public class AssistenteService {
         somministrazione.setMedicine(medicine);
         somministrazione.setDosage(quantita);
         somministrazione.setDate(LocalDateTime.now());
+        somministrazione.setAssistente(assistant);
+        somministrazione.setVeterinario(veterinarian);
+        medicine.setDepartment(animale.getReparto());
         somministrazioneRepository.save(somministrazione);
 
         somministrazioneService.addDocumentToAnimal(

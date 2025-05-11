@@ -21,7 +21,6 @@ public class Turni {
     private boolean approved;
 
     @ManyToOne
-    @JsonIgnore
     @JoinColumn(name = "utente_id")
     private Utente utente;
 

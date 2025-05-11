@@ -25,7 +25,6 @@ public class Vaccino {
 
 
     @ManyToOne
-    @JsonIgnore
     @JoinColumn(name = "veterinario_id")
     private Veterinario veterinario;
 

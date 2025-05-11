@@ -16,10 +16,16 @@ import java.util.Optional;
 @Repository
 public interface MedicineRepository extends JpaRepository<Medicine, Long> {
     List<Medicine> findByDepartmentId(Long departmentId);
-    @Query("SELECT m.department.name AS department, SUM(m.availableQuantity) AS totalConsumption " +
-            "FROM Medicine m GROUP BY m.department.name")
-    List<Map<String, Object>> findConsumoPerReparto();
+//    @Query("SELECT m.department.name AS department, SUM(m.availableQuantity) AS totalConsumption " +
+//            "FROM Medicine m GROUP BY m.department.name")
+//    List<Map<String, Object>> findConsumoPerReparto();
     Optional<Medicine> findByName(String nomeMedicinale);
+    @Query("SELECT new map(r.name as reparto, SUM(s.dosage) as totale) " +
+            "FROM Somministrazione s " +
+            "JOIN s.medicine m " +
+            "JOIN m.department r " +
+            "GROUP BY r.name")
+    List<Map<String, Object>> findConsumoPerReparto();
 
     List<Medicine> findByQuantityGreaterThan(int i);
     Collection<Object> findByAvailableQuantityLessThanEqual(int i);

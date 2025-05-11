@@ -74,6 +74,9 @@ public class VeterinarianService {
             Utente veterinario = utenteRepository.findByKeycloakId(authenticationService.getUserId())
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Veterinario non trovato"));
 
+            Utente assistente = utenteRepository.findByKeycloakId(authenticationService.getUserId())
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Assistente non trovato"));
+
             Utente capoReparto = utenteRepository.findCapoRepartoById(capoRepartoId)
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Capo Reparto non trovato"));
 
@@ -97,6 +100,9 @@ public class VeterinarianService {
             somministrazione.setMedicine(medicine);
             somministrazione.setDosage(quantita);
             somministrazione.setDate(LocalDateTime.now());
+            somministrazione.setVeterinario(veterinario);
+            somministrazione.setAssistente(assistente);
+            medicine.setDepartment(animale.getReparto());
             somministrazioneRepository.save(somministrazione);
 
             somministrazioneService.veterinarianAddDocumentToAnimal(

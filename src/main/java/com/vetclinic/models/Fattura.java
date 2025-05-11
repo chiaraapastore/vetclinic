@@ -22,7 +22,6 @@ public class Fattura {
     private Long id;
 
     @ManyToOne
-    @JsonIgnore
     @JoinColumn(name = "cliente_id")
     private Cliente cliente;
 

@@ -31,7 +31,6 @@ public class Trattamento {
 
 
     @ManyToOne
-    @JsonIgnore
     @JoinColumn(name = "cronologia_animale")
     private CronologiaAnimale cronologiaAnimale;
 
