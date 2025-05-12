@@ -37,12 +37,24 @@ public class ReportService {
     public List<Map<String, Object>> getReportConsumi() {
         Utente utente = utenteRepository.findByKeycloakId(authenticationService.getUserId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Admin non trovato"));
+
         if (utente == null || !utente.getRole().equals("admin")) {
             throw new IllegalArgumentException("Utente non autenticato o non autorizzato");
         }
 
-        return medicineRepository.findConsumoPerReparto();
+        List<Map<String, Object>> rawResults = medicineRepository.findConsumoPerReparto();
+
+        return rawResults.stream()
+                .map(entry -> {
+                    Map<String, Object> normalized = new HashMap<>(entry);
+                    if (normalized.get("consumo") == null) {
+                        normalized.put("consumo", 0);
+                    }
+                    return normalized;
+                })
+                .collect(Collectors.toList());
     }
+
 
     @Transactional
     public Report createReport(Report report) {
