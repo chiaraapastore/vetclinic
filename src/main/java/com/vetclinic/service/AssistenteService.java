@@ -340,11 +340,13 @@ public class AssistenteService {
 
     @Transactional
     public void scadenzaFarmaco(Long capoRepartoId, Long medicinaleId) {
-        Assistente assistente = utenteRepository.findAssistenteByUsername(authenticationService.getUsername())
-                .orElseThrow(() -> new IllegalArgumentException("Utente non autenticato"));
 
-        CapoReparto capoReparto = utenteRepository.findCapoRepartoById(capoRepartoId)
-                .orElseThrow(() -> new IllegalArgumentException("Capo Reparto non trovato"));
+        Utente capoReparto = utenteRepository.findByKeycloakId(authenticationService.getUserId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Capo Reparto non trovato"));
+
+        Utente assistente = utenteRepository.findByKeycloakId(authenticationService.getUserId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Assistente non trovato"));
+
 
         Medicine medicinale = medicineRepository.findById(medicinaleId)
                 .orElseThrow(() -> new IllegalArgumentException("Medicinale non trovato"));

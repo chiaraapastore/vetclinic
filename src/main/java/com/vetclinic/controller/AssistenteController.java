@@ -211,7 +211,7 @@ public class AssistenteController {
         Long capoRepartoId = body.get("capoRepartoId");
         Long idMedicinale = body.get("medicinaleId");
         assistenteService.scadenzaFarmaco(capoRepartoId, idMedicinale);
-        return ResponseEntity.ok("notifica_inviata");
+        return ResponseEntity.ok(Map.of("message", "notifica_inviata"));
     }
 
 

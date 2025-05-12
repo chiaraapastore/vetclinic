@@ -333,7 +333,7 @@ public class NotificheService {
         }, java.util.Date.from(reminderTime.atZone(java.time.ZoneId.systemDefault()).toInstant()));
     }
 
-    public void sendAssistantNotificationToCapoReparto(Assistente assistente, CapoReparto capoReparto, String name) {
+    public void sendAssistantNotificationToCapoReparto(Utente assistente, Utente capoReparto, String name) {
         String message = "Notifica: Il farmaco " +name + " sta per scadere. Notifica inviata da "
                 + assistente.getUsername() + " al Capo Reparto " + capoReparto.getUsername();
         createAndSendNotification(assistente, capoReparto, message, "farmaco_scaduto");
