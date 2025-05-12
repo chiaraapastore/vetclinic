@@ -20,6 +20,12 @@ public class MagazzinoController {
         this.reportService = reportService;
     }
 
+    @GetMapping("/dettagli")
+    public ResponseEntity<Magazzino> getStockDetails() {
+        Magazzino magazzino = magazzinoService.getStock();
+        return ResponseEntity.ok(magazzino);
+    }
+
     @PostMapping("/create")
     public ResponseEntity<Magazzino> createStock(@RequestBody Magazzino magazzino) {
         return ResponseEntity.ok(magazzinoService.createStock(magazzino));

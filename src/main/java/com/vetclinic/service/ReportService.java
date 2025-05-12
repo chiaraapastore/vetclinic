@@ -3,8 +3,10 @@ package com.vetclinic.service;
 import com.vetclinic.config.AuthenticationService;
 import com.vetclinic.models.*;
 import com.vetclinic.repository.*;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
 import java.util.*;
@@ -33,7 +35,8 @@ public class ReportService {
 
     @Transactional
     public List<Map<String, Object>> getReportConsumi() {
-        Utente utente = utenteRepository.findByUsername(authenticationService.getUsername());
+        Utente utente = utenteRepository.findByKeycloakId(authenticationService.getUserId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Admin non trovato"));
         if (utente == null || !utente.getRole().equals("admin")) {
             throw new IllegalArgumentException("Utente non autenticato o non autorizzato");
         }
@@ -43,7 +46,8 @@ public class ReportService {
 
     @Transactional
     public Report createReport(Report report) {
-        Utente utente = utenteRepository.findByUsername(authenticationService.getUsername());
+        Utente utente = utenteRepository.findByKeycloakId(authenticationService.getUserId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Utente non trovato"));
         if (utente == null) {
             throw new IllegalArgumentException("Utente non trovato");
         }
@@ -65,7 +69,8 @@ public class ReportService {
 
     @Transactional
     public List<Report> getAllReports() {
-        Utente utente = utenteRepository.findByUsername(authenticationService.getUsername());
+        Utente utente = utenteRepository.findByKeycloakId(authenticationService.getUserId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Utente non trovato"));
         if (utente == null) {
             throw new IllegalArgumentException("Utente non trovato");
         }
@@ -74,7 +79,8 @@ public class ReportService {
 
     @Transactional
     public Optional<Report> getReportById(String id) {
-        Utente utente = utenteRepository.findByUsername(authenticationService.getUsername());
+        Utente utente = utenteRepository.findByKeycloakId(authenticationService.getUserId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Utente non trovato"));
         if (utente == null) {
             throw new IllegalArgumentException("Utente non trovato");
         }
@@ -83,34 +89,33 @@ public class ReportService {
 
     @Transactional
     public Report updateReport(String id, Report updatedReport) {
-        Utente utente = utenteRepository.findByUsername(authenticationService.getUsername());
-        if (utente == null) {
-            throw new IllegalArgumentException("Utente non trovato");
-        }
+        Utente utente = utenteRepository.findByKeycloakId(authenticationService.getUserId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Utente non trovato"));
 
         return reportRepository.findById(id).map(existingReport -> {
             existingReport.setStartDate(updatedReport.getStartDate());
             existingReport.setEndDate(updatedReport.getEndDate());
             Report savedReport = reportRepository.save(existingReport);
 
-            notificheService.createAndSendNotification(utente, utente, "Il tuo report è stato aggiornato con successo.", "report_update");
+            notificheService.createAndSendNotification(utente, utente,
+                    "Il tuo report è stato aggiornato con successo.", "report_update");
+
+            notificheService.notifyAdmin("Il report " + id + " è stato aggiornato da " + utente.getUsername());
 
             return savedReport;
         }).orElseThrow(() -> new RuntimeException("Report non trovato"));
     }
 
 
+
+
     @Transactional
     public void generateStockReport(Magazzino magazine) {
-        Utente utente = utenteRepository.findByUsername(authenticationService.getUsername());
+        Utente utente = utenteRepository.findByKeycloakId(authenticationService.getUserId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Utente non trovato"));
+
         if (utente == null) {
             throw new IllegalArgumentException("Errore: Utente non trovato!");
-        }
-
-        Animale animale = animaleRepository.findFirstByOrderByIdAsc();
-        if (animale == null) {
-            System.err.println("Errore: Nessun paziente animale trovato nel sistema! Il report non verrà salvato.");
-            return;
         }
 
         String reportMessage = "Report Magazzino\n" +
@@ -121,16 +126,17 @@ public class ReportService {
         report.setStartDate(LocalDate.now());
         report.setEndDate(LocalDate.now().plusDays(7));
         report.setContent(reportMessage);
-
         reportRepository.save(report);
 
-        Utente adminUser = utenteRepository.findByUsername("admin");
+        Utente adminUser = utenteRepository.findByKeycloakId(authenticationService.getUserId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Admin non trovato"));
         if (adminUser != null) {
-             notificheService.notifyAdmin(adminUser, reportMessage);
-            System.out.println("Report inviato all'admin:\n" + reportMessage);
+            notificheService.notifyAdmin(reportMessage);
         } else {
-            System.err.println(" Errore: Utente admin non trovato! Notifica non inviata.");
+            System.err.println("Admin NON trovato: verifica che l'utente admin sia presente nel DB con keycloakId corretto.");
         }
     }
+
+
 
 }

@@ -149,8 +149,7 @@ public class CapoRepartoService {
         );
 
         notificheService.notifyAdmin(
-                capoReparto,
-                "Hai approvato le ferie di " + ferie.getUtente().getFirstName() + " " + ferie.getUtente().getLastName() +
+                "Il capo reparto ha approvato le ferie di " + ferie.getUtente().getFirstName() + " " + ferie.getUtente().getLastName() +
                         " dal " + ferie.getStartDate() + " al " + ferie.getEndDate() + "."
         );
 
@@ -195,7 +194,7 @@ public class CapoRepartoService {
 
         Utente adminUser = utenteRepository.findByUsername("admin");
         if (adminUser != null) {
-            notificheService.notifyAdmin(adminUser, reportMessage);
+            notificheService.notifyAdmin(reportMessage);
             System.out.println("Report inviato all'admin:\n" + reportMessage);
         } else {
             System.err.println(" Errore: Utente admin non trovato! Notifica non inviata.");

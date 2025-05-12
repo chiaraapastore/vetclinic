@@ -7,8 +7,10 @@ import com.vetclinic.repository.MagazzinoRepository;
 import com.vetclinic.repository.MedicineRepository;
 import com.vetclinic.models.Utente;
 import com.vetclinic.repository.UtenteRepository;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Optional;
 
@@ -27,9 +29,13 @@ public class MagazzinoService {
         this.authenticationService = authenticationService;
     }
 
+
+
     @Transactional
     public Magazzino getStock() {
-        Utente utenteAdmin = utenteRepository.findByUsername(authenticationService.getUsername());
+        Utente utenteAdmin = utenteRepository.findByKeycloakId(authenticationService.getUserId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Utente non trovato"));
+
         if (utenteAdmin == null) {
             throw new IllegalArgumentException("Utente non autenticato");
         }
@@ -39,7 +45,9 @@ public class MagazzinoService {
 
     @Transactional
     public Magazzino createStock(Magazzino magazzino) {
-        Utente utenteAdmin = utenteRepository.findByUsername(authenticationService.getUsername());
+        Utente utenteAdmin = utenteRepository.findByKeycloakId(authenticationService.getUserId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Utente non trovato"));
+
         if (utenteAdmin == null) {
             throw new IllegalArgumentException("Utente non autenticato");
         }
@@ -51,10 +59,13 @@ public class MagazzinoService {
 
     @Transactional
     public void updateStock(Magazzino magazzino) {
-        Utente utenteAdmin = utenteRepository.findByUsername(authenticationService.getUsername());
+        Utente utenteAdmin = utenteRepository.findByKeycloakId(authenticationService.getUserId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Admin non trovato"));
+
         if (utenteAdmin == null) {
             throw new IllegalArgumentException("Utente non autenticato");
         }
+
         Magazzino existingStock = getStock();
         existingStock.setCurrentStock(magazzino.getCurrentStock());
         existingStock.setMaximumCapacity(magazzino.getMaximumCapacity());
@@ -63,7 +74,9 @@ public class MagazzinoService {
 
     @Transactional
     public boolean updateMedicineStock(Long medicineId, int quantity) {
-        Utente utenteAdmin = utenteRepository.findByUsername(authenticationService.getUsername());
+        Utente utenteAdmin = utenteRepository.findByKeycloakId(authenticationService.getUserId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Admin non trovato"));
+
         if (utenteAdmin == null) {
             throw new IllegalArgumentException("Utente non autenticato");
         }

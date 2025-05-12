@@ -14,4 +14,6 @@ public interface NotificheRepository extends JpaRepository<Notifiche, Long> {
     void deleteBySentToId(Long id);
     void deleteBySentBy(Utente utente);
     void deleteBySentTo(Utente utente);
+
+    List<Notifiche> findBySentToIdOrderByNotificationDateDesc(Long userId);
 }

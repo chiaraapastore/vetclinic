@@ -1,5 +1,6 @@
 package com.vetclinic.controller;
 
+import com.vetclinic.config.AuthenticationService;
 import com.vetclinic.models.Notifiche;
 import com.vetclinic.service.NotificheService;
 import org.springframework.http.ResponseEntity;
@@ -14,17 +15,22 @@ import java.util.Map;
 public class NotificheController {
 
     private final NotificheService notificheService;
+    private final AuthenticationService authenticationService;
 
-    public NotificheController(NotificheService notificheService) {
+    public NotificheController(NotificheService notificheService, AuthenticationService authenticationService) {
         this.notificheService = notificheService;
+        this.authenticationService = authenticationService;
     }
 
 
     @GetMapping("/list")
-    public ResponseEntity<List<Notifiche>> getAllNotificationsForUser() {
-        List<Notifiche> notifiche = notificheService.getAllNotificationsForCurrentUser();
+    public ResponseEntity<List<Notifiche>> getMyNotifications() {
+        String keycloakId = authenticationService.getUserId();
+        List<Notifiche> notifiche = notificheService.getNotificationsForUserKeycloakId(keycloakId);
         return ResponseEntity.ok(notifiche);
     }
+
+
 
 
     @GetMapping("/mark-all-read")

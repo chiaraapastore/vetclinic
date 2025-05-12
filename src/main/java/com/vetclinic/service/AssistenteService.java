@@ -349,8 +349,13 @@ public class AssistenteService {
         Medicine medicinale = medicineRepository.findById(medicinaleId)
                 .orElseThrow(() -> new IllegalArgumentException("Medicinale non trovato"));
 
+        notificheService.notifyAdmin("L'assistente " + assistente.getUsername() +
+                " ha segnalato farmaci scaduti: " + medicinale.getName());
+
         notificheService.sendAssistantNotificationToCapoReparto(assistente, capoReparto, medicinale.getName());
     }
+
+
 
     public List<Assistente> findByRepartoId(Long repartoId) {
         return assistenteRepository.findByRepartoId(repartoId);

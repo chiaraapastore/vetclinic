@@ -4,6 +4,7 @@ import com.vetclinic.config.AuthenticationService;
 import com.vetclinic.models.*;
 import com.vetclinic.repository.AnimaleRepository;
 import com.vetclinic.repository.FerieRepository;
+import com.vetclinic.repository.ReportRepository;
 import com.vetclinic.repository.UtenteRepository;
 import com.vetclinic.service.*;
 import org.springframework.http.HttpStatus;
@@ -30,10 +31,12 @@ public class CapoRepartoController {
     private final TurniService turniService;
     private final FerieRepository ferieRepository;
     private final FerieService ferieService;
+    private final MagazzinoService magazzinoService;
+    private final ReportService reportService;
 
 
 
-    public CapoRepartoController(CapoRepartoService capoRepartoService, FerieService ferieService,FerieRepository ferieRepository,TurniService turniService ,AnimaleRepository animaleRepository,UtenteRepository utenteRepository ,AuthenticationService authenticationService,AssistenteService assistenteService, VeterinarianService veterinarianService) {
+    public CapoRepartoController(CapoRepartoService capoRepartoService, ReportService reportService,MagazzinoService magazzinoService,FerieService ferieService,FerieRepository ferieRepository,TurniService turniService ,AnimaleRepository animaleRepository,UtenteRepository utenteRepository ,AuthenticationService authenticationService,AssistenteService assistenteService, VeterinarianService veterinarianService) {
         this.capoRepartoService = capoRepartoService;
         this.assistenteService = assistenteService;
         this.veterinarianService = veterinarianService;
@@ -43,6 +46,8 @@ public class CapoRepartoController {
         this.turniService = turniService;
         this.ferieRepository = ferieRepository;
         this.ferieService = ferieService;
+        this.magazzinoService = magazzinoService;
+        this.reportService = reportService;
     }
 
 
@@ -55,12 +60,28 @@ public class CapoRepartoController {
 
 
     @PutMapping("/magazine/update-stock-and-report")
-    public ResponseEntity<Map<String, String>> updateStockAndSendReport(@RequestBody List<Magazzino> magazines) {
-        for (Magazzino magazine : magazines) {
-            capoRepartoService.generateStockReport(magazine);
+    public ResponseEntity<Void> updateStockAndSendReport(
+            @RequestParam Long id,
+            @RequestParam int currentStock,
+            @RequestParam int maximumCapacity) {
+
+        Magazzino magazine = new Magazzino();
+        magazine.setId(id);
+        magazine.setCurrentStock(currentStock);
+        magazine.setMaximumCapacity(maximumCapacity);
+
+        try {
+            magazzinoService.updateStock(magazine);
+            reportService.generateStockReport(magazine);
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            System.err.println("Errore nel backend: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.internalServerError().build();
         }
-        return ResponseEntity.ok(Map.of("message", "Stock aggiornato e report inviato all'amministratore."));
     }
+
+
 
 
     @PutMapping("/assegna-ferie/{utenteId}")

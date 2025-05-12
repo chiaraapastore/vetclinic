@@ -9,6 +9,7 @@ import jakarta.validation.constraints.NotBlank;
 import org.springframework.http.HttpStatus;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.annotation.Async;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
@@ -109,6 +110,15 @@ public class NotificheService {
 
     @Transactional
     public void sendNotificationSomministration(Utente veterinarian, Utente headOfDepartment, String nameOfMedicine){
+        Utente admin = utenteRepository.findAll().stream()
+                .filter(u -> u.getRole().equals("admin"))
+                .findFirst()
+                .orElse(null);
+
+        if (admin != null) {
+            notifyAdmin("È stata effettuata una nuova somministrazione da " + veterinarian.getUsername());
+        }
+
         String message = "Il dottore "+veterinarian.getFirstName()+veterinarian.getLastName()+" ha somministrato il farmaco "+nameOfMedicine+" al paziente";
         createAndSendNotification(veterinarian,headOfDepartment, message, "farmaco");
     }
@@ -330,17 +340,37 @@ public class NotificheService {
     }
 
 
-    public void notifyAdmin(Utente admin, String messaggio) {
+    @Transactional
+    public void notifyAdmin(String messaggio) {
+
+        Utente admin = utenteRepository.findAll().stream()
+                .filter(u -> u.getRole().equalsIgnoreCase("admin"))
+                .findFirst()
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Admin non trovato nel sistema"));
+
+        Utente sender = utenteRepository.findByKeycloakId(authenticationService.getUserId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Mittente non autenticato"));
+
         Notifiche notifica = new Notifiche();
         notifica.setMessage(messaggio);
-        notifica.setRead(false);
         notifica.setNotificationDate(new Date());
-
-        notifica.setSentTo(admin);
         notifica.setType(Notifiche.NotificationType.GENERAL_ALERT);
+        notifica.setRead(false);
+        notifica.setSentTo(admin);
+        notifica.setSentBy(sender);
 
         notificheRepository.save(notifica);
+
+
+        admin.setCountNotification((admin.getCountNotification() != null ? admin.getCountNotification() : 0) + 1);
+        utenteRepository.save(admin);
     }
+
+
+
+
+
+
 
 
     public void notifyFerieAssegnate(Utente destinatario, LocalDate startDate, LocalDate endDate, Utente capoReparto) {
@@ -421,5 +451,11 @@ public class NotificheService {
     }
 
 
+
+    public List<Notifiche> getNotificationsForUserKeycloakId(String keycloakId) {
+        Utente utente = utenteRepository.findByKeycloakId(keycloakId)
+                .orElseThrow(() -> new UsernameNotFoundException("Utente non trovato"));
+        return notificheRepository.findBySentToIdOrderByNotificationDateDesc(utente.getId());
+    }
 
 }
