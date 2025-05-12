@@ -29,6 +29,13 @@ public class MedicineController {
         return medicine.map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
     }
 
+    @PutMapping("/update/{id}")
+    public ResponseEntity<Medicine> updateMedicinale(@PathVariable Long id, @RequestBody Medicine updatedMedicine) {
+        updatedMedicine.setId(id);
+        Medicine saved = medicineService.updateMedicinale(updatedMedicine);
+        return ResponseEntity.ok(saved);
+    }
+
     @PostMapping("/save")
     public ResponseEntity<Medicine> saveMedicine(@RequestBody Medicine medicine) {
         Medicine savedMedicine = medicineService.saveMedicine(medicine);

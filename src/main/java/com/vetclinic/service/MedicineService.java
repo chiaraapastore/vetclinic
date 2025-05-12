@@ -43,6 +43,21 @@ public class MedicineService {
     }
 
     @Transactional
+    public Medicine updateMedicinale(Medicine updatedMedicine) {
+        Medicine existing = medicineRepository.findById(updatedMedicine.getId())
+                .orElseThrow(() -> new IllegalArgumentException("Medicinale non trovato con ID: " + updatedMedicine.getId()));
+
+        existing.setName(updatedMedicine.getName());
+        existing.setQuantity(updatedMedicine.getQuantity());
+        existing.setAvailableQuantity(updatedMedicine.getAvailableQuantity());
+        existing.setDosage(updatedMedicine.getDosage());
+        existing.setExpirationDate(updatedMedicine.getExpirationDate());
+
+        return medicineRepository.save(existing);
+    }
+
+
+    @Transactional
     public void updateMedicinaleAvailableQuantity(Long medicinaleId, int newAvailableQuantity) {
         int updatedRows = medicineRepository.updateAvailableQuantity(medicinaleId, newAvailableQuantity);
         if (updatedRows == 0) {
