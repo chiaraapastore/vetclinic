@@ -407,7 +407,7 @@ public class AdminService {
     }
 
     public String assignDoctorToDepartment(Long utenteId, Long repartoId) {
-          Reparto reparto = repartoRepository.findById(repartoId).orElseThrow(()-> new IllegalArgumentException("Reparto non trovato"));
+        Reparto reparto = repartoRepository.findById(repartoId).orElseThrow(()-> new IllegalArgumentException("Reparto non trovato"));
 
         Utente dottore = utenteRepository.findById(utenteId).orElseThrow(()-> new IllegalArgumentException("Utente non trovato"));
 
