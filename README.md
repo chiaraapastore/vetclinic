@@ -1,29 +1,31 @@
-## VetClinic – Backend
+#  VetClinic – Backend
 
-Piattaforma gestionale modulare per cliniche veterinarie, sviluppata in architettura a microservizi. Questo modulo rappresenta il backend, costruito con Spring Boot, Keycloak per la sicurezza e PostgreSQL per la persistenza dei dati.
+Modular management platform for veterinary clinics, based on a microservices architecture.  
+This module implements the backend using Spring Boot, with Keycloak for security and PostgreSQL for data persistence.
 
 ---
-## Tecnologie utilizzate
+
+##  Technologies Used
 
 -  Spring Boot (REST API)
--  Keycloak (JWT, SSO, gestione ruoli)
+-  Keycloak (JWT, SSO, role-based access)
 -  PostgreSQL + Hibernate
--  Report PDF
+-  PDF reporting
 -  Docker & Docker Compose
 
 ---
 
-## Moduli principali
+##  Main Modules
 
-- **Autenticazione e autorizzazione** (Keycloak integrato)
-- **Gestione utenti e ruoli** (admin, capo reparto, veterinario, assistente, cliente)
-- **Gestione clinica**: pazienti, appuntamenti, somministrazioni, turni, reparti
-- **Reportistica**: generazione PDF e visualizzazione dati clinici
+- **Authentication and Authorization** (Keycloak integration)
+- **User and Role Management** (admin, head of department, vet, assistant, client)
+- **Clinic Management**: patients, appointments, administrations, shifts, departments
+- **Reporting**: PDF generation and clinical data visualization
 
 ---
 
-## Come avviare il backend
+##  How to Run the Backend
 
-1. Clona il repository:
+1. Clone the repository:
    ```bash
    git clone https://github.com/chiaraapastore/vetclinic.git
